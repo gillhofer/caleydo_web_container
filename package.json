@@ -1,0 +1,15 @@
+{
+  "name": "caledo-web-server",
+  "description": "Server component for Caleydo Web.",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "express": "4.x",
+    "fast-csv": "0.4.x"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/caleydo/caleydo-web"
+  },
+  "license": "BSD"
+}
