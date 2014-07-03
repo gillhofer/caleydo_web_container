@@ -1,20 +1,56 @@
 <html>
   <header>
-    <title>Caleydo Web Test</title>
+    <title>Caleydo Web</title>
   </header>
 
   <body>
-    <h1>Endpoints</h1>
+    <img src="logo.png" />
 
-    <h2>About</h2>
-    <p>
-      <a href="/about">About</a> - Returns information about the server.
-    </p>
+    <h1>Caleydo Web - Server API</h1>
+
+    <h2>Meta</h2>
+    <ul>
+      <li>
+        <code>about</code> - Returns information about the server.
+        <p>
+          <i>Examples</i>
+          <ul>
+            <li><a href="/about">about</a></li>
+          </ul>
+        </p>
+
+      </li>
+    </ul>
 
     <h2>Data</h2>
-    <p>
-      <a href="/data">Data</a> - Returns all data.
-    </p>
+    <ul>
+      <li>
+        <code>dataset</code> - Returns a list of datasets.
+        <p>
+          <i>Examples</i>
+          <ul>
+            <li><a href="/dataset">/dataset</a></li>
+          </ul>
+        </p>
+      </li>
+      <li>
+        <code>dataset/<i>id</i></code> - Returns all rows contained in dataset <code><i>id</i></code>.
+        <p>
+          <i>Parameters</i>
+          <ul>
+            <li><code>start</code> - Limit returned rows to those &gt;= <code>start</code>. Rows are 0-indexed.</li>
+            <li><code>end</code> - Limit returned rows to those &lt; <code>end</code>. Rows are 0-indexed.</li>
+          </ul>        
+        </p>
+        <p>
+          <i>Examples</i>
+          <ul>
+            <li><a href="/dataset/0?start=3&end=5">/dataset/0?start=3&end=5</a></li>
+          </ul>
+        </p>
+
+      </li>
+    </ul>
 
   </body>
 </html>

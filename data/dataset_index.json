@@ -1,0 +1,4 @@
+[
+  { "name": "Test 10x10", "path": "test_10x10.csv"},
+  { "name": "Test 100x10", "path": "test_100x10.csv"}
+]
