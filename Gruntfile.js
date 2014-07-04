@@ -2,8 +2,6 @@
 'use strict';
 var proxySnippet = require('grunt-connect-proxy/lib/utils').proxyRequest;
 
-var JENKINS = grunt.option('jenkins');
-
 // # Globbing
 // for performance reasons we're only matching one level down:
 // 'test/spec/{,*/}*.js'
@@ -11,6 +9,8 @@ var JENKINS = grunt.option('jenkins');
 // 'test/spec/**/*.js'
 
 module.exports = function (grunt) {
+  var JENKINS = grunt.option('jenkins');
+
   require('load-grunt-tasks')(grunt);
   require('time-grunt')(grunt);
 
@@ -363,7 +363,16 @@ module.exports = function (grunt) {
         options: {
           hostname: 'localhost',
           port: 9002,
-          server: require('path').resolve('./server/index')
+          server: require('path').resolve('./server/index'),
+          'debug-brk': 5858
+        }
+      },
+      debug: {
+        options: {
+          hostname: 'localhost',
+          port: 9002,
+          server: require('path').resolve('./server/index'),
+          'debug-brk': 5858
         }
       }
     }
@@ -379,7 +388,24 @@ module.exports = function (grunt) {
       'concurrent:server',
       'configureProxies',
       'wiredep',
-      'express',
+      'express:custom',
+      'autoprefixer',
+      'connect:livereload',
+      'watch'
+    ]);
+  });
+  
+  grunt.registerTask('serverd', function (target) {
+    if (target === 'dist') {
+      return grunt.task.run(['build', 'connect:dist:keepalive']);
+    }
+
+    grunt.task.run([
+      'clean:server',
+      'concurrent:server',
+      'configureProxies',
+      'wiredep',
+      'express:debug',
       'autoprefixer',
       'connect:livereload',
       'watch'
