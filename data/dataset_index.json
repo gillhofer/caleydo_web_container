@@ -1,4 +1,6 @@
 [
-  { "name": "Test 10x10", "path": "test_10x10.csv"},
-  { "name": "Test 100x10", "path": "test_100x10.csv"}
+  { "name": "Test 10x10", "path": "test_10x10.csv", rowtype="patient", coltype="gene"},
+  { "name": "Test 100x10", "path": "test_100x10.csv", rowtype="patient", coltype="gene"},
+  { "name": "Test 10x100", "path": "test_10x100.csv", rowtype="patient", coltype="gene"},
+  { "name": "Test Heterogenous 10x4", "path": "test_h10x4.csv", rowtype="patient", coltypes=["Gender", "Age","Value"]}
 ]
