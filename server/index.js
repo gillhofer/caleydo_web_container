@@ -3,7 +3,7 @@ var express = require('express');
 var csv = require("fast-csv");
 
 // global variables
-var datasetBasePath = "../data/";
+var datasetBasePath = "./data/";
 var datasetIndex = undefined;
 
 // application
@@ -11,7 +11,7 @@ var app = express();
 var datasetRouter = express.Router();
 
 
-app.get('/about', function(req, res){
+app.get('/api/about', function(req, res){
   res.send(require('../package.json'));
 });
 
@@ -19,7 +19,7 @@ app.get('/about', function(req, res){
 datasetRouter.param('dataset_id', function(req, res, next, id) {
   if ( datasetIndex[id] ) {
     req.dataset = [];
-  
+    console.log(datasetBasePath + datasetIndex[id].path);
     csv
       .fromPath(datasetBasePath + datasetIndex[id].path)
       .on("record", function(data){
@@ -82,13 +82,13 @@ datasetRouter.route('/')
     res.json(datasetIndex);
   });
 
-app.use('/dataset',datasetRouter);
+app.use('/api/dataset',datasetRouter);
 app.use('/', express.static('static'));
 
 
 var indexDatasets = function(indexFile) {
   // expects an array of {name: <dataset name>, path: <relative path to datafile>} pairs
-  datasetIndex = require(indexFile);
+  datasetIndex = require("../"+indexFile);
 
   for ( var i  = 0; i < datasetIndex.length; ++i ) {
     datasetIndex[i].id = i;
