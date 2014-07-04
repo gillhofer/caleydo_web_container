@@ -2,6 +2,8 @@
 'use strict';
 var proxySnippet = require('grunt-connect-proxy/lib/utils').proxyRequest;
 
+var JENKINS = grunt.option('jenkins');
+
 // # Globbing
 // for performance reasons we're only matching one level down:
 // 'test/spec/{,*/}*.js'
@@ -147,7 +149,8 @@ module.exports = function (grunt) {
     jshint: {
       options: {
         jshintrc: '.jshintrc',
-        reporter: require('jshint-stylish')
+        reporter: (JENKINS && 'checkstyle') || require('jshint-stylish'),
+        reporterOutput: JENKINS && 'jshint.xml'
       },
       all: [
         'Gruntfile.js',
