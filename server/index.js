@@ -3,7 +3,7 @@ var express = require('express');
 var csv = require("fast-csv");
 
 // global variables
-var datasetBasePath = "./data/";
+var datasetBasePath = "../data/";
 var datasetIndex = undefined;
 
 // application
@@ -12,7 +12,7 @@ var datasetRouter = express.Router();
 
 
 app.get('/about', function(req, res){
-  res.send(require('./package.json'));
+  res.send(require('../package.json'));
 });
 
 
@@ -97,8 +97,17 @@ var indexDatasets = function(indexFile) {
   console.log( datasetIndex );
 }
 
-var server = app.listen( 3000, function() {
-    indexDatasets( ( datasetBasePath + 'dataset_index.json' ) );
+indexDatasets( ( datasetBasePath + 'dataset_index.json' ) );
     console.log('Indexed datasets from ' + ( datasetBasePath + 'dataset_index.json' ));
-    console.log('Listening on port %d', server.address().port);
-});
+
+module.exports = app
+
+var main = function(){
+  var server = app.listen( 3000, function() {
+  console.log('Listening on port %d', server.address().port);
+  });
+}
+
+if (require.main === module) {
+    main();
+}
