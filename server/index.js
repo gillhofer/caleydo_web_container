@@ -88,6 +88,7 @@ app.use('/', express.static('static'));
 
 var indexDatasets = function(indexFile) {
   // expects an array of {name: <dataset name>, path: <relative path to datafile>} pairs
+  //since the server is in a sub directory
   datasetIndex = require("../"+indexFile);
 
   for ( var i  = 0; i < datasetIndex.length; ++i ) {
