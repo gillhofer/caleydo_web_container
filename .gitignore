@@ -28,3 +28,5 @@ node_modules
 /dist
 /static/bower_components
 /.idea/workspace.xml
+/jslint.xml
+/.idea/inspectionProfiles
