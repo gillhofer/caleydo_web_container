@@ -1,0 +1,8 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="caleydo-web-client" type="JavascriptDebugType" factoryName="JavaScript Debug" uri="http://127.0.0.1:9000/">
+    <mapping url="http://127.0.0.1:9000" local-file="$PROJECT_DIR$/static" />
+    <RunnerSettings RunnerId="JavascriptDebugRunner" />
+    <ConfigurationWrapper RunnerId="JavascriptDebugRunner" />
+    <method />
+  </configuration>
+</component>
