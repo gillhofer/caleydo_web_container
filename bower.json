@@ -1,0 +1,11 @@
+{
+  "name": "caleydo-web",
+  "version": "0.0.0",
+  "dependencies": {
+    "jquery": "~1.10.2",
+    "bootstrap-sass": "~2.3.1",
+    "es5-shim": "~2.0.8"
+  },
+  "devDependencies": {
+  }
+}
