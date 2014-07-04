@@ -27,3 +27,4 @@ node_modules
 /.tmp
 /dist
 /static/bower_components
+/.idea/workspace.xml
