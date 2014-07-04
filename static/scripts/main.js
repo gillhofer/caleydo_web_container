@@ -1,4 +1,4 @@
-/*global $, document, d3 */
+/*global $, d3 */
 $(function () {
   'use strict';
   d3.json('api/dataset', function (data) {

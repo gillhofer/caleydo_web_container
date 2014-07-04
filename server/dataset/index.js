@@ -1,10 +1,10 @@
 /*global require, module, console*/
 'use strict';
 // external libraries
-var csv = require("fast-csv");
+var csv = require('fast-csv');
 
 // global variables
-var datasetBasePath = "./data/";
+var datasetBasePath = './data/';
 var datasetIndex = [];
 
 var datasetRouter = require('express').Router();
@@ -15,10 +15,10 @@ datasetRouter.param('dataset_id', function (req, res, next, id) {
     console.log(datasetBasePath + datasetIndex[id].path);
     csv
       .fromPath(datasetBasePath + datasetIndex[id].path)
-      .on("record", function (data) {
+      .on('record', function (data) {
         req.dataset.push(data);
       })
-      .on("end", function () {
+      .on('end', function () {
         console.log(req.dataset);
         console.log('Successfully parsed dataset ' + datasetIndex[id].name + ' from ' + (datasetBasePath + datasetIndex[id].path) + '!');
         next();
@@ -67,7 +67,7 @@ datasetRouter.route('/')
     // think of it as route specific middleware!
     next();
   })
-  .get(function (req, res, next) {
+  .get(function (req, res) {
     res.json(datasetIndex);
   });
 
@@ -75,7 +75,7 @@ var indexDatasets = function (indexFile) {
   var i;
   // expects an array of {name: <dataset name>, path: <relative path to datafile>} pairs
   //since the server is in a sub directory
-  datasetIndex = require("../../" + indexFile);
+  datasetIndex = require('../../' + indexFile);
 
   for (i = 0; i < datasetIndex.length; ++i) {
     datasetIndex[i].id = i;
