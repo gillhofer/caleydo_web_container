@@ -1,6 +1,71 @@
 [
-  { "name": "Test 10x10", "path": "test_10x10.csv", "rowtype":"patient", "coltype":"gene"},
-  { "name": "Test 100x10", "path": "test_100x10.csv", "rowtype":"patient", "coltype":"gene"},
-  { "name": "Test 10x100", "path": "test_10x100.csv", "rowtype":"patient", "coltype":"gene"},
-  { "name": "Test Heterogenous 10x4", "path": "test_h10x4.csv", "rowtype":"patient", "coltypes":["Gender", "Age","Value"]}
+  {
+    "name": "Test 10x10",
+    "path": "test_10x10.csv",
+    "type": "matrix",
+    "size": [10, 10],
+    "rowtype": "patient",
+    "coltype": "gene",
+    "value": {
+      "type": "real",
+      "range": [0, 1]
+    }
+  },
+  {
+    "name": "Test 100x10",
+    "path": "test_100x10.csv",
+    "size": [100, 10],
+    "type": "matrix",
+    "rowtype": "patient",
+    "coltype": "gene",
+    "value": {
+      "type": "real",
+      "range": [0, 1]
+    }
+  },
+  {
+    "name": "Test 10x100",
+    "path": "test_10x100.csv",
+    "size": [10, 100],
+    "type": "matrix",
+    "rowtype": "patient",
+    "coltype": "gene",
+    "value": {
+      "type": "real",
+      "range": [0, 1]
+    }
+  },
+  {
+    "name": "Test Heterogenous 10x4",
+    "path": "test_h10x4.csv",
+    "size": [10, 4],
+    "type": "table",
+    "rowtype": "patient",
+    "columns": [
+      {
+        "name": "Gender",
+        "type": "categorical",
+        "categories": [
+          {
+            "name": "male",
+            "color": "blue"
+          },
+          {
+            "name": "female",
+            "color": "red"
+          }
+        ]
+      },
+      {
+        "name": "Age",
+        "type": "int",
+        "range": [0,100]
+      },
+      {
+        "name": "Value",
+        "type": "real",
+        "range": [0,1]
+      }
+    ]
+  }
 ]
