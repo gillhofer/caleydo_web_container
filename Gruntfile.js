@@ -364,8 +364,7 @@ module.exports = function (grunt) {
         options: {
           hostname: 'localhost',
           port: 9002,
-          server: require('path').resolve('./server/index'),
-          'debug-brk': 5858
+          server: require('path').resolve('./server/index')
         }
       },
       debug: {
