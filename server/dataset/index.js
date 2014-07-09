@@ -1,28 +1,18 @@
 /*global require, module, console*/
 'use strict';
-// external libraries
-var csv = require('fast-csv');
 
 // global variables
-var datasetBasePath = './data/';
 var datasetIndex = [];
-
 var datasetRouter = require('express').Router();
 
 datasetRouter.param('dataset_id', function (req, res, next, id) {
-  if (datasetIndex[id]) {
+  var desc = datasetIndex[id];
+  if (desc) {
     req.dataset = [];
-    console.log(datasetBasePath + datasetIndex[id].path);
-    csv
-      .fromPath(datasetBasePath + datasetIndex[id].path)
-      .on('record', function (data) {
-        req.dataset.push(data);
-      })
-      .on('end', function () {
-        console.log(req.dataset);
-        console.log('Successfully parsed dataset ' + datasetIndex[id].name + ' from ' + (datasetBasePath + datasetIndex[id].path) + '!');
-        next();
-      });
+    desc.load(function (data) {
+      req.dataset = data;
+      next();
+    });
   } else {
     return next(new Error('Unknown dataset id "' + id + '".'));
   }
@@ -71,20 +61,22 @@ datasetRouter.route('/')
     res.json(datasetIndex);
   });
 
-var indexDatasets = function (indexFile) {
-  var i;
-  // expects an array of {name: <dataset name>, path: <relative path to datafile>} pairs
-  //since the server is in a sub directory
-  datasetIndex = require('../../' + indexFile);
 
-  for (i = 0; i < datasetIndex.length; ++i) {
-    datasetIndex[i].id = i;
+// Load `*.js` under current directory in a module list
+require('fs').readdirSync(__dirname + '/').forEach(function (file) {
+  var module;
+  if (file.match(/.+\.js/g) !== null && file !== 'index.js') {
+    //var name = file.replace('.js', '');
+    //load module and list all files
+    module = require('./' + file);
+    module.list().forEach(function (desc) {
+      desc.load = function (callback) { //loader helper
+        return module.load(desc, callback);
+      };
+      desc.id = datasetIndex.length; //assign unique id
+      datasetIndex.push(desc);
+    });
   }
-
-  console.log(datasetIndex);
-};
-
-indexDatasets(datasetBasePath + 'dataset_index.json');
-console.log('Indexed datasets from ' + datasetBasePath + 'dataset_index.json');
+});
 
 module.exports = datasetRouter;
