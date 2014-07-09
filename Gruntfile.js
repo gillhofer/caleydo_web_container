@@ -372,7 +372,8 @@ module.exports = function (grunt) {
           hostname: 'localhost',
           port: 9002,
           server: require('path').resolve('./server/index'),
-          'debug-brk': 5858
+          'debug-brk': 5858,
+          showStack : true
         }
       }
     }
