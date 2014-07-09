@@ -1,6 +1,32 @@
 /*global $, d3 */
 $(function () {
   'use strict';
+
+  var loadFile = function (desc, file) {
+    var headers = file[0];
+    var $base = d3.select("#file");
+    $base.select("caption").text(desc.name);
+    var $headers = $base.select("thead tr").selectAll("th").data(headers);
+    $headers.enter()
+      .append("th");
+    $headers.text(function (d) {
+      return d;
+    });
+    $headers.exit().remove();
+
+    var $rows = $base.select("tbody").selectAll("tr").data(file.slice(1));
+    $rows.enter().append("tr");
+    $rows.each(function (row) {
+      var $row = d3.select(this).selectAll("td").data(row);
+      $row.enter().append("td");
+      $row.text(function (d) {
+        return d;
+      });
+      $row.exit().remove();
+    });
+    $rows.exit().remove();
+  };
+
   d3.json('api/dataset', function (data) {
     var $data = d3.select('#datasets').selectAll('li').data(data);
     $data.enter()
@@ -11,7 +37,7 @@ $(function () {
           .attr('href', '#')
           .on('click', function (d) {
             d3.json('api/dataset/'  + d.id, function (file) {
-              console.log(file);
+              loadFile(d, file);
             });
           });
         var d2 = d3.select(this).append('table').selectAll('tr').data(d3.entries(d));
