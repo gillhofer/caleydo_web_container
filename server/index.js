@@ -22,6 +22,7 @@ var main = function () {
   });
 };
 
+//is is the main module similar to python __main__
 if (require.main === module) {
   main();
 }

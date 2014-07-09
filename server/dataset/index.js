@@ -3,9 +3,9 @@
 
 // global variables
 var datasetIndex = [];
-var datasetRouter = require('express').Router();
+module.exports = require('express').Router();
 
-datasetRouter.param('dataset_id', function (req, res, next, id) {
+module.exports.param('dataset_id', function (req, res, next, id) {
   var desc = datasetIndex[id];
   if (desc) {
     req.dataset = [];
@@ -18,7 +18,7 @@ datasetRouter.param('dataset_id', function (req, res, next, id) {
   }
 });
 
-datasetRouter.route('/:dataset_id')
+module.exports.route('/:dataset_id')
   .all(function (req, res, next) {
     // runs for all HTTP verbs first
     console.log(req.originalUrl);
@@ -50,7 +50,7 @@ datasetRouter.route('/:dataset_id')
     }
   });
 
-datasetRouter.route('/')
+module.exports.route('/')
   .all(function (req, res, next) {
     console.log(req.originalUrl);
     // runs for all HTTP verbs first
@@ -78,5 +78,3 @@ require('fs').readdirSync(__dirname + '/').forEach(function (file) {
     });
   }
 });
-
-module.exports = datasetRouter;
