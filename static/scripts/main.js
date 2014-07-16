@@ -47,7 +47,9 @@ $(function () {
     $rows.enter().append("g");
     $rows.each(function (row, i) {
       var $cols = d3.select(this).selectAll("rect").data(row);
-      $cols.enter().append("rect");
+      $cols.enter().append("rect").append("title").text(function(d) {
+          return d;
+      });
       $cols.attr({
         fill: function (d) {
           return c(d);
