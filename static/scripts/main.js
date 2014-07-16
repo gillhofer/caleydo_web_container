@@ -11,28 +11,35 @@ $(function () {
     d3.select("#fileheatmap").style("display", "none");
 
     var headers = file.cols;
-
-    $base.select("caption").text(desc.name);
-    var $headers = $base.select("thead tr").selectAll("th").data(headers);
-    $headers.enter()
-      .append("th");
+    var $headers = $base.select("thead tr").selectAll("th").data(["ID"].concat(headers));
+    $headers.enter().append("th");
     $headers.text(identity);
     $headers.exit().remove();
 
     var $rows = $base.select("tbody").selectAll("tr").data(file.data);
     $rows.enter().append("tr");
-    $rows.each(function (row) {
+    $rows.each(function (row, i) {
+      var $header = d3.select(this).selectAll("th").data(file.rows.slice(i, i+1));
+      $header.enter().append("th");
+      $header.text(identity);
+      $header.exit().remove();
       var $row = d3.select(this).selectAll("td").data(row);
       $row.enter().append("td");
       $row.text(identity);
       $row.exit().remove();
     });
     $rows.exit().remove();
+
+    $($base.node()).dialog({ title: desc.name, width: "auto", height: "auto"});
   }
 
   function loadHeatMap(desc, file) {
     var $svg = d3.select("#fileheatmap").style("display", null);
     d3.select("#filetable").style("display", "none");
+    $svg.attr({
+      width: file.cols.length * 20 + "px",
+      height: file.rows.length * 20 + "px"
+    });
     var colScale = d3.scale.linear().domain([0, file.cols.length]).range([0, 100]);
     var rowScale = d3.scale.linear().domain([0, file.rows.length]).range([0, 100]);
     var c = d3.scale.linear().domain([0, 1]).range(["black", "white"]);
@@ -55,6 +62,8 @@ $(function () {
       $cols.exit().remove();
     });
     $rows.exit().remove();
+
+    $($svg.node()).dialog({ title: desc.name, width: "auto", height: "auto"});
   }
 
   d3.json('api/dataset', function (data) {
