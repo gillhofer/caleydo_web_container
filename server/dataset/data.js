@@ -7,6 +7,8 @@
 var csv = require('fast-csv');
 var fs = require('fs');
 
+var matrix = require('../matrix');
+
 var datasetBasePath = './data/';
 
 //list function returns the description objects of all known datasets
@@ -16,6 +18,18 @@ exports.list = function () {
   var datasetIndex = JSON.parse(fs.readFileSync(datasetBasePath + 'dataset_index.json'));
   return datasetIndex;
 };
+
+function convertData(data) {
+  return matrix.create({
+    cols: data[0].slice(1),
+    rows: data.slice(1).map(function (row) {
+      return row[0];
+    }),
+    data: data.slice(1).map(function (row) {
+      return row.slice(1);
+    })
+  });
+}
 
 //load a specific dataset
 exports.load = function (desc, callback) {
@@ -28,6 +42,6 @@ exports.load = function (desc, callback) {
     .on('end', function () {
       console.log(dataset);
       console.log('Successfully parsed dataset ' + desc.name + ' from ' + (datasetBasePath + desc.path) + '!');
-      callback(dataset);
+      callback(convertData(dataset));
     });
 };

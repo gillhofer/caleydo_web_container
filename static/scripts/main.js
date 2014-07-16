@@ -2,26 +2,26 @@
 $(function () {
   'use strict';
 
+  function identity(arg) {
+    return arg;
+  }
+
   var loadFile = function (desc, file) {
-    var headers = file[0];
+    var headers = file.cols;
     var $base = d3.select("#file");
     $base.select("caption").text(desc.name);
     var $headers = $base.select("thead tr").selectAll("th").data(headers);
     $headers.enter()
       .append("th");
-    $headers.text(function (d) {
-      return d;
-    });
+    $headers.text(identity);
     $headers.exit().remove();
 
-    var $rows = $base.select("tbody").selectAll("tr").data(file.slice(1));
+    var $rows = $base.select("tbody").selectAll("tr").data(file.data);
     $rows.enter().append("tr");
     $rows.each(function (row) {
       var $row = d3.select(this).selectAll("td").data(row);
       $row.enter().append("td");
-      $row.text(function (d) {
-        return d;
-      });
+      $row.text(identity);
       $row.exit().remove();
     });
     $rows.exit().remove();

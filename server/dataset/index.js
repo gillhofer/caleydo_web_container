@@ -26,12 +26,12 @@ module.exports.route('/:dataset_id')
   })
   .get(function (req, res, next) {
     // validate query
-    if (req.query.start < 0 || req.query.start >= req.dataset.length) {
-      next(new Error('"start" has to be larger than 0 and smaller than ' + req.dataset.length + '.'));
+    if (req.query.start < 0 || req.query.start >= req.dataset.nrow) {
+      next(new Error('"start" has to be larger than 0 and smaller than ' + req.dataset.nrow + '.'));
     }
 
-    if (req.query.end < 0 || req.query.end >= req.dataset.length) {
-      next(new Error('"end" has to be larger than 0 and smaller than ' + req.dataset.length + '.'));
+    if (req.query.end < 0 || req.query.end >= req.dataset.nrow) {
+      next(new Error('"end" has to be larger than 0 and smaller than ' + req.dataset.nrow + '.'));
     }
 
     if (req.query.start > req.query.end) {
@@ -40,11 +40,11 @@ module.exports.route('/:dataset_id')
 
     // apply query
     if (req.query.start && req.query.end) {
-      res.json(req.dataset.slice(req.query.start, req.query.end));
+      res.json(req.dataset.rslice(req.query.start, req.query.end));
     } else if (req.query.start && !req.query.end) {
-      res.json(req.dataset.slice(req.query.start));
+      res.json(req.dataset.rslice(req.query.start));
     } else if (!req.query.start && req.query.end) {
-      res.json(req.dataset.slice(0, req.query.end));
+      res.json(req.dataset.rslice(0, req.query.end));
     } else {
       res.json(req.dataset);
     }
