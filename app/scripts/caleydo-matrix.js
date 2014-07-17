@@ -67,6 +67,7 @@ define(['caleydo', 'caleydo-range', 'caleydo-idtypes', 'caleydo-events'], functi
 
   /**
    * loads all the underlying data in json format
+   * TODO: load just needed data and not everything given by the requested range
    * @returns {*}
    */
   Matrix.prototype.load = function() {
@@ -95,7 +96,7 @@ define(['caleydo', 'caleydo-range', 'caleydo-idtypes', 'caleydo-events'], functi
     range = range || range.all();
     var that = this;
     return this.load().then(function(data) {
-      return range.filter(data.data, that.size());
+      return range(data.data, that.size());
     });
   };
   /**
@@ -125,7 +126,7 @@ define(['caleydo', 'caleydo-range', 'caleydo-idtypes', 'caleydo-events'], functi
   };
 
   /**
-   * view on the underlying matrix as the transposed version
+   * view on the underlying matrix as transposed version
    * @param base
    * @constructor
    */
@@ -151,6 +152,13 @@ define(['caleydo', 'caleydo-range', 'caleydo-idtypes', 'caleydo-events'], functi
     return this.t.data(range ? range.swap(): undefined);
   };
 
+  /**
+   * view on the matrix restricted by a range
+   * @param root underlying matrix
+   * @param range range selection
+   * @param t optional its transposed version
+   * @constructor
+   */
   function MatrixView(root, range, t) {
     MatrixBase.call(this, root);
     this.range = range;
@@ -167,7 +175,7 @@ define(['caleydo', 'caleydo-range', 'caleydo-idtypes', 'caleydo-events'], functi
     return this.range.size(this.size());
   };
   MatrixView.prototype.at = function(i, j) {
-    return this.root.at(this.range.transform([i,j],this.root.size()));
+    return this.root.at(this.range.invert([i,j],this.root.size()));
   };
   MatrixView.prototype.data = function(range) {
     return this.root.data(range.times(this.range, this.root.size()));
