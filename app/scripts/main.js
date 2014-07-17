@@ -18,11 +18,11 @@ require([
     console.log(C.version);
     //console.log('Running jQuery ', $().jquery);
     data.list().then(function(descs) {
-      console.log(JSON.stringify(descs));
+      console.log(JSON.stringify(Object.keys(descs)));
     });
     data.get('test')
       .then(function (matrix) {
-        return matrix.at(1, 1)
+        return matrix.rows();
       })
       .then(function (v) {
         console.log(v);

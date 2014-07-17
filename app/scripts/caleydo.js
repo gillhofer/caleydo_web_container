@@ -8,7 +8,7 @@ define(['jquery'], function ($) {
     version: '0.0.1-alpha',
 
     promised: function promised(resolver) {
-      var d = $.Deferred;
+      var d = $.Deferred();
       resolver(function(r) {
         d.resolve(r);
       }, function(r) {
@@ -17,9 +17,7 @@ define(['jquery'], function ($) {
       return d.promise();
     },
     resolved : function resolved(result) {
-      return this.promised(function(resolve) {
-        resolve(result);
-      });
+      return $.Deferred().resolve(result).promise();
     },
 
     getJSON : $.getJSON,
@@ -33,10 +31,25 @@ define(['jquery'], function ($) {
     isEmptyObject: $.isEmptyObject,
     isPlainObject: $.isPlainObject,
 
+    /**
+     * identity function
+     */
     identity: function (d) {
       return d;
     },
+    /**
+     * no operation function
+     */
     noop: function () {
+    },
+
+    /**
+     * just returns the arugment in any case
+     * @param r
+     * @returns {*}
+     */
+    constant: function(r) {
+      return function() { return r};
     }
   };
 });
