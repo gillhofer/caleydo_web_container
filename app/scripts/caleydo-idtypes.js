@@ -3,6 +3,7 @@
  */
 /*global define */
 define(['caleydo'], function (C) {
+  'use strict';
   var cache = {};
   return {
     resolve : function(name) {

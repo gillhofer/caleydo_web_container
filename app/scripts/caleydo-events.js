@@ -3,6 +3,7 @@
  */
 /*global define */
 define(['jquery'], function ($) {
+  'use strict';
   function createEventClass() {
     var $obj = $({});
     var r = function EventListener() {

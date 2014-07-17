@@ -1,9 +1,8 @@
-[
-  {
-    "id": "test",
+{
+  "test": {
     "name": "Test 10x10",
     "path": "test_10x10.csv",
-    "uri" : "data/test_10x10.json",
+    "uri": "data/test_10x10.json",
     "type": "matrix",
     "size": [10, 10],
     "rowtype": "patient",
@@ -13,4 +12,4 @@
       "range": [0, 1]
     }
   }
-]
+}

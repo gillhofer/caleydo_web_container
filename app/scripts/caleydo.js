@@ -9,7 +9,7 @@ define(['jquery'], function ($) {
 
     promised: function promised(resolver) {
       var d = $.Deferred;
-      resolver.call(this, function(r) {
+      resolver(function(r) {
         d.resolve(r);
       }, function(r) {
         d.reject(r);

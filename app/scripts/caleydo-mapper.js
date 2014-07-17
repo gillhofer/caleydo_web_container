@@ -3,6 +3,8 @@
  */
 /*global define */
 define(['caleydo'], function (C) {
+  'use strict';
+
   return {
 
   };

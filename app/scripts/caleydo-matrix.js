@@ -3,6 +3,7 @@
  */
 /*global define */
 define(['caleydo', 'caleydo-range', 'caleydo-idtypes'], function (C, range, idtypes) {
+  'use strict';
   function Matrix(desc) {
     this.desc = desc;
     this.size = desc.size;
@@ -10,36 +11,33 @@ define(['caleydo', 'caleydo-range', 'caleydo-idtypes'], function (C, range, idty
     this.rowtype = idtypes.resolve(desc.rowtype);
     this.coltype = idtypes.resolve(desc.coltype);
   }
-  Matrix.prototype.load = function(resolve, reject) {
+  Matrix.prototype.load = function() {
     var that = this;
     if (this.data) {
-      resolve(this.data);
-    } else {
-      C.getJSON(this.desc.uri).then(function(data) {
-        that.data;
-        resolve(data);
-      }, function(error) {
-        reject(error);
-      });
+      return C.resolved(this.data);
     }
+    return C.getJSON(this.desc.uri).then(function(data) {
+        that.data;
+        return data;
+    });
   };
   Matrix.prototype.at = function(i,j) {
-    return C.promised(this.load).then(function(d) {
+    return this.load().then(function(d) {
       return d.data[i][j];
     });
   };
   Matrix.prototype.map = function(f) {
-    return C.promised(this.load).then(function(d) {
+    return this.load().then(function(d) {
       return d.data[i][j];
     });
   };
   Matrix.prototype.cols = function() {
-    return C.promised(this.load).then(function(d) {
+    return this.load().then(function(d) {
       return d.cols;
     });
   };
   Matrix.prototype.rows = function() {
-    return C.promised(this.load).then(function(d) {
+    return this.load().then(function(d) {
       return d.rows;
     });
   };
