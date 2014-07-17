@@ -2,11 +2,12 @@
  * Created by Samuel Gratzl on 17.07.2014.
  */
 /*global define */
-define(['caleydo', 'caleydo-range', 'caleydo-idtypes'], function (C, range, idtypes) {
+define(['caleydo', 'caleydo-range', 'caleydo-idtypes', 'caleydo-events'], function (C, range, idtypes, events) {
   'use strict';
   function MatrixBase() {
-
+    events.EventHandler.call(this);
   }
+  MatrixBase.prototype = new events.EventHandler;
   Object.defineProperties(MatrixBase.prototype, {
     /**
      * returns the length = rows * cols
@@ -45,9 +46,13 @@ define(['caleydo', 'caleydo-range', 'caleydo-idtypes'], function (C, range, idty
       }
     }
   });
+  MatrixBase.prototype.view = function(range) {
+    return new MatrixView(this.root, range.times(this.range, this.dim));
+  }
 
   function Matrix(desc) {
-    MatrixBase.call(this);
+    MatrixBase.call(this, range.all());
+    this.root = this;
     this.desc = desc;
     this.valuetype = desc.valuetype;
     this.rowtype = idtypes.resolve(desc.rowtype);
@@ -67,6 +72,7 @@ define(['caleydo', 'caleydo-range', 'caleydo-idtypes'], function (C, range, idty
     }
     return C.getJSON(this.desc.uri).then(function(data) {
         that.data; //store cache
+        that.fire("loaded", this);
         return data;
     });
   };
@@ -103,8 +109,14 @@ define(['caleydo', 'caleydo-range', 'caleydo-idtypes'], function (C, range, idty
     return this.desc.size;
   };
 
+  /**
+   * view on the underlying matrix as the transposed version
+   * @param base
+   * @constructor
+   */
   function TransposedMatrix(base) {
     MatrixBase.call(this);
+    this.root = this;
     this.t = base;
   }
   TransposedMatrix.prototype = new MatrixBase;
