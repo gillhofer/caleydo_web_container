@@ -38,6 +38,18 @@ define([], function () {
       get: function () {
         return this.step < 0;
       }
+    },
+    byOne: {
+      enumerable: true,
+      get: function () {
+        return this.step === 1;
+      }
+    },
+    byMinusOne: {
+      enumerable: true,
+      get: function () {
+        return this.step === -1;
+      }
     }
   });
 
