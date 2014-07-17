@@ -10,19 +10,35 @@ define(['caleydo','caleydo-iterator'], function (C, Iterator) {
     this._step = 1;
   }
   Object.defineProperties(RangeDim.prototype, {
-    isAll : function() {
-      return this._from === 0 && this._to === -1 && this._step === 1;
+    /**
+     * checks if this range is all
+     * @returns {boolean}
+     */
+    isAll: {
+      enumerable: true,
+      get: function () {
+        return this._from === 0 && this._to === -1 && this._step === 1;
+      }
     }
   });
   RangeDim.prototype.from = function(val) {
+    if (arguments.length < 1) {
+      return this._from;
+    }
     this._from = val;
     return this;
   };
   RangeDim.prototype.to = function(val) {
+    if (arguments.length < 1) {
+      return this._to;
+    }
     this._to = val;
     return this;
   };
   RangeDim.prototype.step = function(step) {
+    if (arguments.length < 1) {
+      return this._step;
+    }
     this._step = step;
     return this;
   };
@@ -32,34 +48,94 @@ define(['caleydo','caleydo-iterator'], function (C, Iterator) {
     this._step = C.isUndefined(step) ? this._step : step;
     return this;
   };
+  RangeDim.prototype.times = function(other) {
+    if (this.isAll) {
+      return other.clone();
+    }
+    if (other.isAll) {
+      return this.clone();
+    }
+    return this.clone(); //FIXME
+  };
+  RangeDim.prototype.clone = function() {
+    return new RangeDim().slice(this._from, this._to, this._step);
+  };
+  /**
+   * inverts the given index to the original range
+   * @param index
+   * @param size the underlying size for negative indices
+   * @returns {*}
+   */
   RangeDim.prototype.invert = function(index, size) {
     if (this.isAll) {
       return index;
     }
     var r = this.iter(size);
+    return r.from + index * r.step;
   };
   RangeDim.prototype.filter = function(data, size) {
     if (this.isAll) {
       return data;
     }
-    var r = this.iter(size);
+    var it = this.iter(size);
+    if (it.byOne) {
+      return data.slice(it.from, it.to);
+    //} else if (it.byMinusOne) {
+    //  var d = data.slice();
+    //  d.reverse();
+    //  return d;
+    } else {
+      var r = [];
+      while(it.hasNext()) {
+        r.push(data[it.next()]);
+      }
+      return r;
+    }
   };
   /**
    * creates an iterator of this range
-   * @param size
+   * @param size the underlying size for negative indices
    */
   RangeDim.prototype.iter = function(size) {
     var f = function(v) {
       return v < 0 ? (size + 1 - v) : v;
-    }
+    };
     return new Iterator(f(this._from), f(this._to), this._step);
+  };
+  RangeDim.prototype.toString = function() {
+    var r = this._from  + ':' + this._to;
+    if (this._step !== 1) {
+      r += ':' + this._step;
+    }
+    return r;
   };
 
 
   function createRange() {
+    var dims = [];
     var r = function Range() {
       return this.filter.apply(this, Array.prototype.slice(arguments));
     };
+    Object.defineProperties(RangeDim.prototype, {
+      /**
+       * checks if this range is all
+       * @returns {boolean}
+       */
+      isAll: {
+        enumerable: true,
+        get: function () {
+          return dims.every(function(dim) {
+            return dim.isAll;
+          });
+        }
+      },
+      dims: {
+        enumerable: true,
+        get: function () {
+          return dims;
+        }
+      }
+    });
 
 
     /**
@@ -72,21 +148,32 @@ define(['caleydo','caleydo-iterator'], function (C, Iterator) {
       if (other.isAll) {
         return this.clone();
       }
-      return this.clone(); //FIXME
+      var r = createRange();
+      this.dims.forEach(function (d,i) {
+        r.dims[i] = d.times(other.dims[i]);
+      });
+      return r;
     };
     /**
      * clones this range
      * @returns {*}
      */
     r.clone = function() {
-      return createRange().slice(that.from, that.to, that.step);
+      var r = createRange();
+      this.dims.forEach(function (d,i) {
+        r.dims[i] = d.clone();
+      });
+      return r;
     };
     /**
      * create a new range and reverse the dimensions
      */
     r.swap = function() {
-      //FIXME
-      return createRange();
+      var r = createRange();
+      this.dims.forEach(function (d,i) {
+        r.dims[this.dims.length - 1 - i] = d.clone();
+      });
+      return r;
     };
     /**
      * filter the given multi dimensional data according to the current range
@@ -107,7 +194,12 @@ define(['caleydo','caleydo-iterator'], function (C, Iterator) {
      * @returns {r}
      */
     r.dim = function(dimension) {
-      return this; //FIXME
+      var r = this.dims[dimension];
+      if (r) {
+        return r;
+      }
+      this.dims[dimension] = new RangeDim();
+      return this.dims[dimension];
     }
     /**
      * transforms the given multi dimensional indices to their parent notation
@@ -118,8 +210,10 @@ define(['caleydo','caleydo-iterator'], function (C, Iterator) {
       if (this.isAll) {
         return indices;
       }
-      //FIXME
-      return indices;
+      var that = this;
+      return indices.map(function(index, i) {
+        return this.dim(i).invert(index, size[i]);
+      })
     };
     /**
      * returns the range size
@@ -127,6 +221,7 @@ define(['caleydo','caleydo-iterator'], function (C, Iterator) {
      * @returns {*}
      */
     r.size = function(size) {
+      //FIXME
       return size;
     }
 
@@ -134,7 +229,7 @@ define(['caleydo','caleydo-iterator'], function (C, Iterator) {
      * encoded the given range in a string
      */
     r.toString = function() {
-      return "";
+      return this.dims.map(function(d) { return d.toString(); }).join(',');
     }
 
     return r;
@@ -148,22 +243,6 @@ define(['caleydo','caleydo-iterator'], function (C, Iterator) {
       return createRange();
     },
     /**
-     * creates a new range starting at from
-     * @param val
-     * @returns {*}
-     */
-    from : function(val) {
-      return all().from(val);
-    },
-    /**
-     * creates a new range of the given slice
-     * @param val
-     * @returns {*}
-     */
-    slice : function(from, to) {
-      return all().slice(from, to);
-    },
-    /**
      * test if the given object is a range
      */
     is : function(obj) {
@@ -171,7 +250,7 @@ define(['caleydo','caleydo-iterator'], function (C, Iterator) {
     },
 
     parse : function(encoded) {
-      return create(); //FIXME
+      return createRange(); //FIXME
     }
   };
 });

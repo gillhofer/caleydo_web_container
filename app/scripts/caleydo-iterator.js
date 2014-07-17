@@ -13,7 +13,7 @@ define([], function () {
   }
   Iterator.prototype.hasNext = function() {
     return this.act !== this.to;
-  }
+  };
   Iterator.prototype.next = function() {
     if (!this.hasNext()) {
       throw "end";
@@ -26,7 +26,7 @@ define([], function () {
       this.act = this.to;
     }
     return r;
-  }
+  };
   Object.defineProperties(Iterator.prototype, {
     isIncreasing: {
       enumerable: true,
