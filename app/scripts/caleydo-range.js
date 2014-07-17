@@ -31,6 +31,9 @@ define(['caleydo'], function (C) {
       that.step = C.isUndefined(step) ? that.step : step;
       return this;
     };
+    /**
+     * combines this range with another one
+     */
     r.times = function(other, dim) {
       if (this.isAll) {
         return other.clone();
@@ -40,8 +43,27 @@ define(['caleydo'], function (C) {
       }
       return this.clone(); //FIXME
     };
+    /**
+     * clones this range
+     * @returns {*}
+     */
     r.clone = function() {
       return create().slice(that.from, that.to, that.step);
+    };
+    /**
+     * create a new range and reverse the dimensions
+     */
+    r.swap = function() {
+      return create();
+    };
+    r.filter = function(data, size) {
+      return data;
+    };
+    r.dim = function(dimension) {
+      return this; //FIXME
+    }
+    r.transform = function(indices, size) {
+
     };
     Object.defineProperties(r, {
       isAll : function() {
