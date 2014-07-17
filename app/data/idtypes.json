@@ -1,0 +1,10 @@
+{
+  "patient" : {
+    "label" : "Patient",
+    "labels" : "Patients"
+  },
+  "gene" : {
+    "label" : "Gene",
+    "labels" : "Genes"
+  }
+}
