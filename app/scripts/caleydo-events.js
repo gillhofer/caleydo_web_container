@@ -4,17 +4,15 @@
 /*global define */
 define(['jquery'], function ($) {
   'use strict';
-  function createEventClass() {
+  function EventHandler() {
     var $obj = $({});
-    var r = function EventListener() {
 
-    }
     /**
      * register a global event handler
      * @param events
      * @param handler
      */
-    r.on = function (events, handler) {
+    this.on = function (events, handler) {
       $obj.on(events, handler);
     };
     /**
@@ -22,7 +20,7 @@ define(['jquery'], function ($) {
      * @param events
      * @param handler
      */
-    r.off = function (events, handler) {
+    this.off = function (events, handler) {
       $obj.off(events, handler);
     };
     /**
@@ -30,13 +28,11 @@ define(['jquery'], function ($) {
      * @param event
      * @param extraArguments
      */
-    r.fire = function (event, extraArguments) {
-      $obj.trigger.apply($obj, event, extraArguments);
+    this.fire = function (event, extraArguments) {
+      $obj.trigger(event, extraArguments);
     }
-    return r;
   }
-
-  var ex = createEventClass();
-  ex.createEventClass = createEventClass();
+  var ex = new EventHandler();
+  ex.EventHandler = EventHandler;
   return ex;
 });
