@@ -1,17 +1,19 @@
 /*global require */
 require.config({
-    paths: {
-        jquery: '../bower_components/jquery/jquery'
-    }
+  paths: {
+    jquery: '../bower_components/jquery/jquery'
+  }
 });
 
 require([
-        'app',
-        'jquery'
-    ], function (app, $) {
-        'use strict';
-        // use app here
-        console.log(app);
-        console.log('Running jQuery %s', $().jquery);
-    }
+    'app',
+    'jquery',
+    'caleydo'
+  ], function (app, $, C) {
+    'use strict';
+    // use app here
+    console.log(app);
+    console.log(C.version);
+    console.log('Running jQuery %s', $().jquery);
+  }
 );
