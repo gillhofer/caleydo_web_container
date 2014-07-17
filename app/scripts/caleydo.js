@@ -21,8 +21,8 @@ define(['jquery'], function ($) {
     },
 
     getJSON : $.getJSON,
-    extend : function(a,b) {
-      return $.extend({},a,b);
+    mixin : function(a,b) {
+      return $.extend(a,a,b);
     },
 
     //wrap function wrap jquery which may be overwritten replaced sometimes
@@ -50,6 +50,28 @@ define(['jquery'], function ($) {
      */
     constant: function(r) {
       return function() { return r};
+    },
+
+    /**
+     * copies a plain object into a function and call a specific method onto direct call
+     * @param obj
+     * @param f
+     */
+    callable: function (obj, f) {
+      //assert this.isPlainObject(obj);
+      function CallAbleFactory() {
+        var that;
+
+        function CallAble() {
+          that[f].apply(that, Array.prototype.slice(arguments));
+        }
+
+        that = CallAble;
+        C.mixin(CallAble, obj);
+        return CallAble;
+      }
+
+      return CallAbleFactory;
     }
   };
 });

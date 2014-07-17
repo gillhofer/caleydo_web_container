@@ -22,6 +22,10 @@ require([
     });
     data.get('test')
       .then(function (matrix) {
+        matrix(1,2,3);
+        matrix.on("loaded", function() {
+          console.log("loaded");
+        });
         return matrix.rows();
       })
       .then(function (v) {
