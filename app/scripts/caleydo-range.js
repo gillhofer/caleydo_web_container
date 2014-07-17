@@ -5,25 +5,49 @@
 define(['caleydo'], function (C) {
   'use strict';
   function create() {
-    var from = 0, to = -1, step = -1;
-    var r = function() {
+    var that = {
+      from : 0,
+      to : -1,
+      step : 1
+    };
+    var r = function Range() {
       //TODO apply
     };
     r.from = function(val) {
-      from = val;
+      that.from = val;
       return this;
     };
     r.to = function(val) {
-      to = val;
+      that.to = val;
       return this;
     };
     r.step = function(step) {
-      step = step;
+      that.step = step;
       return this;
     };
-    r.slice = function(from, to) {
-      return this.from(from).to(to);
+    r.slice = function(from, to, step) {
+      that.from = C.isUndefined(from) ? 0 : from;
+      that.to = C.isUndefined(to) ? -1 : to;
+      that.step = C.isUndefined(step) ? that.step : step;
+      return this;
     };
+    r.times = function(other, dim) {
+      if (this.isAll) {
+        return other.clone();
+      }
+      if (other.isAll) {
+        return this.clone();
+      }
+      return this.clone(); //FIXME
+    };
+    r.clone = function() {
+      return create().slice(that.from, that.to, that.step);
+    };
+    Object.defineProperties(r, {
+      isAll : function() {
+        return that.from === 0 && that.to === -1 && that.step === 1;
+      }
+    });
 
     return r;
   }
