@@ -11,7 +11,8 @@ require.config({
 
 require([
  'test-caleydo',
-  'test-caleydo-events'
+  'test-caleydo-events',
+  'test-caleydo-iterator'
 ], function () {
   'use strict';
   mocha.run();
