@@ -11,20 +11,54 @@ define(['../scripts/caleydo'], function (C) {
       expect(C.version).to.equal('0.0.1-alpha');
     });
 
-    it('promised', function () {
+    it('promised', function (done) {
+      expect(C.promised(function() {})).to.respondTo('then');
 
+      C.promised(function(resolved) {
+        resolved('a');
+      }).then(function(param) {
+        expect(param).to.be.equal('a');
+        done();
+      });
+      C.promised(function(resolved, reject) {
+        reject('a');
+      }).then(function(param) {
+        expect(null).to.be.not.null;
+        done();
+      }, function(error) {
+        expect(error).to.be.equal('a');
+        done();
+      });
     });
 
     it('resolved', function () {
+      expect(C.resolved('a').to.respondTo('then');
 
+      C.resolved('a').then(function(param) {
+        expect(param).to.be.equal('a');
+        done();
+      },function() {
+        expect(null).to.be.not.null;
+        done();
+      });
     });
 
     it('mixin', function () {
-
+      expect(C.mixin({},{})).to.be.empty;
+      expect(C.mixin({a:3},{})).to.deep.equal({ a: 3});
+      expect(C.mixin({},{a:3})).to.deep.equal({ a: 3});
+      expect(C.mixin({a:4},{a:3})).to.deep.equal({ a: 3});
+      expect(C.mixin({a:4},{b:3})).to.deep.equal({ a: 4, b:3});
     });
 
-    it('getJSON', function () {
-
+    it('getJSON', function (done) {
+      C.getJSON('testdata/simple.json').then(function(data) {
+        expect(data).to.be.not.empty;
+        expect(data).have.property('a',3);
+        expect(data).have.property('b');
+        expect(data.b).is.eql([1,2,3]);
+        done();
+      });
     });
 
     it('isFunction', function () {
@@ -93,9 +127,22 @@ define(['../scripts/caleydo'], function (C) {
 
     it('constant', function () {
       expect(C.constant(2)).to.be.a('function');
+      expect(C.constant(2)()).to.be.equal(2);
+      expect(C.constant(2)(33)).to.be.equal(2);
     });
 
     it('callable', function () {
+      var r = {
+        a: 3,
+        r : function(b) {
+          return this.a + b;
+        }
+      };
+      expect(C.callable(r, 'r')).to.be.a('function');
+      //expect(C.callable(r, 'r')).to.have.property('a');
+      //expect(C.callable(r, 'r')).to.respondTo('r');
+      //expect(C.callable(r, 'r').r(4)).to.be.equal(7);
+      //expect(C.callable(r, 'r')(4)).to.be.equal(7);
 
     });
   });
