@@ -53,5 +53,44 @@ define([], function () {
     }
   });
 
+  function ListIterator(arr) {
+    this.arr = arr;
+    this.it = new Iterator(0,arr.length,1);
+  }
+  ListIterator.prototype.hasNext = function() {
+    return this.it.hasNext();
+  };
+  ListIterator.prototype.next = function() {
+    if (!this.hasNext()) {
+      throw "end";
+    }
+    return this.arr[this.it.next()];
+  };
+  Object.defineProperties(ListIterator.prototype, {
+    isIncreasing: {
+      enumerable: true,
+      value : false
+    },
+    isDecreasing: {
+      enumerable: true,
+        value : false
+    },
+    byOne: {
+      enumerable: true,
+        value : false
+    },
+    byMinusOne: {
+      enumerable: true,
+        value : false
+    }
+  });
+
+  Iterator.forList = function(arr) {
+    return new ListIterator(arr);
+  };
+  Iterator.range = function(from,to,step) {
+    return new Iterator(from,to,step);
+  };
+
   return Iterator;
 });

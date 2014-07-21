@@ -19,11 +19,37 @@ define(['caleydo','caleydo-iterator'], function (C, Iterator) {
       get: function () {
         return this._from === 0 && this._to === -1 && this._step === 1;
       }
+    },
+
+    /**
+     * whether this range is in a list mode
+     */
+    isList: {
+      enumerable: true,
+      get: function () {
+        return C.isArray(this._from);
+      }
+    },
+
+    /**
+     * whether this range is in a list mode
+     */
+    arr: {
+      enumerable: true,
+      get: function () {
+        return this.isList ? this._from : [];
+      }
     }
   });
   RangeDim.prototype.from = function(val) {
     if (arguments.length < 1) {
       return this._from;
+    }
+    if (typeof val !== 'number') {
+      throw { msg: "can just set numbers"};
+    }
+    if (this.isList) {
+      this._step = 1;
     }
     this._from = val;
     return this;
@@ -32,6 +58,12 @@ define(['caleydo','caleydo-iterator'], function (C, Iterator) {
     if (arguments.length < 1) {
       return this._to;
     }
+    if (this.isList) {
+      throw {msg: "range is in list mode, set a from first"};
+    }
+    if (typeof val !== 'number') {
+      throw { msg: "can just set numbers"};
+    }
     this._to = val;
     return this;
   };
@@ -39,7 +71,30 @@ define(['caleydo','caleydo-iterator'], function (C, Iterator) {
     if (arguments.length < 1) {
       return this._step;
     }
+    if (step === 0) {
+      throw {msg: "step === 0"};
+    }
+    if (typeof step !== 'number') {
+      throw { msg: "can just set numbers"};
+    }
     this._step = step;
+    return this;
+  };
+  RangeDim.prototype.list = function(list) {
+    if (arguments.length < 1) {
+      if (C.isArray(this._from)) {
+        return this._from;
+      } else {
+        return [];
+      }
+    }
+    if (arguments.length == 1 && C.isArray(list)) {
+      this._from = list;
+    } else {
+      this._from = Array.prototype.slice(arguments);
+    }
+    this._to = -1;
+    this._step = 0; //marker that this is the list mode
     return this;
   };
   RangeDim.prototype.slice = function(from, to, step) {
@@ -70,6 +125,9 @@ define(['caleydo','caleydo-iterator'], function (C, Iterator) {
     if (this.isAll) {
       return index;
     }
+    if (this.isList) {
+      return this.arr[index];
+    }
     var r = this.iter(size);
     return r.from + index * r.step;
   };
@@ -97,12 +155,18 @@ define(['caleydo','caleydo-iterator'], function (C, Iterator) {
    * @param size the underlying size for negative indices
    */
   RangeDim.prototype.iter = function(size) {
+    if (this.isList) {
+      return Iterator.forList(this._from);
+    }
     var f = function(v) {
       return v < 0 ? (size + 1 - v) : v;
     };
-    return new Iterator(f(this._from), f(this._to), this._step);
+    return Iterator.range(f(this._from), f(this._to), this._step);
   };
   RangeDim.prototype.toString = function() {
+    if (this.isList) {
+      return '('+this.arr.join(',')+')';
+    }
     var r = this._from  + ':' + this._to;
     if (this._step !== 1) {
       r += ':' + this._step;
@@ -221,6 +285,10 @@ define(['caleydo','caleydo-iterator'], function (C, Iterator) {
      * @returns {*}
      */
     r.size = function(size) {
+      if (this.isList) {
+        return this.arr.length;
+      }
+      
       //FIXME
       return size;
     }
