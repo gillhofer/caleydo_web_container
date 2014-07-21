@@ -2,8 +2,7 @@ node_modules
 dist
 .tmp
 .sass-cache
-app/bower_components
-/test
+bower_components
 /.idea/.name
 /.idea/jsLibraryMappings.xml
 /.idea/libraries/yawa_node_modules.xml
