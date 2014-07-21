@@ -7,3 +7,4 @@ bower_components
 /.idea/jsLibraryMappings.xml
 /.idea/libraries/yawa_node_modules.xml
 /.idea/workspace.xml
+/test/xunit.xml

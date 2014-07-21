@@ -54,10 +54,11 @@ module.exports = function (grunt) {
       },
       livereload: {
         options: {
-          open: true,
+          open: false, //don't open the browser window automatically
           base: [
             '.tmp',
-            '<%= yeoman.app %>'
+            '<%= yeoman.app %>',
+            'test'
           ]
         }
       },
@@ -108,8 +109,10 @@ module.exports = function (grunt) {
       all: {
         options: {
           run: true,
-          urls: ['http://<%= connect.test.options.hostname %>:<%= connect.test.options.port %>/index.html']
-        }
+          urls: ['http://<%= connect.test.options.hostname %>:<%= connect.test.options.port %>/test.html'],
+          reporter: 'XUnit'
+        },
+        dest: './test/xunit.xml'
       }
     },
     autoprefixer: {
