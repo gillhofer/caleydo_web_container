@@ -2,7 +2,7 @@
  * Created by Samuel Gratzl on 17.07.2014.
  */
 /*global define */
-define(['caleydo','caleydo-iterator'], function (C, Iterator) {
+define(['./caleydo','./caleydo-iterator'], function (C, Iterator) {
   'use strict';
   function RangeDim() {
     this._from = 0;

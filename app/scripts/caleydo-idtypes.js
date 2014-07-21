@@ -2,7 +2,7 @@
  * Created by Samuel Gratzl on 17.07.2014.
  */
 /*global define */
-define(['caleydo','caleydo-events'], function (C, events) {
+define(['./caleydo','./caleydo-events'], function (C, events) {
   'use strict';
   var cache = undefined;
 

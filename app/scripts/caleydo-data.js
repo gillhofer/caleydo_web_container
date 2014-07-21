@@ -2,7 +2,7 @@
  * Created by Samuel Gratzl on 17.07.2014.
  */
 /*global define */
-define(['caleydo','caleydo-matrix'], function (C, Matrix) {
+define(['./caleydo','./caleydo-matrix'], function (C, Matrix) {
   'use strict';
   var cache = undefined;
   function transformEntry(desc) {

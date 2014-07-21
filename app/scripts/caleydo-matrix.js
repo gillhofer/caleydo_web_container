@@ -2,7 +2,7 @@
  * Created by Samuel Gratzl on 17.07.2014.
  */
 /*global define */
-define(['caleydo', 'caleydo-range', 'caleydo-idtypes', 'caleydo-events'], function (C, range, idtypes, events) {
+define(['./caleydo', './caleydo-range', './caleydo-idtypes', './caleydo-events'], function (C, range, idtypes, events) {
   'use strict';
   function MatrixBase(root) {
     events.EventHandler.call(this);
