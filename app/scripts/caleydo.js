@@ -78,6 +78,19 @@ define(['jquery'], function ($) {
       }
 
       return CallAbleFactory;
+    },
+
+    /**
+     * converts the given arguments object into an array
+     * @param args
+     * @returns {*|Array}
+     */
+    argList : function (args) {
+      if (arguments.length > 1) {
+        return Array.prototype.slice.call(arguments);
+      } else {
+        return Array.prototype.slice.call(args);
+      }
     }
   };
 });

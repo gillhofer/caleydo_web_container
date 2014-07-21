@@ -10,9 +10,10 @@ require.config({
 });
 
 require([
- 'test-caleydo',
-  'test-caleydo-events',
-  'test-caleydo-iterator'
+  './test-caleydo',
+  './test-caleydo-events',
+  './test-caleydo-iterator',
+  './test-caleydo-range'
 ], function () {
   'use strict';
   mocha.run();

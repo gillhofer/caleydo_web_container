@@ -108,7 +108,7 @@ module.exports = function (grunt) {
     mocha: {
       all: {
         options: {
-          run: true,
+          run: false,
           urls: ['http://<%= connect.test.options.hostname %>:<%= connect.test.options.port %>/test.html'],
           reporter: 'XUnit'
         },

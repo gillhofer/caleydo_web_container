@@ -6,7 +6,7 @@
 define(['../scripts/caleydo'], function (C) {
   'use strict';
 
-  describe('Caleydo', function () {
+  describe('caleydo', function () {
     it('version', function () {
       expect(C.version).to.equal('0.0.1-alpha');
     });
@@ -31,8 +31,8 @@ define(['../scripts/caleydo'], function (C) {
       });
     });
 
-    it('resolved', function () {
-      expect(C.resolved('a').to.respondTo('then');
+    it('resolved', function (done) {
+      expect(C.resolved('a')).to.respondTo('then');
 
       C.resolved('a').then(function(param) {
         expect(param).to.be.equal('a');
@@ -144,6 +144,12 @@ define(['../scripts/caleydo'], function (C) {
       //expect(C.callable(r, 'r').r(4)).to.be.equal(7);
       //expect(C.callable(r, 'r')(4)).to.be.equal(7);
 
+    });
+
+    it('argList', function () {
+      expect(function() {
+        return C.argList(arguments);
+      }(1,2,3)).to.be.eql([1,2,3]);
     });
   });
 });

@@ -46,7 +46,7 @@ define(['./caleydo','./caleydo-iterator'], function (C, Iterator) {
       return this._from;
     }
     if (typeof val !== 'number') {
-      throw { msg: "can just set numbers"};
+      throw new Error('can just set numbers');
     }
     if (this.isList) {
       this._step = 1;
@@ -59,10 +59,10 @@ define(['./caleydo','./caleydo-iterator'], function (C, Iterator) {
       return this._to;
     }
     if (this.isList) {
-      throw {msg: "range is in list mode, set a from first"};
+      throw new Error('range is in list mode, set a from first');
     }
     if (typeof val !== 'number') {
-      throw { msg: "can just set numbers"};
+      throw new Error('can just set numbers');
     }
     this._to = val;
     return this;
@@ -72,10 +72,10 @@ define(['./caleydo','./caleydo-iterator'], function (C, Iterator) {
       return this._step;
     }
     if (step === 0) {
-      throw {msg: "step === 0"};
+      throw new Error('step === 0');
     }
     if (typeof step !== 'number') {
-      throw { msg: "can just set numbers"};
+      throw new Error('can just set numbers');
     }
     this._step = step;
     return this;
@@ -164,6 +164,9 @@ define(['./caleydo','./caleydo-iterator'], function (C, Iterator) {
     return Iterator.range(f(this._from), f(this._to), this._step);
   };
   RangeDim.prototype.toString = function() {
+    if (this.isAll) {
+      return '';
+    }
     if (this.isList) {
       return '('+this.arr.join(',')+')';
     }
@@ -178,9 +181,9 @@ define(['./caleydo','./caleydo-iterator'], function (C, Iterator) {
   function createRange() {
     var dims = [];
     var r = function Range() {
-      return this.filter.apply(this, Array.prototype.slice(arguments));
+      return this.filter.apply(this, C.argList(arguments));
     };
-    Object.defineProperties(RangeDim.prototype, {
+    Object.defineProperties(r, {
       /**
        * checks if this range is all
        * @returns {boolean}
@@ -291,7 +294,31 @@ define(['./caleydo','./caleydo-iterator'], function (C, Iterator) {
 
       //FIXME
       return size;
-    }
+    };
+    r._gen = function(name, args) {
+      if (args.length === 0) {
+        return this.dims.map(function(d) { return d[name].call(d); });
+      }
+      for(var i = 0; i < args.length; ++i) {
+        if (args[i] !== undefined) {
+          var d = this.dim(i);
+          d[name].call(d,args[i]);
+        }
+      }
+      return this;
+    };
+    r.from = function() {
+      return this._gen('from',arguments);
+    };
+    r.to = function() {
+      return this._gen('to',arguments);
+    };
+    r.step = function() {
+      return this._gen('step',arguments);
+    };
+    r.list = function() {
+      return this._gen('list',arguments);
+    };
 
     /**
      * encoded the given range in a string
@@ -309,6 +336,14 @@ define(['./caleydo','./caleydo-iterator'], function (C, Iterator) {
      */
     all: function() {
       return createRange();
+    },
+    from: function() {
+      var r = this.all();
+      return r.from.apply(r,C.argList(arguments));
+    },
+    list: function() {
+      var r = this.all();
+      return r.list.apply(r,C.argList(arguments));
     },
     /**
      * test if the given object is a range
