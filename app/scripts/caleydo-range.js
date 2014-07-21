@@ -32,7 +32,7 @@ define(['caleydo','caleydo-iterator'], function (C, Iterator) {
     },
 
     /**
-     * whether this range is in a list mode
+     * pseudo access to range array
      */
     arr: {
       enumerable: true,
@@ -288,7 +288,7 @@ define(['caleydo','caleydo-iterator'], function (C, Iterator) {
       if (this.isList) {
         return this.arr.length;
       }
-      
+
       //FIXME
       return size;
     }

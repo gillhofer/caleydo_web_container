@@ -14,6 +14,7 @@ define(['jquery'], function ($) {
      */
     this.on = function (events, handler) {
       $obj.on(events, handler);
+      return this;
     };
     /**
      * unregister a global event handler
@@ -22,6 +23,7 @@ define(['jquery'], function ($) {
      */
     this.off = function (events, handler) {
       $obj.off(events, handler);
+      return this;
     };
     /**
      * fires an event
@@ -30,6 +32,7 @@ define(['jquery'], function ($) {
      */
     this.fire = function (event, extraArguments) {
       $obj.trigger(event, extraArguments);
+      return this;
     }
   }
   var ex = new EventHandler();

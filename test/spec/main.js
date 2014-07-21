@@ -10,7 +10,8 @@ require.config({
 });
 
 require([
- 'test-caleydo'
+ 'test-caleydo',
+  'test-caleydo-events'
 ], function () {
   'use strict';
   mocha.run();

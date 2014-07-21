@@ -21,6 +21,12 @@ define(['jquery'], function ($) {
     },
 
     getJSON : $.getJSON,
+    /**
+     * integrate b into a and override all duplicates
+     * @param a
+     * @param b
+     * @returns a
+     */
     mixin : function(a,b) {
       return $.extend(a,a,b);
     },
