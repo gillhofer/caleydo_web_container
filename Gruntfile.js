@@ -342,6 +342,14 @@ module.exports = function (grunt) {
       all: {
         rjsConfig: '<%= yeoman.app %>/scripts/main.js'
       }
+    },
+	jsdoc : {
+        dist : {
+            src: ['app/scripts/{,*/}*.js', 'test/spec/{,*/}*.js'], 
+            options: {
+                destination: 'doc'
+            }
+        }
     }
   });
 
@@ -375,7 +383,8 @@ module.exports = function (grunt) {
     'concurrent:dist',
     'autoprefixer',
     'copy:scripts',
-    //'requirejs',
+    //'requirejs',,
+	'jsdoc',
     'concat',
     'cssmin',
     'uglify',
