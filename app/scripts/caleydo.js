@@ -4,9 +4,23 @@
 /*global define */
 define(['jquery'], function ($) {
   'use strict';
-  return {
+  /**
+   * the Caleydo main object
+   * @exports caleydo
+   * @version 0.0.1-alpha
+   */
+  var caledyo = {
+    /**
+     * version of the core
+     */
     version: '0.0.1-alpha',
 
+    /**
+     * wraps the given resolver function to be a promise
+     * @param resolver
+     * @param {function(resolve, reject)} resolver - the promise resolver
+     * @returns {Promise} a promise object
+     */
     promised: function promised(resolver) {
       var d = $.Deferred();
       resolver(function(r) {
@@ -16,25 +30,46 @@ define(['jquery'], function ($) {
       });
       return d.promise();
     },
+    /**
+     * wraps the given result as a promise
+     * @param result - the result of the promise
+     * @returns {Promise} a promise object
+     */
     resolved : function resolved(result) {
       return $.Deferred().resolve(result).promise();
     },
 
+    /**
+     * async JSON loading
+     * @see {@link http://api.jquery.com/jQuery.getJSON/}
+     */
     getJSON : $.getJSON,
     /**
      * integrate b into a and override all duplicates
-     * @param a
-     * @param b
-     * @returns a
+     * @param {Object} a
+     * @param {Object} b
+     * @returns {Object} a with extended b
      */
     mixin : function(a,b) {
       return $.extend(a,a,b);
     },
 
     //wrap function wrap jquery which may be overwritten replaced sometimes
+    /**
+     * test the given object is a function
+     */
     isFunction: $.isFunction,
+    /**
+     * test if the argument t is an array
+     */
     isArray: $.isArray,
+    /**
+     * test if the argument is an empty object, works just for testing objects
+     */
     isEmptyObject: $.isEmptyObject,
+    /**
+     * test if the argument is a plain object, no subclassing
+     */
     isPlainObject: $.isPlainObject,
 
     /**
@@ -50,8 +85,8 @@ define(['jquery'], function ($) {
     },
 
     /**
-     * just returns the arugment in any case
-     * @param r
+     * just returns the argument in any case
+     * @param r - the value to return
      * @returns {*}
      */
     constant: function(r) {
@@ -60,7 +95,7 @@ define(['jquery'], function ($) {
 
     /**
      * copies a plain object into a function and call a specific method onto direct call
-     * @param obj
+     * @param obj - the
      * @param f
      */
     callable: function (obj, f) {
@@ -93,5 +128,7 @@ define(['jquery'], function ($) {
       }
     }
   };
+
+  return caleydo;
 });
 
