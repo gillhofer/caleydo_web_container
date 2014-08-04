@@ -1,7 +1,7 @@
 /**
  * Created by Samuel Gratzl on 04.08.2014.
  */
-/// <reference path="../typings/tsd.d.ts" />
+/// <reference path="../../../tsd.d.ts" />
 import $ = require('jquery');
 'use strict';
 

@@ -20,6 +20,13 @@ module.exports = function (grunt) {
       dist: 'dist'
     },
     watch: {
+      ts: {
+        files: ['<%= yeoman.app %>/scripts/{,*/}*.ts'],
+        tasks: ['ts:build'],
+        options: {
+          livereload: true
+        }
+      },
       coffee: {
         files: ['<%= yeoman.app %>/scripts/{,*/}*.coffee'],
         tasks: ['coffee:dist']
@@ -149,6 +156,48 @@ module.exports = function (grunt) {
         },
         files: {
           '<%= yeoman.dist %>/styles/main.css': '<%= yeoman.dist %>/styles/*.css'
+        }
+      }
+    },
+
+    ts: {
+      // A specific target
+      build: {
+        // The source TypeScript files, http://gruntjs.com/configuring-tasks#files
+        src: ['<%= yeoman.app %>/scripts/**/*.ts'],
+        // If specified, generate this file that to can use for reference management
+        reference: 'tsd.gen.d.ts',
+        // If specified, the generate JavaScript files are placed here. Only works if out is not specified
+        //outDir: 'test/outputdirectory',
+        // If specified, watches this directory for changes, and re-runs the current target
+        //watch: '<%= yeoman.app %>/scripts',
+        // Use to override the default options, http://gruntjs.com/configuring-tasks#options
+        options: {
+          target: 'es5',
+          module: 'amd', // 'amd' (default) | 'commonjs'
+          sourceMap: true,
+          declaration: false,
+          removeComments: false
+        }
+      }
+    },
+
+    tsd: {
+      refresh: {
+        options: {
+          // execute a command
+          command: 'reinstall',
+
+          //optional: always get from HEAD
+          latest: true,
+
+          // specify config file
+          config: 'tsd.json',
+
+          // experimental: options to pass to tsd.API
+          opts: {
+            // props from tsd.Options
+          }
         }
       }
     },
@@ -379,6 +428,8 @@ module.exports = function (grunt) {
 
   grunt.registerTask('build', [
     'clean:dist',
+    'tsd:refresh',
+    'ts:build',
     'useminPrepare',
     'concurrent:dist',
     'autoprefixer',

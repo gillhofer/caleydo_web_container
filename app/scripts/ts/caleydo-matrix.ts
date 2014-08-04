@@ -60,7 +60,7 @@ export class Matrix extends MatrixBase implements IMatrix {
   valuetype:any;
   rowtype:idtypes.IDType;
   coltype:idtypes.IDType;
-  private data : any[][] = null;
+  private _data : any[][] = null;
 
   constructor(private desc:any) {
     super(null);
@@ -78,11 +78,11 @@ export class Matrix extends MatrixBase implements IMatrix {
    */
   load() {
     var that = this;
-    if (this.data) { //in the cache
-      return C.resolved(this.data);
+    if (this._data) { //in the cache
+      return C.resolved(this._data);
     }
     return C.getJSON(this.desc.uri).then(function (data) {
-      that.data = data; //store cache
+      that._data = data; //store cache
       that.fire("loaded", this);
       return data;
     });
