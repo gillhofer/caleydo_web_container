@@ -3,6 +3,7 @@
  */
 /// <reference path="../typings/tsd.d.ts" />
 import $ = require('jquery');
+'use strict';
 
 export class EventHandler {
   private $obj = $({});

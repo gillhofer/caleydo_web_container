@@ -2,8 +2,9 @@
  * Created by Samuel Gratzl on 04.08.2014.
  */
 
+'use strict';
 import C = require('caleydo');
-import range = require('caleydo-range');
+import ranges = require('caleydo-range');
 import idtypes = require('caleydo-idtypes');
 import events = require('caleydo-events');
 
@@ -12,16 +13,16 @@ export interface IMatrix extends events.EventHandler {
   length : number;
   nrow: number;
   ncol : number;
-  view(range:range.Range) : IMatrix;
+  view(range:ranges.Range) : IMatrix;
   t : IMatrix;
-  cols() : C.IPromise<string[]>;
-  rows() : C.IPromise<string[]>;
+  cols(range:ranges.Range) : C.IPromise<string[]>;
+  rows(range:ranges.Range) : C.IPromise<string[]>;
   at(i:number, j:number) : C.IPromise<any>;
-  data(range:range.Range) : C.IPromise<any[][]>;
+  data(range:ranges.Range) : C.IPromise<any[][]>;
 }
 
 export class MatrixBase extends events.EventHandler {
-  constructor(public _root:Matrix) {
+  constructor(public _root:IMatrix) {
     super();
   }
 
@@ -45,7 +46,7 @@ export class MatrixBase extends events.EventHandler {
     return this.dim[1];
   }
 
-  view(range:range.Range) : IMatrix {
+  view(range:ranges.Range) : IMatrix {
     return new MatrixView(this._root, range);
   }
 }
@@ -94,11 +95,11 @@ export class Matrix extends MatrixBase implements IMatrix {
     });
   }
 
-  data(range) {
-    range = range || range.all();
+  data(range: ranges.Range) {
+    range = range || ranges.all();
     var that = this;
     return this.load().then(function (data) {
-      return range(data.data, that.size());
+      return range.filter(data.data, that.size());
     });
   }
 
@@ -106,10 +107,10 @@ export class Matrix extends MatrixBase implements IMatrix {
    * return the column ids of the matrix
    * @returns {*}
    */
-  cols(range) {
-    range = range || range.all();
+  cols(range: ranges.Range) : C.IPromise<string[]>{
+    range = range || ranges.all();
     var that = this;
-    return this.load().then(function (d) {
+    return this.load().then(function (d : any) {
       return range.dim(1).filter(d.cols, that.ncol);
     });
   }
@@ -118,10 +119,10 @@ export class Matrix extends MatrixBase implements IMatrix {
    * return the row ids of the matrix
    * @returns {*}
    */
-  rows(range) {
-    range = range || range.all();
+  rows(range: ranges.Range) : C.IPromise<string[]>{
+    range = range || ranges.all();
     var that = this;
-    return this.load().then(function (d) {
+    return this.load().then(function (d : any) {
       return range.dim(0).filter(d.rows, that.nrow);
     });
   }
@@ -144,11 +145,11 @@ class TransposedMatrix extends MatrixBase  implements IMatrix{
     this.t = base;
   }
 
-  cols(range:range.Range) {
+  cols(range:ranges.Range): C.IPromise<string[]> {
     return this.t.rows(range ? range.swap() : undefined);
   }
 
-  rows(range:range.Range) {
+  rows(range:ranges.Range): C.IPromise<string[]> {
     return this.t.cols(range ? range.swap() : undefined);
   }
 
@@ -161,7 +162,7 @@ class TransposedMatrix extends MatrixBase  implements IMatrix{
     return this.t.at(j, i);
   }
 
-  data(range:range.Range) {
+  data(range:ranges.Range) {
     return this.t.data(range ? range.swap() : undefined);
   }
 }
@@ -174,17 +175,20 @@ class TransposedMatrix extends MatrixBase  implements IMatrix{
  * @constructor
  */
 class MatrixView extends MatrixBase  implements IMatrix{
-  constructor(root:Matrix, private range:range.Range, public t = new MatrixView(root.t, range.swap(), this)) {
+  constructor(root:IMatrix, private range:ranges.Range, public t? : IMatrix) {
     super(root);
     this.range = range;
+    if (!t) {
+      this.t = new MatrixView(root.t, range.swap(), this);
+    }
   }
 
-  cols() {
-    return this._root.cols(this.range);
+  cols(range: ranges.Range) {
+    return this._root.cols(range.times(this.range, this._root.dim));
   }
 
-  rows() {
-    return this._root.rows(this.range);
+  rows(range: ranges.Range) {
+    return this._root.rows(range.times(this.range, this._root.dim));
   }
 
   size() {
@@ -192,15 +196,15 @@ class MatrixView extends MatrixBase  implements IMatrix{
   }
 
   at(i: number, j : number) {
-    var inverted = this.range.invert([i, j], this._root.size());
+    var inverted = this.range.invert([i, j], this._root.dim);
     return this._root.at(inverted[0], inverted[1]);
   }
 
-  data(range: range.Range) {
-    return this._root.data(range.times(this.range, this._root.size()));
+  data(range: ranges.Range) {
+    return this._root.data(range.times(this.range, this._root.dim));
   }
 
-  view(range: range.Range) {
+  view(range: ranges.Range) {
     return new MatrixView(this._root, range.times(this.range, this.dim));
   }
 }

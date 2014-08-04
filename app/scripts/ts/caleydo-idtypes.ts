@@ -4,6 +4,7 @@
 
 import C = require('caleydo');
 import events = require('caleydo-events');
+'use strict';
 
 var cache = undefined;
 

@@ -1,9 +1,9 @@
 /**
  * Created by Samuel Gratzl on 04.08.2014.
  */
-
 /// <reference path="../typings/tsd.d.ts" />
 import $ = require('jquery');
+'use strict'
 
 /**
  * version of the core

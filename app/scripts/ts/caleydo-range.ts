@@ -250,7 +250,7 @@ export class Range {
    * @param indices
    * @param size the underlying size for negative indices
    */
-  invert(indices : number[], size: number) : number[] {
+  invert(indices : number[], size: number[]) : number[] {
     if (this.isAll) {
       return indices;
     }
