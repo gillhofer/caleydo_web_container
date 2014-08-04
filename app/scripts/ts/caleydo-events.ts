@@ -39,4 +39,31 @@ export class EventHandler {
   }
 }
 
-export var global = new EventHandler();
+var global = new EventHandler();
+
+/**
+ * register a global event handler
+ * @param events
+ * @param handler
+ */
+export function on(events, handler) {
+  return global.on(events, handler);
+}
+
+/**
+ * unregister a global event handler
+ * @param events
+ * @param handler
+ */
+export function off(events, handler) {
+  return global.off(events, handler);
+}
+
+/**
+ * fires an event
+ * @param event
+ * @param extraArguments
+ */
+export function fire(event, extraArguments) {
+  return global.fire(event, extraArguments);
+}

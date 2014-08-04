@@ -72,7 +72,7 @@ export var isPlainObject = $.isPlainObject;
 
 export function isUndefined(obj : any) {
   return typeof obj === 'undefined';
-};
+}
 
 /**
  * identity function

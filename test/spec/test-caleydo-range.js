@@ -3,7 +3,7 @@
  */
 /* global define, describe, it, assert, should, expect */
 
-define(['../scripts/caleydo-range','../scripts/caleydo-iterator'], function (range,Iterator) {
+define(['../scripts/ts/caleydo-range','../scripts/ts/caleydo-iterator'], function (range,Iterator) {
   'use strict';
 
   describe('caleydo-range', function () {
@@ -53,7 +53,7 @@ define(['../scripts/caleydo-range','../scripts/caleydo-iterator'], function (ran
       expect(r.dims).is.length(3);
       check(r.dim(0), 10, -1, 1);
       expect(r.dim(1).isAll).is.true;
-      check(r.dim(0), 3, -1, 1);
+      check(r.dim(2), 3, -1, 1);
     });
   });
 });

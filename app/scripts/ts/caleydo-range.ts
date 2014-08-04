@@ -6,15 +6,41 @@ import C = require('./caleydo');
 import Iterator = require('./caleydo-iterator');
 
 'use strict';
+/**
+ * a range dim is a range for a specific dimension
+ */
 export class RangeDim {
+  /**
+   * from marker to list
+   * @type {number}
+   * @private
+   */
   private _from:any = 0;
+  /**
+   * to
+   * @type {number}
+   * @private
+   */
   private _to:number = -1;
+  /**
+   * step if = 0 then _from should be a list
+   * @type {number}
+   * @private
+   */
   private _step:number = 1;
 
+  /**
+   * whether this range returns all data, i.e, doesn't filter anything
+   * @returns {boolean}
+   */
   get isAll() {
     return this._from === 0 && this._to === -1 && this._step === 1;
   }
 
+  /**
+   * whether this range has internal a list of items instead of a range
+   * @returns {boolean}
+   */
   get isList() {
     return C.isArray(this._from);
   }
@@ -87,7 +113,25 @@ export class RangeDim {
     return this;
   }
 
-  times(other) {
+  /**
+   * size of this range given the total size
+   * @param size
+   * @returns {*}
+   */
+  size(size: number) {
+    if (this.isList) {
+      return this.list().length;
+    }
+    var it = <Iterator.Iterator><any>this.iter(size);
+    return it.size;
+  }
+
+  /**
+   * combines this range with another and returns a new one
+   * @param other
+   * @returns {*}
+   */
+  times(other: RangeDim, size: number) {
     if (this.isAll) {
       return other.clone();
     }
@@ -97,6 +141,10 @@ export class RangeDim {
     return this.clone(); //FIXME
   }
 
+  /**
+   * clones this range
+   * @returns {RangeDim}
+   */
   clone() {
     return new RangeDim().slice(this._from, this._to, this._step);
   }
@@ -117,13 +165,20 @@ export class RangeDim {
     return this.fix(this.from(), size) + index * this._step;
   }
 
-  filter(data, size) {
+  /**
+   * filters the given data according to this range
+   * @param data
+   * @param size the total size for resolving negative indices
+   * @returns {*}
+   */
+  filter(data : any[], size : number, transform : (any) => any) {
     if (this.isAll) {
-      return data;
+      return data.map(transform);
     }
     var it = this.iter(size);
+    //optimization
     if (it.byOne && it instanceof Iterator.Iterator) {
-      return data.slice((<Iterator.Iterator><any>it).from, (<Iterator.Iterator><any>it).to);
+      return data.slice((<Iterator.Iterator><any>it).from, (<Iterator.Iterator><any>it).to).map(transform);
       //} else if (it.byMinusOne) {
       //  var d = data.slice();
       //  d.reverse();
@@ -131,12 +186,18 @@ export class RangeDim {
     } else {
       var r = [];
       while (it.hasNext()) {
-        r.push(data[it.next()]);
+        r.push(transform(data[it.next()]));
       }
       return r;
     }
   }
 
+  /**
+   * fix negative indices given the total size
+   * @param v
+   * @param size
+   * @returns {number}
+   */
   private fix(v:number, size:number) {
     return v < 0 ? (size + 1 - v) : v;
   }
@@ -165,9 +226,32 @@ export class RangeDim {
     }
     return r;
   }
+
+  static fromString(code: string) {
+    var r = new RangeDim(), parts: string[];
+
+    if (code.length === 0) {
+      return r;
+    }
+    if (code.charAt(0) === '(') {
+      parts = code.substring(1,code.length-1).split(',');
+      r.list(parts.map((v) => parseInt(v)));
+    } else {
+      parts = code.split(':');
+      r.slice(+parts[0],+parts[1], parts.length > 2 ? +parts[2] : 1);
+    }
+    return r;
+  }
 }
 
+/**
+ * multi dimensional version of a RangeDim
+ */
 export class Range {
+  /**
+   * the list of internal RangeDims
+   * @type {any[]}
+   */
   dims = new Array<RangeDim>();
 
   /**
@@ -176,6 +260,10 @@ export class Range {
    */
   get isAll() {
     return this.dims.every((dim) => dim.isAll);
+  }
+
+  get ndim() {
+    return this.dims.length;
   }
 
   /**
@@ -190,7 +278,7 @@ export class Range {
     }
     var r = new Range();
     this.dims.forEach((d, i) => {
-      r.dims[i] = d.times(other.dims[i]);
+      r.dims[i] = d.times(other.dims[i], size[i]);
     });
     return r;
   }
@@ -223,12 +311,24 @@ export class Range {
    * @param size the underlying size for negative indices
    * @returns {*}
    */
-  filter(data: any[], size: number) {
+  filter(data: any[], size: number[]) {
     if (this.isAll) {
       return data;
     }
-    //FIXME
-    return data;
+    var ndim = this.ndim;
+
+    function filterDim(i: number) {
+      if (i >= ndim) { //out of range no filtering anymore
+        return C.identity;
+      }
+      var d = this.dim(i);
+      var next = filterDim(i+1); //compute next transform
+      var s = size[i];
+      return (elem) => { //if the value is an array, filter it else return the value
+        return C.isArray(elem) ? d.filter(elem, s, next) : elem;
+      };
+    }
+    return filterDim(0)(data);
   }
 
   /**
@@ -236,7 +336,7 @@ export class Range {
    * @param dimension
    * @returns {r}
    */
-  dim(dimension: number) {
+  dim(dimension: number) : RangeDim {
     var r = this.dims[dimension];
     if (r) {
       return r;
@@ -265,8 +365,9 @@ export class Range {
    * @returns {*}
    */
   size(size: number[]) : number[] {
-    //FIXME
-    return size;
+    return this.dims.map((r, i) => {
+      return r.size(size[i]);
+    });
   }
   private gen(name, args) : any{
     if (args.length === 0) {
@@ -307,6 +408,27 @@ export class Range {
       return d.toString();
     }).join(',');
   }
+
+  static fromString(code : string) {
+    var act = 0, c : string, next : number;
+    var dims = new Array<RangeDim>();
+    while(act < code.length) {
+      c = code.charAt(act);
+      if (c === '(') {
+        next = code.indexOf(')',act);
+        dims.push(RangeDim.fromString(code.substring(act,next+1)));
+        act = next+1 +1; //skip ),
+      } else { //regular case
+        next = code.indexOf(',',act);
+        next = next < 0 ? code.length : next;
+        dims.push(RangeDim.fromString(code.substring(act, next)));
+        act = next+1; //skip ,
+      }
+    }
+    var r = new Range();
+    r.dims = dims;
+    return r;
+  }
 }
 /**
  * creates a new range including everything
@@ -327,9 +449,9 @@ export function list() {
  * test if the given object is a range
  */
 export function is(obj: any) {
-  return obj instanceof Range; //FIXME
+  return obj instanceof Range;
 }
 
 export function parse(encoded : string) {
-  return all(); //FIXME
+  return Range.fromString(encoded);
 }

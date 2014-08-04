@@ -72,6 +72,20 @@ export class Iterator implements IIterator<number>{
   get byMinusOne() {
     return this.step === -1;
   }
+
+  get size() {
+    if (this.byOne) {
+      return Math.max(this.to - this.from,0);
+    } else if (this.byMinusOne){
+      return Math.max(this.from - this.to,0);
+    }
+    var d = this.isIncreasing ? (this.to - this.from+1) : (this.from - this.to+1);
+    var s = Math.abs(this.step);
+    if (d <= 0) { //no range
+      return 0;
+    }
+    return Math.floor(d/s);
+  }
 }
 
 export class ListIterator<T> implements IIterator<T>{

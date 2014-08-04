@@ -3,7 +3,7 @@
  */
 /* global define, describe, it, assert, should, expect */
 
-define(['../scripts/caleydo-iterator'], function (Iterator) {
+define(['../scripts/ts/caleydo-iterator'], function (Iterator) {
   'use strict';
 
   function testIt(it) {
@@ -51,6 +51,14 @@ define(['../scripts/caleydo-iterator'], function (Iterator) {
       expect(it.hasNext()).is.false;
       expect(function() { it.next() }).throw(RangeError);
       expect(it.hasNext()).is.false;
+    });
+    it('size', function() {
+      //expect(Iterator.range(0,5,1)).have.property('size', 5);
+      //expect(Iterator.range(5,0,-1)).have.property('size', 5);
+      //expect(Iterator.range(5,5,1)).have.property('size', 0);
+      //expect(Iterator.range(-10,5,-1)).have.property('size', 0);
+      expect(Iterator.range(0,5,2)).have.property('size', 3);
+      expect(Iterator.range(5,0,-2)).have.property('size', 3);
     });
   });
 });
