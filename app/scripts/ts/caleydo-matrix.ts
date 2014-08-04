@@ -3,22 +3,26 @@
  */
 
 'use strict';
-import C = require('caleydo');
-import ranges = require('caleydo-range');
-import idtypes = require('caleydo-idtypes');
-import events = require('caleydo-events');
+import C = require('./caleydo');
+import ranges = require('./caleydo-range');
+import idtypes = require('./caleydo-idtypes');
+import events = require('./caleydo-events');
 
 export interface IMatrix extends events.EventHandler {
   dim: number[];
   length : number;
   nrow: number;
   ncol : number;
-  view(range:ranges.Range) : IMatrix;
+  valuetype:any;
+  rowtype:idtypes.IDType;
+  coltype:idtypes.IDType;
+
+  view(range?:ranges.Range) : IMatrix;
   t : IMatrix;
-  cols(range:ranges.Range) : C.IPromise<string[]>;
-  rows(range:ranges.Range) : C.IPromise<string[]>;
+  cols(range?:ranges.Range) : C.IPromise<string[]>;
+  rows(range?:ranges.Range) : C.IPromise<string[]>;
   at(i:number, j:number) : C.IPromise<any>;
-  data(range:ranges.Range) : C.IPromise<any[][]>;
+  data(range?:ranges.Range) : C.IPromise<any[][]>;
 }
 
 export class MatrixBase extends events.EventHandler {
@@ -46,16 +50,17 @@ export class MatrixBase extends events.EventHandler {
     return this.dim[1];
   }
 
-  view(range:ranges.Range) : IMatrix {
+  view(range:ranges.Range = ranges.all()) : IMatrix {
     return new MatrixView(this._root, range);
   }
 }
 
 export class Matrix extends MatrixBase implements IMatrix {
-  public t:IMatrix;
-  public valuetype:any;
-  public rowtype:idtypes.IDType;
-  public coltype:idtypes.IDType;
+  t:IMatrix;
+  valuetype:any;
+  rowtype:idtypes.IDType;
+  coltype:idtypes.IDType;
+  private data : any[][] = null;
 
   constructor(private desc:any) {
     super(null);
@@ -95,8 +100,7 @@ export class Matrix extends MatrixBase implements IMatrix {
     });
   }
 
-  data(range: ranges.Range) {
-    range = range || ranges.all();
+  data(range: ranges.Range = ranges.all()) {
     var that = this;
     return this.load().then(function (data) {
       return range.filter(data.data, that.size());
@@ -107,8 +111,7 @@ export class Matrix extends MatrixBase implements IMatrix {
    * return the column ids of the matrix
    * @returns {*}
    */
-  cols(range: ranges.Range) : C.IPromise<string[]>{
-    range = range || ranges.all();
+  cols(range: ranges.Range= ranges.all()) : C.IPromise<string[]>{
     var that = this;
     return this.load().then(function (d : any) {
       return range.dim(1).filter(d.cols, that.ncol);
@@ -119,8 +122,7 @@ export class Matrix extends MatrixBase implements IMatrix {
    * return the row ids of the matrix
    * @returns {*}
    */
-  rows(range: ranges.Range) : C.IPromise<string[]>{
-    range = range || ranges.all();
+  rows(range: ranges.Range = ranges.all()) : C.IPromise<string[]>{
     var that = this;
     return this.load().then(function (d : any) {
       return range.dim(0).filter(d.rows, that.nrow);
@@ -138,18 +140,30 @@ export class Matrix extends MatrixBase implements IMatrix {
  * @constructor
  */
 class TransposedMatrix extends MatrixBase  implements IMatrix{
-  public t:IMatrix;
+  t:IMatrix;
 
   constructor(base:Matrix) {
     super(base);
     this.t = base;
   }
 
-  cols(range:ranges.Range): C.IPromise<string[]> {
+  get valuetype() {
+    return this._root.valuetype;
+  }
+
+  get rowtype() {
+    return this._root.coltype;
+  }
+
+  get coltype() {
+    return this._root.rowtype;
+  }
+
+  cols(range:ranges.Range = ranges.all()): C.IPromise<string[]> {
     return this.t.rows(range ? range.swap() : undefined);
   }
 
-  rows(range:ranges.Range): C.IPromise<string[]> {
+  rows(range:ranges.Range = ranges.all()): C.IPromise<string[]> {
     return this.t.cols(range ? range.swap() : undefined);
   }
 
@@ -162,7 +176,7 @@ class TransposedMatrix extends MatrixBase  implements IMatrix{
     return this.t.at(j, i);
   }
 
-  data(range:ranges.Range) {
+  data(range:ranges.Range = ranges.all()) {
     return this.t.data(range ? range.swap() : undefined);
   }
 }
@@ -183,11 +197,11 @@ class MatrixView extends MatrixBase  implements IMatrix{
     }
   }
 
-  cols(range: ranges.Range) {
+  cols(range: ranges.Range = ranges.all()) {
     return this._root.cols(range.times(this.range, this._root.dim));
   }
 
-  rows(range: ranges.Range) {
+  rows(range: ranges.Range = ranges.all()) {
     return this._root.rows(range.times(this.range, this._root.dim));
   }
 
@@ -200,11 +214,23 @@ class MatrixView extends MatrixBase  implements IMatrix{
     return this._root.at(inverted[0], inverted[1]);
   }
 
-  data(range: ranges.Range) {
+  data(range: ranges.Range = ranges.all()) {
     return this._root.data(range.times(this.range, this._root.dim));
   }
 
-  view(range: ranges.Range) {
+  view(range: ranges.Range = ranges.all()) {
     return new MatrixView(this._root, range.times(this.range, this.dim));
+  }
+
+  get valuetype() {
+    return this._root.valuetype;
+  }
+
+  get rowtype() {
+    return this._root.rowtype;
+  }
+
+  get coltype() {
+    return this._root.coltype;
   }
 }

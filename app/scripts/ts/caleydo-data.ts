@@ -1,8 +1,8 @@
 /**
  * Created by Samuel Gratzl on 04.08.2014.
  */
-import C = require('caleydo');
-import matrix = require('caleydo-matrix');
+import C = require('./caleydo');
+import matrix = require('./caleydo-matrix');
 'use strict';
 
 var cache = undefined;

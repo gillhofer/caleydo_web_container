@@ -8,8 +8,8 @@ require.config({
 require([
     'app',
     'jquery',
-    './caleydo',
-    './caleydo-data'
+    './ts/caleydo',
+    './ts/caleydo-data'
   ], function (app, $, C, data) {
     'use strict';
     // use app here

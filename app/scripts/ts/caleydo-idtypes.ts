@@ -2,8 +2,8 @@
  * Created by Samuel Gratzl on 04.08.2014.
  */
 
-import C = require('caleydo');
-import events = require('caleydo-events');
+import C = require('./caleydo');
+import events = require('./caleydo-events');
 'use strict';
 
 var cache = undefined;

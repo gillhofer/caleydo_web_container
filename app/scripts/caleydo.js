@@ -9,7 +9,7 @@ define(['jquery'], function ($) {
    * @exports caleydo
    * @version 0.0.1-alpha
    */
-  var caledyo = {
+  var caleydo = {
     /**
      * version of the core
      */
