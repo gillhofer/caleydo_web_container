@@ -198,11 +198,11 @@ class MatrixView extends MatrixBase  implements IMatrix{
   }
 
   cols(range: ranges.Range = ranges.all()) {
-    return this._root.cols(range.times(this.range, this._root.dim));
+    return this._root.cols(this.range.preMultiply(range, this._root.dim));
   }
 
   rows(range: ranges.Range = ranges.all()) {
-    return this._root.rows(range.times(this.range, this._root.dim));
+    return this._root.rows(this.range.preMultiply(range, this._root.dim));
   }
 
   size() {
@@ -215,11 +215,11 @@ class MatrixView extends MatrixBase  implements IMatrix{
   }
 
   data(range: ranges.Range = ranges.all()) {
-    return this._root.data(range.times(this.range, this._root.dim));
+    return this._root.data(this.range.preMultiply(range, this._root.dim));
   }
 
   view(range: ranges.Range = ranges.all()) {
-    return new MatrixView(this._root, range.times(this.range, this.dim));
+    return new MatrixView(this._root, this.range.preMultiply(range, this.dim));
   }
 
   get valuetype() {

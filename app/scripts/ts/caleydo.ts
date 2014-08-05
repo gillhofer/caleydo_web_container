@@ -3,7 +3,7 @@
  */
 /// <reference path="../../../tsd.d.ts" />
 import $ = require('jquery');
-'use strict'
+'use strict';
 
 /**
  * version of the core
@@ -16,11 +16,11 @@ export var version = '0.0.1-alpha';
  * @param {function(resolve, reject)} resolver - the promise resolver
  * @returns {Promise} a promise object
  */
-export function promised(resolver) {
-  var d = $.Deferred();
-  resolver(function (r) {
+export function promised<T>(f) {
+  var d = $.Deferred<T>();
+  f((r) => {
     d.resolve(r);
-  }, function (r) {
+  }, (r) => {
     d.reject(r);
   });
   return d.promise();

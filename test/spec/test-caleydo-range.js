@@ -55,5 +55,15 @@ define(['../scripts/ts/caleydo-range','../scripts/ts/caleydo-iterator'], functio
       expect(r.dim(1).isAll).is.true;
       check(r.dim(2), 3, -1, 1);
     });
+
+    it('preMultiply', function() {
+      var r;
+      r = range.parse('0:10').preMultiply(range.all(), 10);
+      check(d.dim(0), 0,10,1);
+      r = range.parse('0:10').preMultiply(range.parse('0:5'), 10);
+      check(d.dim(0), 0,5,1);
+      r = range.parse('0:10').preMultiply(range.parse('0:10:2'), 10);
+      check(d.dim(0), 0,10,2);
+    })
   });
 });

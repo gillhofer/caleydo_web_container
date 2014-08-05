@@ -4,7 +4,6 @@
 
 import C = require('./caleydo');
 import Iterator = require('./caleydo-iterator');
-
 'use strict';
 /**
  * a range dim is a range for a specific dimension
@@ -128,17 +127,37 @@ export class RangeDim {
 
   /**
    * combines this range with another and returns a new one
+   * this = (1,3,4), sub = (2) -> (2)
+   * (2)(1,2,3)
    * @param other
    * @returns {*}
    */
-  times(other: RangeDim, size: number) {
+  preMultiply(sub: RangeDim, size: number) : RangeDim {
     if (this.isAll) {
-      return other.clone();
+      return sub.clone();
     }
-    if (other.isAll) {
+    if (sub.isAll) {
       return this.clone();
     }
-    return this.clone(); //FIXME
+    var s = this.size(size);
+    var r = new RangeDim();
+    //if one is a list then the result is a list, too
+    if (this.isList) {
+      return r.list(sub.filter(this.list(), s));
+    } else if (sub.isList) {
+      return r.list(sub.filter(this.iter(size).asList(), s));
+    }
+    r._step = sub._step * this._step;
+
+    if (sub._from >= 0 == this._from >= 0) { //both same sign
+        r._from = this._from + sub._from;
+    } else if (sub._from < 0 && this._from < 0) {
+        r._from = this._from +1 + sub._from; //-1 + 1 -1 = -1
+    } else { //mixed
+
+    }
+
+    return r;
   }
 
   /**
@@ -171,7 +190,7 @@ export class RangeDim {
    * @param size the total size for resolving negative indices
    * @returns {*}
    */
-  filter(data : any[], size : number, transform : (any) => any) {
+  filter(data : any[], size : number, transform : (any) => any = C.identity) {
     if (this.isAll) {
       return data.map(transform);
     }
@@ -227,6 +246,11 @@ export class RangeDim {
     return r;
   }
 
+  /**
+   * parses the given code created by toString
+   * @param code
+   * @returns {RangeDim}
+   */
   static fromString(code: string) {
     var r = new RangeDim(), parts: string[];
 
@@ -269,7 +293,7 @@ export class Range {
   /**
    * combines this range with another one
    */
-  times(other: Range, size: number[]) {
+  preMultiply(other: Range, size: number[]) {
     if (this.isAll) {
       return other.clone();
     }
@@ -278,7 +302,7 @@ export class Range {
     }
     var r = new Range();
     this.dims.forEach((d, i) => {
-      r.dims[i] = d.times(other.dims[i], size[i]);
+      r.dims[i] = d.preMultiply(other.dims[i], size[i]);
     });
     return r;
   }
@@ -409,6 +433,11 @@ export class Range {
     }).join(',');
   }
 
+  /**
+   * parse the give code created toString
+   * @param code
+   * @returns {Range}
+   */
   static fromString(code : string) {
     var act = 0, c : string, next : number;
     var dims = new Array<RangeDim>();
@@ -432,15 +461,23 @@ export class Range {
 }
 /**
  * creates a new range including everything
- * @returns {*}
+ * @returns {Range}
  */
 export function all() {
   return new Range();
 }
+/**
+ * creates a new range starting at from
+ * @returns {Range}
+ */
 export function from() {
   var r = this.all();
   return r.from.apply(r, C.argList(arguments));
 }
+/**
+ * creates a new range using the given list
+ * @returns {Range}
+ */
 export function list() {
   var r = this.all();
   return r.list.apply(r, C.argList(arguments));
@@ -452,6 +489,11 @@ export function is(obj: any) {
   return obj instanceof Range;
 }
 
+/**
+ * parses the given encoded string created by toString to a range object
+ * @param encoded
+ * @returns {Range}
+ */
 export function parse(encoded : string) {
   return Range.fromString(encoded);
 }
