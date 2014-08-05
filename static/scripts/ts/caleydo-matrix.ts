@@ -292,6 +292,9 @@ class MatrixView extends MatrixBase  implements IMatrix{
   }
 
   view(range: ranges.Range = ranges.all()) {
+    if (range.isAll) {
+      return this;
+    }
     return new MatrixView(this._root, this.range.preMultiply(range, this.dim));
   }
 

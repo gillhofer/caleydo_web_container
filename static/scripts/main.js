@@ -24,13 +24,13 @@ require([
     data.list().then(function (descs) {
       console.log(JSON.stringify(Object.keys(descs)));
     });
-    data.get('test')
+    data.get('0')
       .then(function (matrix) {
         //matrix(1,2,3);
         matrix.on("loaded", function () {
           console.log("loaded");
         });
-        var m = matrix.view(range.parse('0:5,1:6'));
+        var m = matrix.view(); //range.parse('0:5,1:6'));
         var visses = plugins.listVis(m);
         visses.forEach(function (vis) {
           vis.load().then(function (plugin) {

@@ -398,6 +398,9 @@ export class Range {
    * @returns {*}
    */
   size(size: number[]) : number[] {
+    if (this.isAll) {
+      return size;
+    }
     return this.dims.map((r, i) => {
       return r.size(size[i]);
     });

@@ -181,6 +181,9 @@ class VectorView extends VectorBase implements IVector {
   }
 
   view(range:ranges.Range = ranges.all()) {
+    if (range.isAll) {
+      return this;
+    }
     return new VectorView(this._root, this.range.preMultiply(range, this.dim));
   }
 

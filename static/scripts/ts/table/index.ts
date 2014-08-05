@@ -5,19 +5,33 @@
 
 import d3 = require('d3');
 import matrix = require('../caleydo-matrix');
+import table = require('../caleydo-table');
+import vector = require('../caleydo-vector');
+import datatypes = require('../caleydo-datatype');
 import plugins = require('../caleydo-plugins');
 import C = require('../caleydo');
 
 export class Table implements plugins.IVisualization {
-  constructor(public data : matrix.IMatrix, public parent: Element) {
-    this.build(d3.select(parent));
+  constructor(public data : any, public parent: Element) {
+    var $p = d3.select(parent);
+    switch(data.type) {
+      case 'matrix':
+        this.build($p, [this.data.cols(),this.data.rows(), this.data.data()]);
+        break;
+     case 'table':
+       this.build($p, [this.data.cols().map((v) => v.name),this.data.rows(), this.data.data()]);
+       break;
+     case 'vector':
+       this.build($p, [['Value'],this.data.ids(), this.data.data().then((data) => data.map((d) => [d]))]);
+       break;
+    }
   }
 
-  private build($parent : D3.Selection) {
+  private build($parent : D3.Selection, promises: any[]) {
     var $table = $parent.append('table');
     $table.append('thead').append('tr');
     $table.append('tbody');
-    C.all([this.data.cols(),this.data.rows(), this.data.data()]).then((arr) => {
+    C.all(promises).then((arr) => {
       var cols = arr[0], rows = arr[1], d = arr[2];
       var $headers = $table.select('thead tr').selectAll('th').data(['ID'].concat(cols));
       $headers.enter().append('th');
@@ -41,6 +55,6 @@ export class Table implements plugins.IVisualization {
   }
 }
 
-export function create(data : matrix.IMatrix, parent : Element)  {
+export function create(data : datatypes.IDataType, parent : Element)  {
   return new Table(data, parent);
 }

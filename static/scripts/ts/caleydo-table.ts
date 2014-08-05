@@ -22,6 +22,11 @@ export interface ITable extends datatypes.IDataType {
   cols(range?:ranges.Range) : vector.IVector[];
 
   col(i:number) : vector.IVector;
+  /**
+   * returns a promise for getting the row names of the matrix
+   * @param range
+   */
+  rows(range?:ranges.Range) : C.IPromise<string[]>;
 
   /**
    * creates a new view on this matrix specified by the given range
@@ -141,7 +146,18 @@ export class Table extends TableBase implements ITable {
   data(range:ranges.Range = ranges.all()) {
     var that = this;
     return this.load().then(function (data) {
-      return datatypes.transpose(range.swap().filter(data.data, this.swap(that.size())));
+      return datatypes.transpose(range.swap().filter(data.data, that.swap(that.size())));
+    });
+  }
+
+  /**
+   * return the row ids of the matrix
+   * @returns {*}
+   */
+  rows(range: ranges.Range = ranges.all()) : C.IPromise<string[]>{
+    var that = this;
+    return this.load().then(function (d : any) {
+      return range.dim(0).filter(d.rows, that.nrow);
     });
   }
 
@@ -197,7 +213,14 @@ class TableView extends TableBase implements ITable {
     return this._root.data(this.range.preMultiply(range, this._root.dim));
   }
 
+  rows(range: ranges.Range = ranges.all()) {
+    return this._root.rows(this.range.preMultiply(range, this._root.dim));
+  }
+
   view(range:ranges.Range = ranges.all()) {
+    if (range.isAll) {
+      return this;
+    }
     return new TableView(this._root, this.range.preMultiply(range, this.dim));
   }
 
