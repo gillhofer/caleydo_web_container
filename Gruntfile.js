@@ -1,5 +1,6 @@
 // Generated on 2014-07-17 using generator-yawa 0.4.7
 'use strict';
+var proxySnippet = require('grunt-connect-proxy/lib/utils').proxyRequest;
 
 // # Globbing
 // for performance reasons we're only matching one level down:
@@ -8,6 +9,7 @@
 // 'test/spec/**/*.js'
 
 module.exports = function (grunt) {
+  var JENKINS = grunt.option('jenkins');
   // show elapsed time at the end
   require('time-grunt')(grunt);
   // load all grunt tasks
@@ -16,7 +18,8 @@ module.exports = function (grunt) {
   grunt.initConfig({
     // configurable paths
     yeoman: {
-      app: 'app',
+      // configurable paths
+      app: require('./bower.json').appPath || 'static',
       dist: 'dist'
     },
     watch: {
@@ -44,7 +47,7 @@ module.exports = function (grunt) {
           livereload: '<%= connect.options.livereload %>'
         },
         files: [
-          '<%= yeoman.app %>/*.html',
+          '<%= yeoman.app %>/{,*/}*.html',
           '{.tmp,<%= yeoman.app %>}/styles/{,*/}*.css',
           '{.tmp,<%= yeoman.app %>}/scripts/{,*/}*.js',
           '<%= yeoman.app %>/images/{,*/}*.{png,jpg,jpeg,gif,webp,svg}',
@@ -57,6 +60,19 @@ module.exports = function (grunt) {
       app: {
         src: [
           '<%= yeoman.app %>/index.html'
+        ]
+      }
+    },
+    autoprefixer: {
+      options: ['last 1 version'],
+      dist: {
+        files: [
+          {
+            expand: true,
+            cwd: '.tmp/styles/',
+            src: '{,*/}*.css',
+            dest: '.tmp/styles/'
+          }
         ]
       }
     },
@@ -139,8 +155,7 @@ module.exports = function (grunt) {
           }
         ]
       },
-      server: '.tmp',
-      scripts: '.tmp/scripts/*'
+      server: '.tmp'
     },
     jshint: {
       options: {
@@ -162,21 +177,6 @@ module.exports = function (grunt) {
           reporter: 'XUnit'
         },
         dest: './test/xunit.xml'
-      }
-    },
-    autoprefixer: {
-      options: {
-        browsers: ['last 1 version']
-      },
-      dist: {
-        files: [
-          {
-            expand: true,
-            cwd: '.tmp/styles/',
-            src: '{,*/}*.css',
-            dest: '.tmp/styles/'
-          }
-        ]
       }
     },
     bless: {
@@ -434,13 +434,13 @@ module.exports = function (grunt) {
         rjsConfig: '<%= yeoman.app %>/scripts/main.js'
       }
     },
-	jsdoc : {
-        dist : {
-            src: ['app/scripts/{,*/}*.js', 'test/spec/{,*/}*.js'], 
-            options: {
-                destination: 'doc'
-            }
+    jsdoc: {
+      dist: {
+        src: ['app/scripts/{,*/}*.js', 'test/spec/{,*/}*.js'],
+        options: {
+          destination: 'doc'
         }
+      }
     },
     express: {
       options: {
@@ -455,7 +455,7 @@ module.exports = function (grunt) {
           livereload: true,
           serverreload: true,
           'debug-brk': 5858,
-          showStack : true,
+          showStack: true,
           server: require('path').resolve('./server/index'),
           bases: [require('path').resolve("./server")]
         }
@@ -472,10 +472,28 @@ module.exports = function (grunt) {
     grunt.task.run([
       'clean:server',
       'concurrent:server',
+      'configureProxies',
+      'wiredep',
+      'express:custom',
+      'autoprefixer',
+      //'copy:scripts',
+      'connect:livereload',
+      'watch'
+    ]);
+  });
+
+  grunt.registerTask('serverd', function (target) {
+    if (target === 'dist') {
+      return grunt.task.run(['build', 'connect:dist:keepalive']);
+    }
+
+    grunt.task.run([
+      'clean:server',
+      'concurrent:server',
+      'configureProxies',
       'wiredep',
       'express:debug',
       'autoprefixer',
-      //'copy:scripts',
       'connect:livereload',
       'watch'
     ]);
@@ -498,15 +516,15 @@ module.exports = function (grunt) {
     'autoprefixer',
     'copy:scripts',
     //'requirejs',,
-	'jsdoc',
-    'concat',
-    'cssmin',
-    'uglify',
+    'jsdoc',
+    //'concat',
+    //'cssmin',
+    //'uglify',
     'copy:dist',
     'bless:dist',
-    'rev',
-    'usemin',
-    'htmlmin:deploy'
+    //'rev',
+    //'usemin',
+    //'htmlmin:deploy'
   ]);
 
   grunt.registerTask('default', [

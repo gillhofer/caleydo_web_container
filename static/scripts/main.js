@@ -3,13 +3,12 @@ require.config({
   baseUrl: '/scripts',
   paths: {
     jquery: '../bower_components/jquery/jquery',
-    d3 : '../bower_components/d3/d3',
-    'caleydo-plugins-gen' : 'ts/caleydo-plugins-gen'
+    d3: '../bower_components/d3/d3',
+    'caleydo-plugins-gen': 'ts/caleydo-plugins-gen'
   }
 });
 
 require([
-    'app',
     'jquery',
     './ts/caleydo',
     './ts/caleydo-data',
@@ -22,17 +21,17 @@ require([
     console.log(C.version);
     console.log(JSON.stringify(plugins.list()));
     //console.log('Running jQuery ', $().jquery);
-    data.list().then(function(descs) {
+    data.list().then(function (descs) {
       console.log(JSON.stringify(Object.keys(descs)));
     });
     data.get('test')
       .then(function (matrix) {
         //matrix(1,2,3);
-        matrix.on("loaded", function() {
+        matrix.on("loaded", function () {
           console.log("loaded");
         });
         var visses = plugins.listVis(matrix);
-        visses.forEach(function(vis) {
+        visses.forEach(function (vis) {
           vis.load().then(function (plugin) {
             plugin.create(matrix, $('body')[0]);
           });
