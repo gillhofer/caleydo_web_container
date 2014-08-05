@@ -41,7 +41,8 @@ module.exports = function (grunt) {
           '<%= yeoman.app %>/{,*/}*.html',
           '.tmp/styles/{,*/}*.css',
           '{.tmp,<%= yeoman.app %>}/scripts/{,*/}*.js',
-          '<%= yeoman.app %>/images/{,*/}*.{png,jpg,jpeg,gif,webp,svg}'
+          '<%= yeoman.app %>/images/{,*/}*.{png,jpg,jpeg,gif,webp,svg}',
+          'server/{,*/}*.js'
         ]
       }
     },
@@ -360,20 +361,21 @@ module.exports = function (grunt) {
       }
     },
     express: {
+      options: {
+        hostname: 'localhost',
+        port: 9002
+      },
       custom: {
-        options: {
-          hostname: 'localhost',
-          port: 9002,
-          server: require('path').resolve('./server/index')
-        }
+        server: require('path').resolve('./server/index')
       },
       debug: {
         options: {
-          hostname: 'localhost',
-          port: 9002,
-          server: require('path').resolve('./server/index'),
+          livereload: true,
+          serverreload: true,
           'debug-brk': 5858,
-          showStack : true
+          showStack : true,
+          server: require('path').resolve('./server/index'),
+          bases: [require('path').resolve("./server")]
         }
       }
     }
