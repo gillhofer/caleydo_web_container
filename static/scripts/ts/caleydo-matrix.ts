@@ -9,22 +9,71 @@ import idtypes = require('./caleydo-idtypes');
 import events = require('./caleydo-events');
 
 export interface IMatrix extends events.EventHandler {
+  /**
+   * dimension of this matrix row x col
+   */
   dim: number[];
+  /**
+   * nrow * ncol
+   */
   length : number;
+  /**
+   * number of rows
+   */
   nrow: number;
+  /**
+   * number of cols
+   */
   ncol : number;
+  /**
+   * type of the value - to be specified
+   */
   valuetype:any;
+  /**
+   * row id type
+   */
   rowtype:idtypes.IDType;
+  /**
+   * column id type
+   */
   coltype:idtypes.IDType;
 
+  /**
+   * creates a new view on this matrix specified by the given range
+   * @param range
+   */
   view(range?:ranges.Range) : IMatrix;
+  /**
+   * transposed version of this matrix
+   */
   t : IMatrix;
+  /**
+   * returns a promise for getting the col names of the matrix
+   * @param range
+   * @returns {IPromise<string[]>}
+   */
   cols(range?:ranges.Range) : C.IPromise<string[]>;
+  /**
+   * returns a promise for getting the row names of the matrix
+   * @param range
+   */
   rows(range?:ranges.Range) : C.IPromise<string[]>;
+  /**
+   * returns a promise for getting one cell
+   * @param i
+   * @param j
+   */
   at(i:number, j:number) : C.IPromise<any>;
+  /**
+   * returns a promise for getting the data as two dimensional array
+   * @param range
+   */
   data(range?:ranges.Range) : C.IPromise<any[][]>;
 }
 
+/**
+ * base class for different Matrix implementations, views, transposed,...
+ */
 export class MatrixBase extends events.EventHandler {
   constructor(public _root:IMatrix) {
     super();
@@ -55,6 +104,9 @@ export class MatrixBase extends events.EventHandler {
   }
 }
 
+/**
+ * root matrix implementation holding the data
+ */
 export class Matrix extends MatrixBase implements IMatrix {
   t:IMatrix;
   valuetype:any;
@@ -169,7 +221,7 @@ class TransposedMatrix extends MatrixBase  implements IMatrix{
 
   size() {
     var s = this.t.dim;
-    return [s[1], s[0]];
+    return [s[1], s[0]]; //swap dimension
   }
 
   at(i:number, j:number) {

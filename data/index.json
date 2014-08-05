@@ -1,5 +1,6 @@
 [
   {
+    "id": "test",
     "name": "Test 10x10",
     "path": "test_10x10.csv",
     "type": "matrix",
@@ -12,6 +13,7 @@
     }
   },
   {
+    "id": "test100x10",
     "name": "Test 100x10",
     "path": "test_100x10.csv",
     "size": [100, 10],
@@ -24,6 +26,7 @@
     }
   },
   {
+    "id": "test10x100",
     "name": "Test 10x100",
     "path": "test_10x100.csv",
     "size": [10, 100],
@@ -36,6 +39,7 @@
     }
   },
   {
+    "id": "testh",
     "name": "Test Heterogenous 10x4",
     "path": "test_h10x4.csv",
     "size": [10, 4],
@@ -59,12 +63,12 @@
       {
         "name": "Age",
         "type": "int",
-        "range": [0,100]
+        "range": [0, 100]
       },
       {
         "name": "Value",
         "type": "real",
-        "range": [0,1]
+        "range": [0, 1]
       }
     ]
   }

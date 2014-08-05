@@ -6,6 +6,10 @@ import matrix = require('./caleydo-matrix');
 'use strict';
 
 var cache = undefined;
+var loader = C.getJSON('api/dataset').then(function (r) {
+  cache = transform(r);
+  return cache;
+});
 function transformEntry(desc) {
   if (desc === undefined) {
     return desc;
@@ -17,20 +21,14 @@ function transformEntry(desc) {
 }
 function transform(descs) {
   var r = {};
-  Object.keys(descs).forEach(function (name) {
-    r[name] = transformEntry(descs[name]);
+  descs.forEach(function (entry) {
+    r[entry.id] = transformEntry(entry);
   });
   return r;
 }
 
 export function list() {
-  if (cache) {
-    return C.resolved(cache);
-  }
-  return C.getJSON('data/index.json').then(function (r) {
-    cache = transform(r);
-    return cache;
-  });
+  return loader;
 }
 export function get(name) {
   return this.list().then(function (data) {

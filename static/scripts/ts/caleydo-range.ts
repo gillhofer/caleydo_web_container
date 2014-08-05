@@ -149,6 +149,7 @@ export class RangeDim {
     }
     r._step = sub._step * this._step;
 
+    //FIXME not yet implement
     if (sub._from >= 0 == this._from >= 0) { //both same sign
         r._from = this._from + sub._from;
     } else if (sub._from < 0 && this._from < 0) {
@@ -286,12 +287,20 @@ export class Range {
     return this.dims.every((dim) => dim.isAll);
   }
 
+  /**
+   * number of defined dimensions
+   * @returns {number}
+   */
   get ndim() {
     return this.dims.length;
   }
 
   /**
-   * combines this range with another one
+   * combines this range with another and returns a new one
+   * this = (1,3,4), sub = (2) -> (2)
+   * (2)(1,2,3)
+   * @param other
+   * @returns {*}
    */
   preMultiply(other: Range, size: number[]) {
     if (this.isAll) {
@@ -339,6 +348,7 @@ export class Range {
     }
     var ndim = this.ndim;
     var that = this;
+    //recursive variant for just filtering the needed rows
     function filterDim(i: number) {
       if (i >= ndim) { //out of range no filtering anymore
         return C.identity;
@@ -363,6 +373,7 @@ export class Range {
     if (r) {
       return r;
     }
+    //not yet existing create one
     this.dims[dimension] = new RangeDim();
     return this.dims[dimension];
   }
@@ -391,6 +402,13 @@ export class Range {
       return r.size(size[i]);
     });
   }
+
+  /**
+   * utility function for a generic version for calling all sub dimensions
+   * @param name
+   * @param args
+   * @returns {*}
+   */
   private gen(name, args) : any{
     if (args.length === 0) {
       return this.dims.map(function (d) {

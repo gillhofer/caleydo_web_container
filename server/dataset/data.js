@@ -15,7 +15,7 @@ var datasetBasePath = './data/';
 exports.list = function () {
   // expects an array of {name: <dataset name>, path: <relative path to datafile>} pairs
   //since the server is in a sub directory
-  var datasetIndex = JSON.parse(fs.readFileSync(datasetBasePath + 'dataset_index.json'));
+  var datasetIndex = JSON.parse(fs.readFileSync(datasetBasePath + 'index.json'));
   return datasetIndex;
 };
 
