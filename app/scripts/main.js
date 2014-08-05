@@ -1,8 +1,10 @@
 /*global require */
 require.config({
+  baseUrl: '/scripts',
   paths: {
     jquery: '../bower_components/jquery/jquery',
-    d3 : '../bower_components/d3/d3'
+    d3 : '../bower_components/d3/d3',
+    'caleydo-plugins-gen' : 'ts/caleydo-plugins-gen'
   }
 });
 

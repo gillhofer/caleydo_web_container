@@ -3,7 +3,7 @@
  */
 /// <reference path="../../../../tsd.d.ts" />
 
-import d = require('d3');
+import d3 = require('d3');
 import matrix = require('../caleydo-matrix');
 import plugins = require('../caleydo-plugins');
 import C = require('../caleydo');

@@ -1,8 +1,9 @@
 /**
  * Created by Samuel Gratzl on 05.08.2014.
  */
-import C = require('caleydo');
-import matrix = require('caleydo-matrix');
+import C = require('./caleydo');
+import require_ = require('require');
+import matrix = require('./caleydo-matrix');
 import plugindescs = require('caleydo-plugins-gen');
 
 export interface IPluginDesc {
@@ -29,10 +30,9 @@ export interface IVisualization {
 
 }
 
-declare var require;
 export function loadHelper(desc:IPluginDesc):() => C.IPromise<IPlugin> {
   return () => C.promised<IPlugin>((resolver) => {
-    require([desc.module], (m:IPlugin) => {
+    require_([desc.module], (m:IPlugin) => {
       if (!m.desc) {
         m.desc = desc;
       }
@@ -79,7 +79,7 @@ export function autoload():C.IPromise<IPlugin[]> {
       resolve([]);
     }
     //load all auto load plugins and return
-    require(auto, () => {
+    require_(auto, () => {
       //loaded
       resolve(C.argList(arguments));
     });

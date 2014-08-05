@@ -8,6 +8,7 @@ define(function () {
         {
           type: 'vis',
           name: 'heatmap',
+          module: './heatmap/index',
           description: 'simple heatmap',
           version: '0.0.1-alpha',
           size: function (dim) {
