@@ -5,3 +5,12 @@
 declare module "d3" {
   export = d3;
 }
+
+declare module 'require' {
+  function r(deps: string[], f: any);
+  export = r;
+}
+
+declare module 'caleydo-plugins-gen' {
+  export var plugins : any[];
+}
