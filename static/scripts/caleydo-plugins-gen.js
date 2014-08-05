@@ -20,6 +20,11 @@ define(function () {
           type: 'vis',
           name: 'table',
           module: './table/index',
+        },
+        {
+          type: 'vis',
+          name: 'parco',
+          module: './parco/index',
         }
 //auto generate end
       ]

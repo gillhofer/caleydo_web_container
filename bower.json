@@ -5,7 +5,9 @@
     "requirejs": "~2.1.8",
     "jquery": "~1.10.2",
     "d3": "~3.4.11",
-    "require-css": "~0.1.5"
+    "require-css": "~0.1.5",
+    "d3.parcoords": "http://syntagmatic.github.io/parallel-coordinates/d3.parcoords.js",
+    "d3.parcoords-css": "http://syntagmatic.github.io/parallel-coordinates/d3.parcoords.css"
   },
   "devDependencies": {}
 }
