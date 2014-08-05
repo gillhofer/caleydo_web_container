@@ -5,6 +5,11 @@ require.config({
     jquery: '../bower_components/jquery/jquery',
     d3: '../bower_components/d3/d3',
     'caleydo-plugins-gen': './caleydo-plugins-gen'
+  },
+  map: {
+    '*': {
+      'css': '../bower_components/require-css/css' // or whatever the path to require-css is
+    }
   }
 });
 
