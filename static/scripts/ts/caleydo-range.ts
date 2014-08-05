@@ -324,9 +324,7 @@ export class Range {
    */
   swap() {
     var r = new Range();
-    this.dims.forEach(function (d, i) {
-      r.dims[this.dims.length - 1 - i] = d.clone();
-    });
+    r.dims = this.dims.map((d) => d.clone()).reverse();
     return r;
   }
   /**
@@ -340,12 +338,12 @@ export class Range {
       return data;
     }
     var ndim = this.ndim;
-
+    var that = this;
     function filterDim(i: number) {
       if (i >= ndim) { //out of range no filtering anymore
         return C.identity;
       }
-      var d = this.dim(i);
+      var d = that.dim(i);
       var next = filterDim(i+1); //compute next transform
       var s = size[i];
       return (elem) => { //if the value is an array, filter it else return the value

@@ -206,7 +206,7 @@ class MatrixView extends MatrixBase  implements IMatrix{
   }
 
   size() {
-    return this.range.size(this.size());
+    return this.range.size(this._root.dim);
   }
 
   at(i: number, j : number) {
