@@ -4,7 +4,7 @@ require.config({
   paths: {
     jquery: '../bower_components/jquery/jquery',
     d3: '../bower_components/d3/d3',
-    'caleydo-plugins-gen': 'ts/caleydo-plugins-gen'
+    'caleydo-plugins-gen': './caleydo-plugins-gen'
   }
 });
 
@@ -13,11 +13,10 @@ require([
     './ts/caleydo',
     './ts/caleydo-data',
     './ts/caleydo-plugins'
-  ], function (app, $, C, data, plugins) {
+  ], function ($, C, data, plugins) {
     'use strict';
     // use app here
     var a = 5;
-    console.log(app);
     console.log(C.version);
     console.log(JSON.stringify(plugins.list()));
     //console.log('Running jQuery ', $().jquery);
