@@ -34,6 +34,15 @@ export function resolved(result) {
   return $.Deferred().resolve(result).promise();
 }
 
+/**
+ * when all given promises are done
+ * @param deferreds the promises to wait for
+ * @type {IPromise<Array<any>>}
+ */
+export function all(promises: any[]): IPromise<Array<any>> {
+  return $.when.apply($,promises).then(() => argList(arguments));
+}
+
 export interface IPromise<T> extends JQueryPromise<T> {
 
 }

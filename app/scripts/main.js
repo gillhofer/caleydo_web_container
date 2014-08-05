@@ -32,8 +32,10 @@ require([
           console.log("loaded");
         });
         var visses = plugins.listVis(matrix);
-        visses[0].load().then(function(plugin) {
-          plugin.create(matrix, $('body')[0]);
+        visses.forEach(function(vis) {
+          vis.load().then(function (plugin) {
+            plugin.create(matrix, $('body')[0]);
+          });
         });
         return matrix.rows();
       })

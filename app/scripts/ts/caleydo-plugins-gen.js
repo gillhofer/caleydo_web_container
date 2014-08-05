@@ -9,11 +9,14 @@ define(function () {
           type: 'vis',
           name: 'heatmap',
           module: './heatmap/index',
-          description: 'simple heatmap',
-          version: '0.0.1-alpha',
           size: function (dim) {
             return [dim[0] * 20, dim[1] * 20];
           }
+        },
+        {
+          type: 'vis',
+          name: 'table',
+          module: './table/index',
         }
 //auto generate end
       ]
