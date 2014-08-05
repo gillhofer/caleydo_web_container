@@ -1,103 +1,22 @@
 <!doctype html>
-<html>
-  <head>
-    <title>Caleydo Web</title>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <link rel="shortcut icon" type="image/x-icon" href="favicon.ico"/>
-    <link rel="apple-touch-icon" href="favicon.png"/>
-    
-    <!-- build:css(.tmp) styles/main.css -->
-    <!-- bower:css -->
-    <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.css" />
-    <link rel="stylesheet" href="bower_components/font-awesome/css/font-awesome.css" />
-    <!-- endbower -->
-    <!-- endbuild -->
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<title>yawa</title>
+		<meta name="description" content="">
+		<meta name="viewport" content="width=device-width">
+		<!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
+		<!-- build:css(.tmp) styles/main.css -->
+		<link rel="stylesheet" href="styles/main.css">
+		<!-- endbuild -->
+		
+		<script data-main="scripts/main" src="bower_components/requirejs/require.js"></script>
+	</head>
+	<body>
 
-
-    <link rel="stylesheet" href="bower_components/jquery-ui/themes/ui-darkness/jquery-ui.css" />
-    <link rel="stylesheet" href="styles/main.css" />
-
-    <!-- build:js scripts/plugins.js -->
-    <!-- bower:js -->
-    <script src="bower_components/es5-shim/es5-shim.js"></script>
-    <script src="bower_components/jquery/dist/jquery.js"></script>
-    <script src="bower_components/bootstrap/dist/js/bootstrap.js"></script>
-    <script src="bower_components/d3/d3.js"></script>
-    <script src="bower_components/jquery-ui/jquery-ui.js"></script>
-    <!-- endbower -->
-    <!-- endbuild -->
-
-    <!-- build:js({.tmp,app}) scripts/scripts.js -->
-    <script src="scripts/main.js"></script>
-    <!-- endbuild -->
-  </head>
-
-  <body>
-    <img src="images/logo.png" />
-
-    <h1>Caleydo Web - Server API</h1>
-
-    <h2>Meta</h2>
-    <ul>
-      <li>
-        <code>about</code> - Returns information about the server.
-        <p>
-          <i>Examples</i>
-          <ul>
-            <li><a href="/api/about"><i class="fa fa-bomb"></i> about</a></li>
-          </ul>
-        </p>
-
-      </li>
-    </ul>
-
-    <h2>Data</h2>
-    <ul>
-      <li>
-        <code>dataset</code> - Returns a list of datasets.
-        <p>
-          <i>Examples</i>
-          <ul>
-            <li><a href="/api/dataset">/api/dataset</a></li>
-          </ul>
-        </p>
-      </li>
-      <li>
-        <code>dataset/<i>id</i></code> - Returns all rows contained in dataset <code><i>id</i></code>.
-        <p>
-          <i>Parameters</i>
-          <ul>
-            <li><code>start</code> - Limit returned rows to those &gt;= <code>start</code>. Rows are 0-indexed.</li>
-            <li><code>end</code> - Limit returned rows to those &lt; <code>end</code>. Rows are 0-indexed.</li>
-          </ul>        
-        </p>
-        <p>
-          <i>Examples</i>
-          <ul>
-            <li><a href="/api/dataset/0?start=3&end=5">/api/dataset/0?start=3&end=5</a></li>
-          </ul>
-        </p>
-      </li>
-    </ul>
-
-    <h2>Datasets</h2>
-    <ul id="datasets">
-
-    </ul>
-
-    <h2>Dataset </h2>
-    <table id="filetable" style="display: none">
-        <thead>
-            <tr></tr>
-        </thead>
-        <tbody>
-
-        </tbody>
-    </table>
-
-    <svg width="300" height="300" id="fileheatmap" style="display: none">
-
-    </svg>
-  </body>
+	</body>
 </html>
