@@ -39,6 +39,18 @@
     }
   },
   {
+    "id": "test10",
+    "name": "Test 10",
+    "path": "test_10.csv",
+    "size": 10,
+    "type": "vector",
+    "idtype": "patient",
+    "value": {
+      "type": "real",
+      "range": [0, 1]
+    }
+  },
+  {
     "id": "testh",
     "name": "Test Heterogenous 10x4",
     "path": "test_h10x4.csv",
@@ -48,27 +60,33 @@
     "columns": [
       {
         "name": "Gender",
-        "type": "categorical",
-        "categories": [
-          {
-            "name": "male",
-            "color": "blue"
-          },
-          {
-            "name": "female",
-            "color": "red"
-          }
-        ]
+        "value" : {
+          "type": "categorical",
+          "categories": [
+            {
+              "name": "male",
+              "color": "blue"
+            },
+            {
+              "name": "female",
+              "color": "red"
+            }
+          ]
+        }
       },
       {
         "name": "Age",
-        "type": "int",
-        "range": [0, 100]
+        "value" : {
+          "type": "int",
+          "range": [0, 100]
+        }
       },
       {
         "name": "Value",
-        "type": "real",
-        "range": [0, 1]
+        "value" : {
+          "type": "real",
+          "range": [0, 1]
+        }
       }
     ]
   }

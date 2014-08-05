@@ -6,13 +6,10 @@
 import C = require('./caleydo');
 import ranges = require('./caleydo-range');
 import idtypes = require('./caleydo-idtypes');
+import datatypes = require('./caleydo-datatype');
 import events = require('./caleydo-events');
 
-export interface IMatrix extends events.EventHandler {
-  /**
-   * dimension of this matrix row x col
-   */
-  dim: number[];
+export interface IMatrix extends datatypes.IDataType {
   /**
    * nrow * ncol
    */
@@ -79,6 +76,10 @@ export class MatrixBase extends events.EventHandler {
     super();
   }
 
+  get type() {
+    return 'matrix';
+  }
+
   size():number[] {
     throw new Error('not implemented');
   }
@@ -108,16 +109,20 @@ export class MatrixBase extends events.EventHandler {
  * root matrix implementation holding the data
  */
 export class Matrix extends MatrixBase implements IMatrix {
+  name: string;
+  id: string;
   t:IMatrix;
   valuetype:any;
   rowtype:idtypes.IDType;
   coltype:idtypes.IDType;
-  private _data : any[][] = null;
+  private _data : any = null;
 
   constructor(private desc:any) {
     super(null);
+    this.name = desc.name;
+    this.id = desc.id;
     this._root = this;
-    this.valuetype = desc.valuetype;
+    this.valuetype = desc.value;
     this.rowtype = idtypes.resolve(desc.rowtype);
     this.coltype = idtypes.resolve(desc.coltype);
     this.t = new TransposedMatrix(this);
@@ -199,6 +204,14 @@ class TransposedMatrix extends MatrixBase  implements IMatrix{
     this.t = base;
   }
 
+  get name() {
+    return this._root.name;
+  }
+
+  get id() {
+    return this._root.id;
+  }
+
   get valuetype() {
     return this._root.valuetype;
   }
@@ -249,6 +262,14 @@ class MatrixView extends MatrixBase  implements IMatrix{
     }
   }
 
+  get name() {
+    return this._root.name;
+  }
+
+  get id() {
+    return this._root.id;
+  }
+
   cols(range: ranges.Range = ranges.all()) {
     return this._root.cols(this.range.preMultiply(range, this._root.dim));
   }
@@ -267,7 +288,7 @@ class MatrixView extends MatrixBase  implements IMatrix{
   }
 
   data(range: ranges.Range = ranges.all()) {
-    return this._root.data(this.range.preMultiply(range, this._root.dim));
+    return this._root.data(this.range.preMultiply(range, this._root.dim)).then((data : any[][]) => datatypes.transpose(data));
   }
 
   view(range: ranges.Range = ranges.all()) {

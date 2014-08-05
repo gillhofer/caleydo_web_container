@@ -3,7 +3,7 @@
  */
 import C = require('./caleydo');
 import require_ = require('require');
-import matrix = require('./caleydo-matrix');
+import datatypes = require('./caleydo-datatype');
 import plugindescs = require('caleydo-plugins-gen');
 
 export interface IPluginDesc {
@@ -16,7 +16,7 @@ export interface IPluginDesc {
   load() : C.IPromise<IPlugin>;
 }
 export interface IVisualizationPluginDesc extends IPluginDesc {
-  filter : (data:matrix.IMatrix) => boolean;
+  filter : (data:datatypes.IDataType) => boolean;
   size : (dim:number[]) => number[];
 }
 export interface IPlugin {
@@ -24,7 +24,7 @@ export interface IPlugin {
 }
 export interface IVisualizationPlugin extends IPlugin {
   desc: IVisualizationPluginDesc;
-  create(data:matrix.IMatrix, parent:HTMLElement) : IVisualization;
+  create(data:datatypes.IDataType, parent:HTMLElement) : IVisualization;
 }
 export interface IVisualization {
 
@@ -98,7 +98,7 @@ export function list(type = '') {
   return plugins.filter((desc) => desc.type === type);
 }
 
-export function listVis(data:matrix.IMatrix):IVisualizationPluginDesc[] {
+export function listVis(data:datatypes.IDataType):IVisualizationPluginDesc[] {
   return plugins
     .filter(function(p : any) { return p.type === 'vis' && p.filter && p.filter(data); })
     .map(function(p) { return <IVisualizationPluginDesc>(<any>p); });

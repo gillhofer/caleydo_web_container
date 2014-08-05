@@ -11,6 +11,9 @@ define(function () {
           module: './heatmap/index',
           size: function (dim) {
             return [dim[0] * 20, dim[1] * 20];
+          },
+          filter: function (data) {
+            return data.type === 'matrix';
           }
         },
         {

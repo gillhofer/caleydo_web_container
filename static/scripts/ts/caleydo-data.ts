@@ -3,6 +3,8 @@
  */
 import C = require('./caleydo');
 import matrix = require('./caleydo-matrix');
+import vector = require('./caleydo-vector');
+import table = require('./caleydo-table');
 'use strict';
 
 var cache = undefined;
@@ -14,8 +16,13 @@ function transformEntry(desc) {
   if (desc === undefined) {
     return desc;
   }
-  if (desc.type === 'matrix') {
-    return new matrix.Matrix(desc);
+  switch(desc.type) {
+    case 'matrix':
+      return new matrix.Matrix(desc);
+    case 'vector':
+      return new vector.Vector(desc);
+    case 'table':
+      return new table.Table(desc);
   }
   return desc;
 }

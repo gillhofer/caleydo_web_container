@@ -6,10 +6,10 @@
 import C = require('./caleydo');
 import ranges = require('./caleydo-range');
 import idtypes = require('./caleydo-idtypes');
+import datatypes = require('./caleydo-datatype');
 import events = require('./caleydo-events');
 
-export interface IVector extends events.EventHandler {
-  dim: number[];
+export interface IVector extends datatypes.IDataType {
   length : number;
   /**
    * type of the value - to be specified
@@ -20,6 +20,10 @@ export interface IVector extends events.EventHandler {
    */
   idtype:idtypes.IDType;
 
+  /**
+   * return the associated ids of this vector
+   */
+  ids(range?:ranges.Range) : C.IPromise<string[]>;
   /**
    * creates a new view on this matrix specified by the given range
    * @param range
@@ -46,6 +50,10 @@ export class VectorBase extends events.EventHandler {
     super();
   }
 
+  get type() {
+    return 'vector';
+  }
+
   get dim() {
     return [this.length];
   }
@@ -58,7 +66,7 @@ export class VectorBase extends events.EventHandler {
     return this.size();
   }
 
-  view(range:ranges.Range = ranges.all()) : IVector {
+  view(range:ranges.Range = ranges.all()):IVector {
     return new VectorView(this._root, range);
   }
 }
@@ -69,13 +77,21 @@ export class VectorBase extends events.EventHandler {
 export class Vector extends VectorBase implements IVector {
   valuetype:any;
   idtype:idtypes.IDType;
-  private _data : any[] = null;
+  private _data:any = null;
 
   constructor(private desc:any) {
     super(null);
     this._root = this;
-    this.valuetype = desc.valuetype;
+    this.valuetype = desc.value;
     this.idtype = idtypes.resolve(desc.idtype);
+  }
+
+  get name() {
+    return this.desc.name;
+  }
+
+  get id() {
+    return this.desc.id;
   }
 
   /**
@@ -107,10 +123,17 @@ export class Vector extends VectorBase implements IVector {
     });
   }
 
-  data(range: ranges.Range = ranges.all()) {
+  data(range:ranges.Range = ranges.all()) {
     var that = this;
     return this.load().then(function (data) {
       return range.filter(data.data, that.dim);
+    });
+  }
+
+  ids(range:ranges.Range = ranges.all()) {
+    var that = this;
+    return this.load().then(function (data) {
+      return range.filter(data.rows, that.dim);
     });
   }
 
@@ -126,26 +149,38 @@ export class Vector extends VectorBase implements IVector {
  * @param t optional its transposed version
  * @constructor
  */
-class VectorView extends VectorBase  implements IVector{
+class VectorView extends VectorBase implements IVector {
   constructor(root:IVector, private range:ranges.Range) {
     super(root);
     this.range = range;
+  }
+
+  get name() {
+    return this._root.name;
+  }
+
+  get id() {
+    return this._root.id;
   }
 
   size() {
     return this.range.size(this._root.dim)[0];
   }
 
-  at(i: number) {
+  at(i:number) {
     var inverted = this.range.invert([i], this._root.dim);
     return this._root.at(inverted[0]);
   }
 
-  data(range: ranges.Range = ranges.all()) {
+  data(range:ranges.Range = ranges.all()) {
     return this._root.data(this.range.preMultiply(range, this._root.dim));
   }
 
-  view(range: ranges.Range = ranges.all()) {
+  ids(range:ranges.Range = ranges.all()) {
+    return this._root.ids(this.range.preMultiply(range, this._root.dim));
+  }
+
+  view(range:ranges.Range = ranges.all()) {
     return new VectorView(this._root, this.range.preMultiply(range, this.dim));
   }
 
