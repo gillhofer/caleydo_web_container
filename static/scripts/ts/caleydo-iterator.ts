@@ -3,16 +3,32 @@
  */
 
 'use strict';
+/**
+ * basic iterator interface
+ */
 export interface IIterator<T> {
   hasNext() : boolean;
   next() : T;
+  /**
+   * converts this whole itertor into an array
+   */
   asList() : T[];
+
   isIncreasing : boolean;
   isDecreasing : boolean;
+  /**
+   * increases by one
+   */
   byOne : boolean;
+  /**
+   * decreases by one
+   */
   byMinusOne : boolean;
 }
 
+/**
+ * iterator for a given range
+ */
 export class Iterator implements IIterator<number>{
 
   private act:number;

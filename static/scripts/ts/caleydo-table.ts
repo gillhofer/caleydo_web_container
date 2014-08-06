@@ -274,6 +274,11 @@ export class TableVector extends vector.VectorBase implements vector.IVector {
   }
 }
 
+/**
+ * module entry point for creating a datatype
+ * @param desc
+ * @returns {ITable}
+ */
 export function create(desc: datatypes.IDataDescription): ITable {
   return new Table(desc);
 }

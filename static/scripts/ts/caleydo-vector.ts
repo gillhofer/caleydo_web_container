@@ -10,6 +10,9 @@ import datatypes = require('./caleydo-datatype');
 import events = require('./caleydo-events');
 
 export interface IVector extends datatypes.IDataType {
+  /**
+   * length of the vector
+   */
   length : number;
   /**
    * type of the value - to be specified
@@ -185,6 +188,11 @@ class VectorView extends VectorBase implements IVector {
   }
 }
 
+/**
+ * module entry point for creating a datatype
+ * @param desc
+ * @returns {IVector}
+ */
 export function create(desc: datatypes.IDataDescription): IVector {
   return new Vector(desc);
 }
