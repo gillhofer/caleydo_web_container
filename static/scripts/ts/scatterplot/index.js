@@ -11,11 +11,16 @@ define(['exports', 'd3', '../caleydo'], function (exports, d3, C) {
 
     ScatterPlot.prototype.build = function ($parent) {
       var dims = this.data.dim;
-      var width = 200, height = 200;
+      var width = 100, height = 100;
       var div = $parent.append('div');
 
       var xcol = 0;
       var ycol = 1;
+
+      // add the tooltip area to the webpage
+      var tooltip = d3.select("body").append("div")
+        .attr("class", "tooltip")
+        .style("opacity", 0);
 
       var svg = div.append("svg").attr({
         'class': 'scatterplot',
@@ -25,8 +30,13 @@ define(['exports', 'd3', '../caleydo'], function (exports, d3, C) {
 
       that = this;
 
+      div.append("div").attr("id", "hover-points");
+
       // bind data to chart
-      this.data.data().then(function (arr) {
+      C.all([this.data.data(), this.data.rows()]).then(function (promise) {
+
+        var arr = promise[0];
+        var rowNames = promise[1];
 
         // create scales
         var x = d3.scale.linear().domain([0, d3.max(arr.map(function (d) {
@@ -46,10 +56,28 @@ define(['exports', 'd3', '../caleydo'], function (exports, d3, C) {
           .attr("cy", function (d) {
             return y(d[ycol]);
           })
-          .attr("r", 2);
-        //.on("mouseover", function(d) {
-        //  d3.select('#hover-food').text(d.name.substr(0,50));
-        //});
+          .attr("r", 2)
+          .on("mouseover", function (d, i) {
+            d3.select('#hover-points').text(rowNames[i]);
+
+            d3.select(this).attr("fill", "red");
+
+            tooltip.transition()
+              .duration(200)
+              .style("opacity", .9);
+            tooltip.html(rowNames[i])
+              .style("left", (d3.event.pageX + 5) + "px")
+              .style("top", (d3.event.pageY - 28) + "px")
+          })
+          .on("mouseout", function (d) {
+
+            d3.select(this).attr("fill", "black");
+
+            tooltip.transition()
+              .duration(500)
+              .style("opacity", 0);
+          });
+        ;
       });
 
       div.append("select").attr("id", "xaxis-selection");
@@ -67,7 +95,7 @@ define(['exports', 'd3', '../caleydo'], function (exports, d3, C) {
           });
 
         d3.select("#xaxis-selection")
-          .on("change", function() {
+          .on("change", function () {
             xcol = this.selectedIndex;
             update()
           });
@@ -83,7 +111,7 @@ define(['exports', 'd3', '../caleydo'], function (exports, d3, C) {
           });
 
         d3.select("#yaxis-selection")
-          .on("change", function() {
+          .on("change", function () {
             ycol = this.selectedIndex;
             update()
           });
