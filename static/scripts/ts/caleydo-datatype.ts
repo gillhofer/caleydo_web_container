@@ -5,6 +5,9 @@
 'use strict';
 import events = require('./caleydo-events');
 
+/**
+ * basic description elements
+ */
 export interface IDataDescription {
   name: string;
   id: string;
@@ -21,6 +24,9 @@ export interface IDataType extends events.EventHandler {
   dim: number[];
 }
 
+/**
+ * dummy data type just holding the description
+ */
 export class DummyDataType extends events.EventHandler implements IDataType {
   constructor(public desc: IDataDescription) {
     super();
@@ -31,6 +37,11 @@ export class DummyDataType extends events.EventHandler implements IDataType {
   }
 }
 
+/**
+ * transpose the given matrix
+ * @param m
+ * @returns {*}
+ */
 export function transpose(m: any[][]) {
   if (m.length === 0 || m[0].length === 0) {
     return [];

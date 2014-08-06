@@ -300,6 +300,11 @@ class MatrixView extends MatrixBase  implements IMatrix{
   }
 }
 
+/**
+ * module entry point for creating a datatype
+ * @param desc
+ * @returns {IMatrix}
+ */
 export function create(desc: datatypes.IDataDescription): IMatrix {
   return new Matrix(desc);
 }

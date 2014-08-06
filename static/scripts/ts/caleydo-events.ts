@@ -5,6 +5,9 @@
 import $ = require('jquery');
 'use strict';
 
+/**
+ * EventHandler base class, in the backend JQuery is used
+ */
 export class EventHandler {
   private $obj = $({});
 

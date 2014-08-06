@@ -16,12 +16,27 @@ export interface IPluginDesc {
   description: string;
   load() : C.IPromise<IPlugin>;
 }
+
+/**
+ * basic plugin element
+ */
 export interface IPlugin {
+  /**
+   * underlying plugin description
+   */
   desc: IPluginDesc;
+  /**
+   * link to the referenced method as described in the description
+   */
   factory(): any;
 }
 
-export function loadHelper(desc:IPluginDesc):() => C.IPromise<IPlugin> {
+/**
+ * utility function to create a loading promise function which wraps requirejs
+ * @param desc
+ * @returns {function(): Promise}
+ */
+function loadHelper(desc:IPluginDesc):() => C.IPromise<IPlugin> {
   return () => C.promised<IPlugin>((resolver) => {
     require_([desc.module], (m) => {
       resolver({
@@ -33,6 +48,11 @@ export function loadHelper(desc:IPluginDesc):() => C.IPromise<IPlugin> {
   });
 }
 
+/**
+ * parses the given descriptions and creates a full description out of it
+ * @param descs
+ * @returns {IPluginDesc[]}
+ */
 function parsePlugins(descs : any[]) {
   return descs.map((desc) => {
     //provide some default values
