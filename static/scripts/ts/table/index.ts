@@ -36,6 +36,7 @@ export class Table implements plugins.IVisualization {
       var $headers = $table.select('thead tr').selectAll('th').data(['ID'].concat(cols));
       $headers.enter().append('th');
       $headers.text(C.identity);
+      console.log("Test:" +C.identity(1));
       $headers.exit().remove();
 
       var $rows = $table.select('tbody').selectAll('tr').data(d);

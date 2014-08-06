@@ -18,19 +18,16 @@ define(['exports', 'd3', 'd3.parcoords', '../caleydo'], function (exports, d3, d
         style: 'width:360px;height:150px'
       });
 
-      var data = [
-        [0,-0,0,0,0,3 ],
-        [1,-1,1,2,1,6 ],
-        [2,-2,4,4,0.5,2],
-        [3,-3,9,6,0.33,4],
-        [4,-4,16,8,0.25,9]
-      ];
-
-      var pc = d3_parcoords()('#example')
-        .data(data)
-        .render()
-        .ticks(3)
-        .createAxes();
+      this.data.data().then(function (arr) {
+        var pc = d3_parcoords()("#example")
+          .data(arr)
+          .render()
+          .ticks(3)
+          .createAxes()
+          .reorderable()
+          .brushable()
+          .interactive();
+      });
     };
     return ParCo;
   })();
