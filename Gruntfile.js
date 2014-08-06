@@ -458,7 +458,7 @@ module.exports = function (grunt) {
       debug: {
         options: {
           'debug-brk': 5858,
-          showStack: true,
+          showStack: true
         }
       }
     }

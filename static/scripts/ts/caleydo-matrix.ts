@@ -109,22 +109,19 @@ export class MatrixBase extends events.EventHandler {
  * root matrix implementation holding the data
  */
 export class Matrix extends MatrixBase implements IMatrix {
-  name: string;
-  id: string;
   t:IMatrix;
   valuetype:any;
   rowtype:idtypes.IDType;
   coltype:idtypes.IDType;
   private _data : any = null;
 
-  constructor(private desc:any) {
+  constructor(public desc: datatypes.IDataDescription) {
     super(null);
-    this.name = desc.name;
-    this.id = desc.id;
     this._root = this;
-    this.valuetype = desc.value;
-    this.rowtype = idtypes.resolve(desc.rowtype);
-    this.coltype = idtypes.resolve(desc.coltype);
+    var d = <any>desc;
+    this.valuetype = d.value;
+    this.rowtype = idtypes.resolve(d.rowtype);
+    this.coltype = idtypes.resolve(d.coltype);
     this.t = new TransposedMatrix(this);
   }
 
@@ -138,7 +135,7 @@ export class Matrix extends MatrixBase implements IMatrix {
     if (this._data) { //in the cache
       return C.resolved(this._data);
     }
-    return C.getJSON(this.desc.uri).then(function (data) {
+    return C.getJSON((<any>this.desc).uri).then(function (data) {
       that._data = data; //store cache
       that.fire("loaded", this);
       return data;
@@ -187,7 +184,7 @@ export class Matrix extends MatrixBase implements IMatrix {
   }
 
   size() {
-    return this.desc.size;
+    return (<any>this.desc).size;
   }
 }
 
@@ -204,12 +201,8 @@ class TransposedMatrix extends MatrixBase  implements IMatrix{
     this.t = base;
   }
 
-  get name() {
-    return this._root.name;
-  }
-
-  get id() {
-    return this._root.id;
+  get desc() {
+    return this._root.desc;
   }
 
   get valuetype() {
@@ -262,12 +255,8 @@ class MatrixView extends MatrixBase  implements IMatrix{
     }
   }
 
-  get name() {
-    return this._root.name;
-  }
-
-  get id() {
-    return this._root.id;
+  get desc() {
+    return this._root.desc;
   }
 
   cols(range: ranges.Range = ranges.all()) {
@@ -309,4 +298,8 @@ class MatrixView extends MatrixBase  implements IMatrix{
   get coltype() {
     return this._root.coltype;
   }
+}
+
+export function create(desc: datatypes.IDataDescription): IMatrix {
+  return new Matrix(desc);
 }

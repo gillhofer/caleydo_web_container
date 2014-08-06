@@ -11,57 +11,40 @@ export interface IPluginDesc {
   name : string;
   autoload: boolean;
   module : string;
+  factory: string;
   version: string;
   description: string;
   load() : C.IPromise<IPlugin>;
 }
-export interface IVisualizationPluginDesc extends IPluginDesc {
-  filter : (data:datatypes.IDataType) => boolean;
-  size : (dim:number[]) => number[];
-}
 export interface IPlugin {
   desc: IPluginDesc;
-}
-export interface IVisualizationPlugin extends IPlugin {
-  desc: IVisualizationPluginDesc;
-  create(data:datatypes.IDataType, parent:HTMLElement) : IVisualization;
-}
-export interface IVisualization {
-
+  factory(): any;
 }
 
 export function loadHelper(desc:IPluginDesc):() => C.IPromise<IPlugin> {
   return () => C.promised<IPlugin>((resolver) => {
-    require_([desc.module], (m:IPlugin) => {
-      if (!m.desc) {
-        m.desc = desc;
-      }
-      resolver(m);
+    require_([desc.module], (m) => {
+      resolver({
+        desc: desc,
+        impl : m,
+        factory : m[desc.factory]
+      });
     });
   });
 }
 
 function parsePlugins(descs : any[]) {
   return descs.map((desc) => {
-    var m:string = desc.module || desc.name;
-    var r:any = {
-      name: <string>(desc.name),
-      type: <string>(desc.type),
-      module: m,
-      autoload: <boolean>(desc.autoload || false),
-      description: <string>(desc.description || ''),
-      version: <string>(desc.version || '1.0'),
-      load: null
-    };
-    r.load = loadHelper(<IPluginDesc>r);
-    switch (desc.type) {
-      case 'vis':
-      {
-        r.size = desc.size || ((dim:number) => NaN);
-        r.filter = desc.filter || C.constant(true);
-      }
-    }
-    return <IPluginDesc>r;
+    //provide some default values
+    desc = C.mixin({
+      'module' : './'+desc.name+'/index',
+      factory: 'create',
+      autoload: false,
+      description: '',
+      version: '1.0'
+    },desc);
+    desc.load = loadHelper(<IPluginDesc>desc);
+    return <IPluginDesc>desc;
   });
 }
 
@@ -98,8 +81,7 @@ export function list(type = '') {
   return plugins.filter((desc) => desc.type === type);
 }
 
-export function listVis(data:datatypes.IDataType):IVisualizationPluginDesc[] {
+export function listVis(data:datatypes.IDataType):IPluginDesc[] {
   return plugins
-    .filter(function(p : any) { return p.type === 'vis' && p.filter && p.filter(data); })
-    .map(function(p) { return <IVisualizationPluginDesc>(<any>p); });
+    .filter(function(p : any) { return p.type === 'vis' && (!p.filter || p.filter(data)); });
 }
