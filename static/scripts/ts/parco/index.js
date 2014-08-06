@@ -26,7 +26,7 @@ define(['exports', 'd3', 'd3.parcoords', '../caleydo'], function (exports, d3, d
         [4,-4,16,8,0.25,9]
       ];
 
-      var pc = d3_parcoords()('#example')
+      var pc = d3_parcoords()($svg.node())
         .data(data)
         .render()
         .ticks(3)

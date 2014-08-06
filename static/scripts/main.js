@@ -46,7 +46,7 @@ require([
         var visses = plugins.listVis(m);
         visses.forEach(function (vis) {
           vis.load().then(function (plugin) {
-            plugin.create(m, $('body')[0]);
+            plugin.factory(m, $('body')[0]);
           });
         });
         return matrix.rows();

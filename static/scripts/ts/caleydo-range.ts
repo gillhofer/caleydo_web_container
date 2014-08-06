@@ -36,6 +36,20 @@ export class RangeDim {
     return this._from === 0 && this._to === -1 && this._step === 1;
   }
 
+  get isNone() {
+    if (this.isList) {
+      return this.list().length === 0;
+    }
+    if (this._to === this._from) {
+      return true;
+    }
+    if (this._step > 0) {
+      return this._to >= 0 && this._to <= this._from;
+    } else {
+      return this._to >= 0 && this._to >= this._from;
+    }
+  }
+
   /**
    * whether this range has internal a list of items instead of a range
    * @returns {boolean}
@@ -105,7 +119,7 @@ export class RangeDim {
   }
 
 
-  slice(from, to, step) {
+  slice(from?:number, to?:number, step?:number) {
     this._from = C.isUndefined(from) ? 0 : from;
     this._to = C.isUndefined(to) ? -1 : to;
     this._step = C.isUndefined(step) ? this._step : step;
@@ -117,7 +131,7 @@ export class RangeDim {
    * @param size
    * @returns {*}
    */
-  size(size: number) {
+  size(size:number) {
     if (this.isList) {
       return this.list().length;
     }
@@ -132,7 +146,7 @@ export class RangeDim {
    * @param other
    * @returns {*}
    */
-  preMultiply(sub: RangeDim, size: number) : RangeDim {
+  preMultiply(sub:RangeDim, size:number):RangeDim {
     if (this.isAll) {
       return sub.clone();
     }
@@ -151,14 +165,69 @@ export class RangeDim {
 
     //FIXME not yet implement
     if (sub._from >= 0 == this._from >= 0) { //both same sign
-        r._from = this._from + sub._from;
+      r._from = this._from + sub._from;
     } else if (sub._from < 0 && this._from < 0) {
-        r._from = this._from +1 + sub._from; //-1 + 1 -1 = -1
+      r._from = this._from + 1 + sub._from; //-1 + 1 -1 = -1
     } else { //mixed
 
     }
 
     return r;
+  }
+
+  static empty() {
+    return new RangeDim().slice(0, 0, 1);
+  }
+
+  /**
+   * logical union between two ranges
+   * @param other
+   * @returns {RangeDim}
+   */
+  union(other:RangeDim, size: number) {
+    if (this.isAll || other.isNone) {
+      return this.clone();
+    }
+    if (other.isAll || this.isNone) {
+      return other.clone();
+    }
+    //real union FIXME
+    return this.clone();
+  }
+
+  /**
+   * logical intersection between two ranges
+   * @param other
+   * @returns {RangeDim}
+   */
+  intersect(other:RangeDim, size: number) {
+    if (this.isNone || other.isNone) {
+      return RangeDim.empty();
+    }
+    if (this.isAll) {
+      return other.clone();
+    }
+    if (other.isAll) {
+      return this.clone();
+    }
+    //real intersection FIXME
+    return this.clone();
+  }
+
+  /**
+   * logical difference between two ranges
+   * @param other
+   * @returns {RangeDim}
+   */
+  without(without:RangeDim, size: number) {
+    if (this.isNone || without.isNone) {
+      return this.clone();
+    }
+    if (without.isAll) {
+      return RangeDim.empty();
+    }
+    //real difference FIXME
+    return this.clone();
   }
 
   /**
@@ -191,7 +260,7 @@ export class RangeDim {
    * @param size the total size for resolving negative indices
    * @returns {*}
    */
-  filter(data : any[], size : number, transform : (any) => any = C.identity) {
+  filter(data:any[], size:number, transform:(any) => any = C.identity) {
     if (this.isAll) {
       return data.map(transform);
     }
@@ -252,18 +321,18 @@ export class RangeDim {
    * @param code
    * @returns {RangeDim}
    */
-  static fromString(code: string) {
-    var r = new RangeDim(), parts: string[];
+  static fromString(code:string) {
+    var r = new RangeDim(), parts:string[];
 
     if (code.length === 0) {
       return r;
     }
     if (code.charAt(0) === '(') {
-      parts = code.substring(1,code.length-1).split(',');
+      parts = code.substring(1, code.length - 1).split(',');
       r.list(parts.map((v) => parseInt(v)));
     } else {
       parts = code.split(':');
-      r.slice(+parts[0],+parts[1], parts.length > 2 ? +parts[2] : 1);
+      r.slice(+parts[0], +parts[1], parts.length > 2 ? +parts[2] : 1);
     }
     return r;
   }
@@ -287,6 +356,10 @@ export class Range {
     return this.dims.every((dim) => dim.isAll);
   }
 
+  get isNone() {
+    return this.dims.every((dim) => dim.isNone);
+  }
+
   /**
    * number of defined dimensions
    * @returns {number}
@@ -302,7 +375,7 @@ export class Range {
    * @param other
    * @returns {*}
    */
-  preMultiply(other: Range, size: number[]) {
+  preMultiply(other:Range, size:number[]) {
     if (this.isAll) {
       return other.clone();
     }
@@ -312,6 +385,67 @@ export class Range {
     var r = new Range();
     this.dims.forEach((d, i) => {
       r.dims[i] = d.preMultiply(other.dims[i], size[i]);
+    });
+    return r;
+  }
+
+  static empty() {
+    var r = new Range();
+    r.dims = [RangeDim.empty(),RangeDim.empty()];
+    return r;
+  }
+
+  union(other:Range, size:number[]) {
+    if (this.isAll || other.isNone) {
+      return this.clone();
+    }
+    if (other.isAll || this.isNone) {
+      return other.clone();
+    }
+    var r = new Range();
+    this.dims.forEach((d, i) => {
+      r.dims[i] = d.union(other.dims[i], size[i]);
+    });
+    return r;
+  }
+
+  /**
+   * logical intersection between two ranges
+   * @param other
+   * @returns {RangeDim}
+   */
+  intersect(other:Range, size:number[]) {
+    if (this.isNone || other.isNone) {
+      return Range.empty();
+    }
+    if (this.isAll) {
+      return other.clone();
+    }
+    if (other.isAll) {
+      return this.clone();
+    }
+    var r = new Range();
+    this.dims.forEach((d, i) => {
+      r.dims[i] = d.intersect(other.dims[i], size[i]);
+    });
+    return r;
+  }
+
+  /**
+   * logical difference between two ranges
+   * @param other
+   * @returns {RangeDim}
+   */
+  without(without:Range, size:number[]) {
+    if (this.isNone || without.isNone) {
+      return this.clone();
+    }
+    if (without.isAll) {
+      return Range.empty();
+    }
+    var r = new Range();
+    this.dims.forEach((d, i) => {
+      r.dims[i] = d.without(without.dims[i], size[i]);
     });
     return r;
   }
@@ -336,30 +470,32 @@ export class Range {
     r.dims = this.dims.map((d) => d.clone()).reverse();
     return r;
   }
+
   /**
    * filter the given multi dimensional data according to the current range
    * @param data
    * @param size the underlying size for negative indices
    * @returns {*}
    */
-  filter(data: any[], size: number[]) {
+  filter(data:any[], size:number[]) {
     if (this.isAll) {
       return data;
     }
     var ndim = this.ndim;
     var that = this;
     //recursive variant for just filtering the needed rows
-    function filterDim(i: number) {
+    function filterDim(i:number) {
       if (i >= ndim) { //out of range no filtering anymore
         return C.identity;
       }
       var d = that.dim(i);
-      var next = filterDim(i+1); //compute next transform
+      var next = filterDim(i + 1); //compute next transform
       var s = size[i];
       return (elem) => { //if the value is an array, filter it else return the value
         return C.isArray(elem) ? d.filter(elem, s, next) : elem;
       };
     }
+
     return filterDim(0)(data);
   }
 
@@ -368,7 +504,7 @@ export class Range {
    * @param dimension
    * @returns {r}
    */
-  dim(dimension: number) : RangeDim {
+  dim(dimension:number):RangeDim {
     var r = this.dims[dimension];
     if (r) {
       return r;
@@ -383,7 +519,7 @@ export class Range {
    * @param indices
    * @param size the underlying size for negative indices
    */
-  invert(indices : number[], size: number[]) : number[] {
+  invert(indices:number[], size:number[]):number[] {
     if (this.isAll) {
       return indices;
     }
@@ -397,7 +533,7 @@ export class Range {
    * @param size the underlying size for negative indices
    * @returns {*}
    */
-  size(size: number[]) : number[] {
+  size(size:number[]):number[] {
     if (this.isAll) {
       return size;
     }
@@ -412,7 +548,7 @@ export class Range {
    * @param args
    * @returns {*}
    */
-  private gen(name, args) : any{
+  private gen(name, args):any {
     if (args.length === 0) {
       return this.dims.map(function (d) {
         return d[name].call(d);
@@ -457,20 +593,20 @@ export class Range {
    * @param code
    * @returns {Range}
    */
-  static fromString(code : string) {
-    var act = 0, c : string, next : number;
+  static fromString(code:string) {
+    var act = 0, c:string, next:number;
     var dims = new Array<RangeDim>();
-    while(act < code.length) {
+    while (act < code.length) {
       c = code.charAt(act);
       if (c === '(') {
-        next = code.indexOf(')',act);
-        dims.push(RangeDim.fromString(code.substring(act,next+1)));
-        act = next+1 +1; //skip ),
+        next = code.indexOf(')', act);
+        dims.push(RangeDim.fromString(code.substring(act, next + 1)));
+        act = next + 1 + 1; //skip ),
       } else { //regular case
-        next = code.indexOf(',',act);
+        next = code.indexOf(',', act);
         next = next < 0 ? code.length : next;
         dims.push(RangeDim.fromString(code.substring(act, next)));
-        act = next+1; //skip ,
+        act = next + 1; //skip ,
       }
     }
     var r = new Range();
@@ -504,7 +640,7 @@ export function list() {
 /**
  * test if the given object is a range
  */
-export function is(obj: any) {
+export function is(obj:any) {
   return obj instanceof Range;
 }
 
@@ -513,6 +649,6 @@ export function is(obj: any) {
  * @param encoded
  * @returns {Range}
  */
-export function parse(encoded : string) {
+export function parse(encoded:string) {
   return Range.fromString(encoded);
 }

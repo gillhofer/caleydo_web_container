@@ -5,27 +5,30 @@
 'use strict';
 import events = require('./caleydo-events');
 
+export interface IDataDescription {
+  name: string;
+  id: string;
+  type: string;
+}
 /**
  * basic data type interface
  */
 export interface IDataType extends events.EventHandler {
-  /**
-   * type of the data: matrix, table, vector
-   */
-  type:string;
-
-  /**
-   * unique name
-   */
-  id:string;
-  /**
-   * label
-   */
-  name : string;
+  desc: IDataDescription;
   /**
    * dimensions of this datatype
    */
   dim: number[];
+}
+
+export class DummyDataType extends events.EventHandler implements IDataType {
+  constructor(public desc: IDataDescription) {
+    super();
+  }
+
+  get dim() {
+    return [];
+  }
 }
 
 export function transpose(m: any[][]) {

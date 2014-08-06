@@ -89,19 +89,12 @@ export class Table extends TableBase implements ITable {
   private _data:any = null;
   private vectors : TableVector[];
 
-  constructor(private desc:any) {
+  constructor(public desc:datatypes.IDataDescription) {
     super(null);
     this._root = this;
-    this.rowtype = idtypes.resolve(desc.rowtype);
-    this.vectors = desc.columns.map((cdesc, i) => new TableVector(this, i, cdesc));
-  }
-
-  get name() {
-    return this.desc.name;
-  }
-
-  get id() {
-    return this.desc.id;
+    var d = <any>desc;
+    this.rowtype = idtypes.resolve(d.rowtype);
+    this.vectors = d.columns.map((cdesc, i) => new TableVector(this, i, cdesc));
   }
 
   /**
@@ -114,7 +107,7 @@ export class Table extends TableBase implements ITable {
     if (this._data) { //in the cache
       return C.resolved(this._data);
     }
-    return C.getJSON(this.desc.uri).then(function (data) {
+    return C.getJSON((<any>this.desc).uri).then(function (data) {
       that._data = data; //store cache
       //transpose to have column order for better vector access
       that._data.data = datatypes.transpose(data.data);
@@ -166,7 +159,7 @@ export class Table extends TableBase implements ITable {
   }
 
   size() {
-    return this.desc.size;
+    return (<any>this.desc).size;
   }
 }
 
@@ -183,12 +176,8 @@ class TableView extends TableBase implements ITable {
     this.range = range;
   }
 
-  get name() {
-    return this._root.name;
-  }
-
-  get id() {
-    return this._root.id;
+  get desc() {
+    return this._root.desc;
   }
 
   size() {
@@ -236,18 +225,10 @@ export class TableVector extends vector.VectorBase implements vector.IVector {
   valuetype:any;
   idtype:idtypes.IDType = null;
 
-  constructor(private table: Table, private index: number, private desc:any) {
+  constructor(private table: Table, private index: number, public desc:datatypes.IDataDescription) {
     super(null);
     this._root = this;
-    this.valuetype = desc.value;
-  }
-
-  get name() {
-    return this.desc.name;
-  }
-
-  get id() {
-    return this.index.toString();
+    this.valuetype = (<any>desc).value;
   }
 
   /**
@@ -291,4 +272,8 @@ export class TableVector extends vector.VectorBase implements vector.IVector {
   size() {
     return this.table.nrow;
   }
+}
+
+export function create(desc: datatypes.IDataDescription): ITable {
+  return new Table(desc);
 }

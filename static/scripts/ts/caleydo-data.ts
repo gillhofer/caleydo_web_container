@@ -2,29 +2,35 @@
  * Created by Samuel Gratzl on 04.08.2014.
  */
 import C = require('./caleydo');
-import matrix = require('./caleydo-matrix');
-import vector = require('./caleydo-vector');
-import table = require('./caleydo-table');
+import plugins = require('./caleydo-plugins');
+import datatypes = require('./caleydo-datatype');
 'use strict';
 
 var cache = undefined;
-var loader = C.getJSON('api/dataset').then(function (r) {
-  cache = transform(r);
-  return cache;
+var available = plugins.list('datatype');
+
+var loader = C.getJSON('api/dataset').then(function (descs) {
+  return C.all(descs.map((desc) => transformEntry(desc))).then((datas) => {
+    var r = {};
+    datas.forEach((data) => {
+      r[data.desc.id] = data;
+    });
+    cache = r;
+    return r;
+  });
 });
 function transformEntry(desc) {
   if (desc === undefined) {
     return desc;
   }
-  switch(desc.type) {
-    case 'matrix':
-      return new matrix.Matrix(desc);
-    case 'vector':
-      return new vector.Vector(desc);
-    case 'table':
-      return new table.Table(desc);
+  var plugin = available.filter((p) => p.name === desc.type);
+  if (plugin.length === 0) {
+    return new datatypes.DummyDataType(desc);
   }
-  return desc;
+  //take the first matching one
+  return plugin[0].load().then((p) => {
+    return p.factory(desc);
+  });
 }
 function transform(descs) {
   var r = {};

@@ -79,19 +79,12 @@ export class Vector extends VectorBase implements IVector {
   idtype:idtypes.IDType;
   private _data:any = null;
 
-  constructor(private desc:any) {
+  constructor(public desc:datatypes.IDataDescription) {
     super(null);
     this._root = this;
-    this.valuetype = desc.value;
-    this.idtype = idtypes.resolve(desc.idtype);
-  }
-
-  get name() {
-    return this.desc.name;
-  }
-
-  get id() {
-    return this.desc.id;
+    var d = <any>desc;
+    this.valuetype = d.value;
+    this.idtype = idtypes.resolve(d.idtype);
   }
 
   /**
@@ -104,7 +97,7 @@ export class Vector extends VectorBase implements IVector {
     if (this._data) { //in the cache
       return C.resolved(this._data);
     }
-    return C.getJSON(this.desc.uri).then(function (data) {
+    return C.getJSON((<any>this.desc).uri).then(function (data) {
       that._data = data; //store cache
       that.fire("loaded", this);
       return data;
@@ -138,7 +131,7 @@ export class Vector extends VectorBase implements IVector {
   }
 
   size() {
-    return this.desc.size;
+    return (<any>this.desc).size;
   }
 }
 
@@ -155,12 +148,8 @@ class VectorView extends VectorBase implements IVector {
     this.range = range;
   }
 
-  get name() {
-    return this._root.name;
-  }
-
-  get id() {
-    return this._root.id;
+  get desc() {
+    return this._root.desc;
   }
 
   size() {
@@ -194,4 +183,8 @@ class VectorView extends VectorBase implements IVector {
   get idtype() {
     return this._root.idtype;
   }
+}
+
+export function create(desc: datatypes.IDataDescription): IVector {
+  return new Vector(desc);
 }
