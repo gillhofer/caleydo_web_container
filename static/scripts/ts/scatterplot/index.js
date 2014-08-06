@@ -12,13 +12,28 @@ define(['exports', 'd3','../caleydo'], function (exports, d3, C) {
     ScatterPlot.prototype.build = function ($parent) {
       var dims = this.data.dim;
       var width = dims[1], height = dims[0];
-      var $svg = $parent.append('div').attr({
+      var $svg = $parent.append('div').append("svg").attr({
         'class': 'scatterplot',
         id: 'example',
         style: 'width:360px;height:150px'
       });
 
+var test = $svg.selectAll(".test").data([1,2,3]);
+test.exit().remove();
 
+// --- adding Element to class test
+var testEnter = test.enter().append("circle").attr({
+    "class":"test"
+})
+
+// --- changing nodes for test
+test.attr({
+    cx: 5,
+    cy: function (d,i) {
+      return i*10+5+d*2;
+    },
+    r:5
+})
     };
     return ScatterPlot;
   })();
