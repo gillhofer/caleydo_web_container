@@ -445,19 +445,20 @@ module.exports = function (grunt) {
     express: {
       options: {
         hostname: 'localhost',
-        port: 9002
+        port: 9002,
+        livereload: true,
+        serverreload: true,
+        server: require('path').resolve('./server/index'),
+        bases: [require('path').resolve("./server")]
       },
       custom: {
-        server: require('path').resolve('./server/index')
+        options: {
+        }
       },
       debug: {
         options: {
-          livereload: true,
-          serverreload: true,
           'debug-brk': 5858,
           showStack: true,
-          server: require('path').resolve('./server/index'),
-          bases: [require('path').resolve("./server")]
         }
       }
     }
