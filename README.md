@@ -7,6 +7,7 @@
 3. Install grunt and bower ```npm install -g bower grunt-cli``` (might have to be run using ```sudo```).
 4. Install requirements ```npm install``` (might have to be run using ```sudo```).
 5. Install bower requirements ```bower install```
+6. Build with ```grunt build```
 
 ## Launching the server
 
