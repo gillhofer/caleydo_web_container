@@ -12,7 +12,7 @@ var available = plugins.list('datatype');
  * load all descriptons and store them in a promise
  * @type {JQueryPromise<any>|JQueryGenericPromise<JQueryPromise<{}>>|JQueryGenericPromise<U>|JQueryPromise<JQueryPromise<{}>>|JQueryPromise<U>}
  */
-var loader = C.getJSON('api/dataset').then(function (descs) {
+var loader = C.getJSON('/api/dataset').then(function (descs) {
   //load descriptions and create data out of them
   return C.all(descs.map((desc) => transformEntry(desc))).then((datas) => {
     var r = {};
