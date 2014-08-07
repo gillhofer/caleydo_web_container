@@ -8,10 +8,9 @@ import matrix = require('../caleydo-matrix');
 import table = require('../caleydo-table');
 import vector = require('../caleydo-vector');
 import datatypes = require('../caleydo-datatype');
-import plugins = require('../caleydo-plugins');
 import C = require('../caleydo');
 
-export class Table implements plugins.IVisualization {
+export class Table {
   constructor(public data : any, public parent: Element) {
     var $p = d3.select(parent);
     switch(data.type) {

@@ -5,10 +5,9 @@
 
 import d3 = require('d3');
 import matrix = require('../caleydo-matrix');
-import plugins = require('../caleydo-plugins');
 import C = require('../caleydo');
 
-export class HeatMap implements plugins.IVisualization {
+export class HeatMap {
   constructor(public data : matrix.IMatrix, public parent: Element) {
     this.build(d3.select(parent));
   }

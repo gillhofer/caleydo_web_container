@@ -8,11 +8,23 @@ define(function () {
         {
           type: 'vis',
           name: 'heatmap',
+          /**
+           * optional function returning the expected size of the vis given the dimension (nrow,ncol) of the represented data
+           * default unknown
+           * @param dim array containing the data dimensions returned by IDataType.dim
+           * @returns {*[]}
+           */
           size: function (dim) {
             return [dim[0] * 20, dim[1] * 20];
           },
+          /**
+           * optional filter for which this vis can be applied, given an IDataType
+           * default: all
+           * @param data
+           * @returns {boolean}
+           */
           filter: function (data) {
-            return data.type === 'matrix';
+            return data.desc.type === 'matrix';
           }
         },
         {
@@ -25,9 +37,7 @@ define(function () {
         },
         {
           type: 'vis',
-          name: 'scatterplot',
-          module: './scatterplot/index',
-          factory: 'create'
+          name: 'scatterplot'
         },
         {
           type: 'datatype',
