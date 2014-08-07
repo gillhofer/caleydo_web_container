@@ -24,6 +24,12 @@ define(function () {
           name: 'parco'
         },
         {
+          type: 'vis',
+          name: 'scatterplot',
+          module: './scatterplot/index',
+          factory: 'create'
+        },
+        {
           type: 'datatype',
           name: 'matrix',
           module: './caleydo-matrix'
