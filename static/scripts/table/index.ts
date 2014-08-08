@@ -1,7 +1,7 @@
 /**
  * Created by Samuel Gratzl on 05.08.2014.
  */
-/// <reference path='../../../../tsd.d.ts' />
+/// <reference path='../../../tsd.d.ts' />
 
 import d3 = require('d3');
 import matrix = require('../caleydo-matrix');

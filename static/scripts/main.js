@@ -22,10 +22,10 @@ require.config({
 
 require([
     'jquery',
-    './ts/caleydo',
-    './ts/caleydo-data',
-    './ts/caleydo-range',
-    './ts/caleydo-plugins'
+    './caleydo',
+    './caleydo-data',
+    './caleydo-range',
+    './caleydo-plugins'
   ], function ($, C, data, range, plugins) {
     'use strict';
     // use app here

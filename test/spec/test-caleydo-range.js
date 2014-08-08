@@ -3,7 +3,7 @@
  */
 /* global define, describe, it, assert, should, expect */
 
-define(['../scripts/ts/caleydo-range','../scripts/ts/caleydo-iterator'], function (range,Iterator) {
+define(['../scripts/caleydo-range','../scripts/caleydo-iterator'], function (range,Iterator) {
   'use strict';
 
   describe('caleydo-range', function () {

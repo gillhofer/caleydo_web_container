@@ -3,7 +3,7 @@
  */
 /* global define, describe, it, assert, should, expect */
 
-define(['../scripts/ts/caleydo'], function (C) {
+define(['../scripts/caleydo'], function (C) {
   'use strict';
 
   describe('caleydo', function () {
