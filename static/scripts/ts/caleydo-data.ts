@@ -9,7 +9,7 @@ import datatypes = require('./caleydo-datatype');
 //find all datatype plugins
 var available = plugins.list('datatype');
 /**
- * load all descriptons and store them in a promise
+ * load all descriptions and store them in a promise
  * @type {JQueryPromise<any>|JQueryGenericPromise<JQueryPromise<{}>>|JQueryGenericPromise<U>|JQueryPromise<JQueryPromise<{}>>|JQueryPromise<U>}
  */
 var loader = C.getJSON('/api/dataset').then(function (descs) {

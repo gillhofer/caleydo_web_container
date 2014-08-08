@@ -91,7 +91,7 @@ export function identity(d:any) {
 }
 
 /**
- * identity function
+ * a dummy function, which does exactly nothing, i.e. used as default
  */
 export function noop() {
 }
@@ -102,7 +102,29 @@ export function noop() {
  * @returns {*}
  */
 export function constant(r) {
+  if (typeof r === 'boolean' && r === true) {
+    return constantTrue;
+  }
+  if (typeof r === 'boolean' && r === false) {
+    return constantFalse;
+  }
   return () => r;
+}
+
+/**
+ * special constant function which returns always true, i.e., as a default for a filter function
+ * @returns {boolean}
+ */
+export function constantTrue() {
+  return true;
+}
+
+/**
+ * special constant function which returns always false, i.e., as a default for a filter function
+ * @returns {boolean}
+ */
+export function constantFalse() {
+  return true;
 }
 
 /**

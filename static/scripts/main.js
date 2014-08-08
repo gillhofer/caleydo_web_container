@@ -26,7 +26,7 @@ require([
     './ts/caleydo-data',
     './ts/caleydo-range',
     './ts/caleydo-plugins'
-  ], function ($, C, data, range,plugins) {
+  ], function ($, C, data, range, plugins) {
     'use strict';
     // use app here
     var a = 5;
@@ -42,7 +42,7 @@ require([
         matrix.on("loaded", function () {
           console.log("loaded");
         });
-        var m = matrix.view(); //range.parse('0:5,1:6'));
+        var m = matrix; //.view(range.parse('0:5,1:6'));
         var visses = plugins.listVis(m);
         visses.forEach(function (vis) {
           vis.load().then(function (plugin) {
