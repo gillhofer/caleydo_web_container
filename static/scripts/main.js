@@ -2,19 +2,19 @@
 require.config({
   baseUrl: '/scripts',
   paths: {
-    jquery: '../bower_components/jquery/jquery',
-    d3: '../bower_components/d3/d3',
+    jquery: '/bower_components/jquery/jquery',
+    d3: '/bower_components/d3/d3',
     'caleydo-plugins-gen': './caleydo-plugins-gen',
-    'd3.parcoords': '../bower_components/d3.parcoords/index'
+    'd3.parcoords': '/bower_components/d3.parcoords/index'
   },
   map: {
     '*': {
-      'css': '../bower_components/require-css/css' // or whatever the path to require-css is
+      'css': '/bower_components/require-css/css.js' // or whatever the path to require-css is
     }
   },
   shim: {
     'd3.parcoords': {
-      deps: ['css!../bower_components/d3.parcoords-css/index', 'd3'],
+      deps: ['css!/bower_components/d3.parcoords-css/index', 'd3'],
       exports: 'd3.parcoords'
     }
   }
