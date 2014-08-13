@@ -30,6 +30,10 @@ module.exports = function (grunt) {
           livereload: true
         }
       },
+      sass: {
+        files: ['<%= yeoman.app %>/{,*/}*.scss'],
+        tasks: ['sass:dev']
+      },
       coffee: {
         files: ['<%= yeoman.app %>/scripts/{,*/}*.coffee'],
         tasks: ['coffee:dist']
@@ -74,6 +78,29 @@ module.exports = function (grunt) {
             dest: '.tmp/styles/'
           }
         ]
+      }
+    },
+    sass: {
+      dist: {                            // target
+        files: [{
+          expand: true,
+          cwd: '<%= yeoman.app %>/',
+          src: '**/*.scss',
+          dest: '<%= yeoman.app %>/',
+          ext: '.css'
+        }]
+      },
+      dev: {                              // another target
+        options: {                      // dictionary of render options
+          sourceMap: true
+        },
+        files: [{
+          expand: true,
+          cwd: '<%= yeoman.app %>/',
+          src: '**/*.scss',
+          dest: '<%= yeoman.app %>/',
+          ext: '.css'
+        }]
       }
     },
     connect: {
@@ -512,6 +539,7 @@ module.exports = function (grunt) {
     'clean:dist',
     'tsd:refresh',
     'ts:build',
+    'sass:dist',
     'useminPrepare',
     'concurrent:dist',
     'autoprefixer',
