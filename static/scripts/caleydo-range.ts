@@ -30,6 +30,9 @@ export class RangeElem {
   static single(val: number) {
     return new RangeElem(val, val+1,1);
   }
+  static range(from :number, to = -1, step = 1) {
+    return new RangeElem(from, to, step);
+  }
 
   size(size : number) : number {
     var t = this.fix(this.to, size), f = this.fix(this.from, size);
@@ -130,14 +133,23 @@ export class Range1D {
     } else if (indices.length === 1) {
       return [RangeElem.single(indices[0])];
     }
-    return indices.map(RangeElem.single);
-    /* TODO optimize
+    //return indices.map(RangeElem.single);
     var r = new Array<RangeElem>(),
-      delta = indices[1]-indices[0],
+      deltas = indices.slice(1).map((e,i) => e-indices[i]),
       start = 0, act = 1;
-    function flush() {
-
-    }*/
+    while(act < indices.length) {
+      while(deltas[start] == deltas[act-1] && act < indices.length) {
+        act++;
+      }
+      if (act === start+1) {
+        r.push(RangeElem.single(indices[start]));
+      } else {
+        //+1 since end is excluded
+        r.push(RangeElem.range(indices[start], indices[act-1]+1, deltas[start]));
+      }
+      start = act-1;
+    }
+    return r;
   }
 
   get isAll() {
@@ -154,7 +166,31 @@ export class Range1D {
   push(...items: string[]): number;
   push(...items: RangeElem[]): number;
   push(...items: any[]): number {
-    return this.arr.push.apply(this.arr,items.map((item) => typeof item === 'string' ? RangeElem.parse(item.toString()) : <RangeElem>item));
+    function p(item : any) {
+      if  (typeof item === 'string') {
+        return RangeElem.parse(item.toString());
+      } else if (typeof item === 'number') {
+        return RangeElem.single(<number>item);
+      } else if (C.isArray(item)) {
+        return new RangeElem(item[0],item[1],item[2]);
+      }
+      return <RangeElem>item;
+    }
+    return this.arr.push.apply(this.arr,items.map(p));
+  }
+
+  pushSlice(from: number, to: number = -1, step : number = 1) {
+    this.arr.push(new RangeElem(from, to, step));
+  }
+  pushList(indices : number[]) {
+    this.arr.push.apply(this.arr, indices.map(RangeElem.single));
+  }
+
+  setSlice(from: number, to: number = -1, step : number = 1) {
+    this.arr = [new RangeElem(from, to, step)];
+  }
+  setList(indices : number[]) {
+    this.arr = Range1D.compress(indices);
   }
 
   forEach(callbackfn: (value: RangeElem, index: number, array: RangeElem[]) => void, thisArg?: any): void {
@@ -189,10 +225,14 @@ export class Range1D {
     if (sub.isAll) {
       return this.clone();
     }
-    var r = new Range1D();
     //TODO optimize
-
-    return r;
+    var l = this.iter(size).asList();
+    var s = sub.iter(l.length);
+    var r = new Array<number>();
+    while(s.hasNext()) {
+      r.push(l[s.next()]);
+    }
+    return Range1D.from(r);
   }
 
   /**
@@ -339,13 +379,14 @@ export class Range1D {
       return '';
     }
     if (this.length === 1) {
-      return this[0].toString();
+      return this.arr[0].toString();
     }
     return '('+this.arr.join(',')+')';
   }
 
   static parse(code : string) {
     var r = new Range1D();
+    code = code.trim();
     if (code.length >= 2 && code.charAt(0) === '(' && code.charAt(code.length-1) === ')') {
       r.push.apply(r, code.substr(1,code.length-2).split(',').map(RangeElem.parse));
     } else {
@@ -596,6 +637,7 @@ export class Range {
   static parse(code:string) {
     var act = 0, c:string, next:number;
     var dims = new Array<Range1D>();
+    code = code.trim();
     while (act < code.length) {
       c = code.charAt(act);
       if (c === '(') {
@@ -629,11 +671,53 @@ export function is(obj:any) {
   return obj instanceof Range;
 }
 
+export function range(from: number, to?: number,step?: number)
+export function range(...ranges : number[]);
+export function range() {
+  if (arguments.length === 0) {
+    return all();
+  }
+  var r = new Range();
+  if (C.isArray(arguments[0])) { //array mode
+    C.argList(arguments).forEach((arr : number[], i) => {
+      if (arr.length === 0) {
+        return;
+      }
+      r.dim(i).setSlice(arr[0],arr[1],arr[2]);
+    })
+  }
+  if (typeof arguments[0] === 'number') { //single slice mode
+    r.dim(0).setSlice(arguments[0], arguments[1], arguments[2])
+  }
+  return r;
+}
+
+export function list(...indices: number[]);
+export function list(...indexarrays : number[][]);
+export function list() {
+  if (arguments.length === 0) {
+    return all();
+  }
+  var r = new Range();
+  if (C.isArray(arguments[0])) { //array mode
+    C.argList(arguments).forEach((arr : number[], i) => {
+      r.dim(i).setList(arr);
+    })
+  }
+  if (typeof arguments[0] === 'number') { //single slice mode
+    r.dim(0).setList(C.argList(arguments));
+  }
+  return r;
+}
+
 /**
  * parses the given encoded string created by toString to a range object
  * @param encoded
  * @returns {Range}
  */
-export function parse(encoded:string) {
-  return Range.parse(encoded);
+export function parse(...encoded:string[]) {
+  if (encoded.length === 0) {
+    return all();
+  }
+  return Range.parse(encoded.join(','));
 }
