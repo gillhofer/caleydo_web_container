@@ -40,6 +40,9 @@ define(function () {
           name: 'scatterplot'
         },
         {
+          type: 'vis',
+          name: 'links'
+        },        {
           type: 'datatype',
           name: 'matrix',
           module: './caleydo-matrix'

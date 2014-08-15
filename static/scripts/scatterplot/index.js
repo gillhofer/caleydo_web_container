@@ -77,7 +77,6 @@ define(['exports', 'd3', '../caleydo', 'css!./scatterplot_style'], function (exp
               .duration(500)
               .style("opacity", 0);
           });
-        ;
       });
 
       div.append("select").attr("id", "xaxis-selection");

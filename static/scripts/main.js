@@ -45,6 +45,11 @@ require([
         var m = matrix; //.view(range.parse('0:5,1:6'));
         var visses = plugins.listVis(m);
         visses.forEach(function (vis) {
+          console.log(vis);
+
+          //if (vis.name == "links")
+          //  return;
+
           vis.load().then(function (plugin) {
             plugin.factory(m, $('body')[0]);
           });
