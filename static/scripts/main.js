@@ -3,6 +3,7 @@ require.config({
   baseUrl: '/scripts',
   paths: {
     jquery: '/bower_components/jquery/jquery',
+    "jquery-ui": '/bower_components/jquery-ui/ui/jquery-ui',
     d3: '/bower_components/d3/d3',
     'caleydo-plugins-gen': './caleydo-plugins-gen',
     'd3.parcoords': '/bower_components/d3.parcoords/index'

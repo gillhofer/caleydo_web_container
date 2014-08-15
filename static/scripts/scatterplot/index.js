@@ -1,7 +1,7 @@
 /**
  * Created by Marc Streit on 06.08.2014.
  */
-define(['exports', 'd3', '../caleydo', 'css!./scatterplot_style'], function (exports, d3, C) {
+define(['exports', 'd3', '../caleydo', 'jquery-ui','css!./scatterplot_style', 'css!../../bower_components/jquery-ui/themes/smoothness/jquery-ui.css'], function (exports, d3, C) {
   var ScatterPlot = (function () {
     function ScatterPlot(data, parent) {
       this.data = data;
@@ -12,7 +12,14 @@ define(['exports', 'd3', '../caleydo', 'css!./scatterplot_style'], function (exp
     ScatterPlot.prototype.build = function ($parent) {
       var dims = this.data.dim;
       var width = 100, height = 100;
-      var div = $parent.append('div');
+      var div = $parent.append('div').attr({
+        id: "resizable",
+        class: "ui-widget-content"
+      });
+
+      $( "#resizable" ).resizable();
+      $( "#resizable" ).draggable();
+
 
       var xcol = 0;
       var ycol = 1;
