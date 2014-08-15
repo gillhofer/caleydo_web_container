@@ -12,13 +12,21 @@ define(['exports', 'd3', '../caleydo', 'jquery-ui','css!./scatterplot_style', 'c
     ScatterPlot.prototype.build = function ($parent) {
       var dims = this.data.dim;
       var width = 100, height = 100;
-      var div = $parent.append('div').attr({
-        id: "resizable",
+      var div = $parent.append("div").attr({
+        id: "view-container",
         class: "ui-widget-content"
       });
 
-      $( "#resizable" ).resizable();
-      $( "#resizable" ).draggable();
+      div.append("h3").text("Scatterplot").attr({
+        class: "ui-widget-header"
+      });
+
+      $("#view-container").draggable().resizable({
+        maxHeight: 250,
+        maxWidth: 350,
+        minHeight: 100,
+        minWidth: 100,
+      });
 
 
       var xcol = 0;
@@ -30,7 +38,7 @@ define(['exports', 'd3', '../caleydo', 'jquery-ui','css!./scatterplot_style', 'c
         .style("opacity", 0);
 
       var svg = div.append("svg").attr({
-        'class': 'scatterplot',
+        class: 'scatterplot',
         id: 'example',
         style: 'width:360px;height:150px'
       });
@@ -65,8 +73,6 @@ define(['exports', 'd3', '../caleydo', 'jquery-ui','css!./scatterplot_style', 'c
           })
           .attr("r", 2)
           .on("mouseover", function (d, i) {
-            d3.select('#hover-points').text(rowNames[i]);
-
             d3.select(this).attr("fill", "red");
 
             tooltip.transition()

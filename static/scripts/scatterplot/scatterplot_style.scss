@@ -19,5 +19,20 @@ circle.hidden {
   stroke: #fff;
 }
 
-#resizable { width: 150px; height: 150px; padding: 0.5em; }
-#resizable h3 { text-align: center; margin: 0; }
+h3.ui-widget-header {
+  font-size: 12px;
+}
+
+#view-container {
+  width: 150px;
+  height: 150px;
+  padding: 0.1em;
+  position: absolute;
+  left: 500px;
+  bottom: 200px;
+}
+
+#view-container h3 {
+  text-align: center;
+  margin: 0;
+}
