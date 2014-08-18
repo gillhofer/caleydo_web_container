@@ -3,6 +3,7 @@ require.config({
   baseUrl: '/scripts',
   paths: {
     jquery: '/bower_components/jquery/jquery',
+    "jquery-ui": '/bower_components/jquery-ui/ui/jquery-ui',
     d3: '/bower_components/d3/d3',
     'caleydo-plugins-gen': './caleydo-plugins-gen',
     'd3.parcoords': '/bower_components/d3.parcoords/index'
@@ -45,6 +46,11 @@ require([
         var m = matrix; //.view(range.parse('0:5,1:6'));
         var visses = plugins.listVis(m);
         visses.forEach(function (vis) {
+          console.log(vis);
+
+          //if (vis.name == "links")
+          //  return;
+
           vis.load().then(function (plugin) {
             plugin.factory(m, $('body')[0]);
           });
