@@ -40,7 +40,7 @@ define(function () {
           name: 'scatterplot'
         },
         {
-          type: 'vis',
+          type: 'autoload',
           name: 'links'
         },        {
           type: 'datatype',

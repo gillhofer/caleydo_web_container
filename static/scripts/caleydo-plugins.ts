@@ -119,9 +119,9 @@ export function list(type = '') {
  */
 export function load(plugins: IPluginDesc[]) :C.IPromise<IPlugin[]> {
   return C.promised((resolve) => {
-    require_(plugins.map((desc) => desc.module), (loaded) => {
+    require_(plugins.map((desc) => desc.module), (...plugins : IPlugin[]) => {
       //loaded
-      resolve(loaded);
+      resolve(plugins);
     });
   });
 }

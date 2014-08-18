@@ -14,7 +14,7 @@ define(['exports', 'd3', '../caleydo', 'jquery-ui','css!./scatterplot_style', 'c
       var width = 100, height = 100;
       var div = $parent.append("div").attr({
         id: "view-container",
-        class: "ui-widget-content"
+        class: "scatterplot ui-widget-content"
       });
 
       div.append("h3").text("Scatterplot").attr({
@@ -38,12 +38,10 @@ define(['exports', 'd3', '../caleydo', 'jquery-ui','css!./scatterplot_style', 'c
         .style("opacity", 0);
 
       var svg = div.append("svg").attr({
-        class: 'scatterplot',
-        id: 'example',
         style: 'width:360px;height:150px'
       });
 
-      that = this;
+      var that = this;
 
       div.append("div").attr("id", "hover-points");
 

@@ -3,8 +3,7 @@
  */
 define(['exports', 'd3', '../caleydo', 'css!./links_style'], function (exports, d3, C) {
   var LinksRenderer = (function () {
-    function LinksRenderer(data, parent) {
-      this.data = data;
+    function LinksRenderer(parent) {
       this.parent = parent;
       this.build(d3.select(parent));
     }
@@ -33,14 +32,14 @@ define(['exports', 'd3', '../caleydo', 'css!./links_style'], function (exports, 
         })
         .on("mouseout", function (d, i) {
           d3.select(this).attr("fill", "black");
-        });;
+        });
     };
     return LinksRenderer;
   })();
   exports.LinksRenderer = LinksRenderer;
 
-  function create(data, parent) {
-    return new LinksRenderer(data, parent);
+  function create(parent) {
+    return new LinksRenderer(parent);
   }
 
   exports.create = create;

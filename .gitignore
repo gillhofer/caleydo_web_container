@@ -9,10 +9,11 @@ bower_components
 /.idea/workspace.xml
 /test/xunit.xml
 /doc
-*.map
 /.idea/libraries/Generated_files.xml
 /.idea/watcherTasks.xml
 /.tscache/
 /tsd.gen.d.ts
 /typings/
 /.idea/inspectionProfiles
+*.map
+*.css

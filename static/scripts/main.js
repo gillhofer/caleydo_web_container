@@ -33,6 +33,12 @@ require([
     var a = 5;
     console.log(C.version);
     console.log(JSON.stringify(plugins.list()));
+    //load and excute the auto load plugins
+    plugins.load(plugins.list('autoload')).then(function (plugins) {
+      plugins.forEach(function (p) {
+        p.factory($('body'));
+      });
+    });
     //console.log('Running jQuery ', $().jquery);
     data.list().then(function (descs) {
       console.log(JSON.stringify(Object.keys(descs)));
