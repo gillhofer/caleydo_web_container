@@ -101,15 +101,31 @@ function parsePlugins(descs : any[]) {
 var plugins = parsePlugins(plugindescs.plugins);
 
 /**
- * lists all plugins with an optional type filter
- * @param type plugin type
+ * returns a list of matching plugin descs
+ * @param filter the filter function to apply
  * @returns {IPluginDesc[]}
  */
-export function list(type = '') {
-  if (type === '') {
+export function list(filter : (desc : IPluginDesc) => boolean);
+/**
+ * returns a list of matching plugin descs
+ * @param type the desired plugin type
+ * @returns {IPluginDesc[]}
+ */
+export function list(type : string);
+/**
+ * returns a list of matching plugin descs
+ * @param filter
+ * @returns {IPluginDesc[]}
+ */
+export function list(filter : any = C.constantTrue) {
+  if (typeof filter === 'String') {
+    var v = filter;
+     filter = (desc) => desc.type === v;
+  }
+  if (filter === C.constantTrue) {
     return plugins;
   }
-  return plugins.filter((desc) => desc.type === type);
+  return plugins.filter(filter);
 }
 
 /**

@@ -14,7 +14,6 @@ define(['exports', 'd3', 'd3.parcoords', '../caleydo'], function (exports, d3, d
       var width = dims[1], height = dims[0];
       var $svg = $parent.append('div').attr({
         'class': 'parcoords',
-        id: 'example',
         style: 'width:360px;height:150px'
       });
 

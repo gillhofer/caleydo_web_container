@@ -53,10 +53,6 @@ export class VectorBase extends events.EventHandler {
     super();
   }
 
-  get type() {
-    return 'vector';
-  }
-
   get dim() {
     return [this.length];
   }

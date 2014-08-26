@@ -11,22 +11,26 @@ import datatypes = require('../caleydo-datatype');
 import C = require('../caleydo');
 
 export class Table {
-  constructor(public data : any, public parent: Element) {
+  constructor(public data:any, public parent:Element) {
     var $p = d3.select(parent);
-    switch(data.type) {
+    switch (data.type) {
       case 'matrix':
-        this.build($p, [this.data.cols(),this.data.rows(), this.data.data()]);
+        this.build($p, [this.data.cols(), this.data.rows(), this.data.data()]);
         break;
-     case 'table':
-       this.build($p, [this.data.cols().map((v) => v.name),this.data.rows(), this.data.data()]);
-       break;
-     case 'vector':
-       this.build($p, [['Value'],this.data.ids(), this.data.data().then((data) => data.map((d) => [d]))]);
-       break;
+      case 'table':
+        this.build($p, [this.data.cols().map((v) => v.name), this.data.rows(), this.data.data()]);
+        break;
+      case 'vector':
+        this.build($p, [
+          ['Value'],
+          this.data.ids(),
+          this.data.data().then((data) => data.map((d) => [d]))
+        ]);
+        break;
     }
   }
 
-  private build($parent : D3.Selection, promises: any[]) {
+  private build($parent:D3.Selection, promises:any[]) {
     var $table = $parent.append('table');
     $table.append('thead').append('tr');
     $table.append('tbody');
@@ -35,13 +39,12 @@ export class Table {
       var $headers = $table.select('thead tr').selectAll('th').data(['ID'].concat(cols));
       $headers.enter().append('th');
       $headers.text(C.identity);
-      console.log("Test:" +C.identity(1));
       $headers.exit().remove();
 
       var $rows = $table.select('tbody').selectAll('tr').data(d);
       $rows.enter().append('tr');
       $rows.each(function (row, i) {
-        var $header = d3.select(this).selectAll('th').data(rows.slice(i, i+1));
+        var $header = d3.select(this).selectAll('th').data(rows.slice(i, i + 1));
         $header.enter().append('th');
         $header.text(C.identity);
         $header.exit().remove();
@@ -55,6 +58,6 @@ export class Table {
   }
 }
 
-export function create(data : datatypes.IDataType, parent : Element)  {
+export function create(data:datatypes.IDataType, parent:Element) {
   return new Table(data, parent);
 }

@@ -42,7 +42,8 @@ define(function () {
         {
           type: 'autoload',
           name: 'links'
-        },        {
+        },
+        {
           type: 'datatype',
           name: 'matrix',
           module: './caleydo-matrix'
