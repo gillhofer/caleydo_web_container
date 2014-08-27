@@ -31,7 +31,9 @@ export class Table {
   }
 
   private build($parent:D3.Selection, promises:any[]) {
-    var $table = $parent.append('table');
+    var $table = $parent.append('table').attr('class','table').style({
+      'font-size' : 'smaller'
+    });
     $table.append('thead').append('tr');
     $table.append('tbody');
     C.all(promises).then((arr) => {

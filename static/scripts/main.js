@@ -55,23 +55,20 @@ require([
           console.log("loaded");
         });
         var m = matrix; //.view(range.parse('0:5,1:6'));
-        var visses = plugins.listVis(m);
-        visses.forEach(function (vis, i) {
-          console.log(vis);
-
-          //if (vis.name == "links")
-          //  return;
-
-          vis.load().then(function (plugin) {
+        plugins.load(plugins.listVis(m)).then(function (visses) {
+          var acc = 10;
+          visses.forEach(function (plugin) {
             var w = window.create($body[0]);
             w.title = plugin.desc.name;
-            w.pos = [20, i*210];
+            w.pos = [20, acc];
             if (typeof plugin.desc.size === 'function') {
-              w.size = plugin.desc.size(m.dim);
+              w.contentSize = plugin.desc.size(m.dim);
             } else {
-              w.size = [200, 200];
+              w.contentSize = [200, 200];
             }
             plugin.factory(m, w.node);
+            var s = w.size;
+            acc += s[1]+10;
           });
         });
         return matrix.rows();

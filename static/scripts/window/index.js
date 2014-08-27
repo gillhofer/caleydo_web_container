@@ -6,7 +6,15 @@ define(['exports', 'jquery', 'jquery-ui'], function (exports, $) {
   var Window = (function () {
     function Window(parent) {
       this.$parent = $(parent);
-      this.$div = $("<div/>").appendTo(this.$parent).addClass("ui-widget-content");
+      this.$div = $("<div/>").appendTo(this.$parent)
+        .addClass("ui-widget-content")
+        .css({
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          width: 100,
+          height: 100
+        });
       $("<h3>").appendTo(this.$div)
         .addClass("ui-widget-header")
         .disableSelection(); //no selection of header for dragging
@@ -31,18 +39,30 @@ define(['exports', 'jquery', 'jquery-ui'], function (exports, $) {
       });
       Object.defineProperty(Window.prototype, "size", {
         get: function () {
-          return [this.$div.css('width'), this.$div.css('height') - 45];
+          return [this.$div.width(), this.$div.height()];
         },
         set: function (val) {
           this.$div.css('width', val[0]);
-          this.$div.css('height', val[1] + 45); //for header
+          this.$div.css('height', val[1]); //for header
+        },
+        enumerable: true,
+        configurable: true
+      });
+      Object.defineProperty(Window.prototype, "contentSize", {
+        get: function () {
+          var s = this.size;
+          return [s[0], s[1] - 45];
+        },
+        set: function (val) {
+          this.size = [val[0], val[1] + 45];
         },
         enumerable: true,
         configurable: true
       });
       Object.defineProperty(Window.prototype, "pos", {
         get: function () {
-          return [this.$div.css('left'), this.$div.css('top')];
+          var p = this.$div.position();
+          return [p.left, p.top];
         },
         set: function (val) {
           this.$div.css('left', val[0]);

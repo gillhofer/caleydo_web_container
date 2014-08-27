@@ -27,17 +27,26 @@ define(function () {
       },
       {
         type: 'vis',
-        name: 'table'
+        name: 'table',
+        size: function (dim) {
+          return [dim[0] * 110, dim[1] * 22];
+        }
       },
       {
         type: 'vis',
-        name: 'parco'
+        name: 'parco',
+        size: function (dim) {
+          return [360, 150];
+        }
       },
       {
         type: 'vis',
         name: 'scatterplot',
         size: function () {
           return [300, 300 + 40];
+        },
+        filter: function (data) {
+          return data.desc.type === 'matrix' || data.desc.type === 'table';
         }
       },
       {
