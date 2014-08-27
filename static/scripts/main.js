@@ -3,7 +3,7 @@ require.config({
   baseUrl: '/scripts',
   paths: {
     jquery: '/bower_components/jquery/jquery',
-    "jquery-ui": '/bower_components/jquery-ui/ui/jquery-ui',
+    'jquery-ui-js': '/bower_components/jquery-ui/ui/jquery-ui',
     d3: '/bower_components/d3/d3',
     'caleydo-plugins-gen': './caleydo-plugins-gen',
     'd3.parcoords': '/bower_components/d3.parcoords/index'
@@ -18,6 +18,9 @@ require.config({
       deps: ['css!/bower_components/d3.parcoords-css/index', 'd3'],
       exports: 'd3.parcoords'
     }
+  },
+  bundles: {
+    'wrapper-bundle': ['jquery-ui']
   }
 });
 
@@ -26,17 +29,19 @@ require([
     './caleydo',
     './caleydo-data',
     './caleydo-range',
-    './caleydo-plugins'
-  ], function ($, C, data, range, plugins) {
+    './caleydo-plugins',
+    './window/index'
+  ], function ($, C, data, range, plugins, window) {
     'use strict';
     // use app here
     var a = 5;
+    var $body = $('body');
     console.log(C.version);
     console.log(JSON.stringify(plugins.list()));
     //load and excute the auto load plugins
     plugins.load(plugins.list('autoload')).then(function (plugins) {
       plugins.forEach(function (p) {
-        p.factory($('body'));
+        p.factory($body[0]);
       });
     });
     //console.log('Running jQuery ', $().jquery);
@@ -51,14 +56,18 @@ require([
         });
         var m = matrix; //.view(range.parse('0:5,1:6'));
         var visses = plugins.listVis(m);
-        visses.forEach(function (vis) {
+        visses.forEach(function (vis, i) {
           console.log(vis);
 
           //if (vis.name == "links")
           //  return;
 
           vis.load().then(function (plugin) {
-            plugin.factory(m, $('body')[0]);
+            var w = window.create($body[0]);
+            w.title = plugin.desc.name;
+            w.pos = [200,i*210];
+            w.size = [200,200];
+            plugin.factory(m, w.node);
           });
         });
         return matrix.rows();
