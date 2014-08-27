@@ -331,7 +331,7 @@ class ProjectedVector extends vector.VectorBase implements vector.IVector {
   }
 
   size() {
-    return this.m.length;
+    return this.m.nrow;
   }
   /**
    * return the associated ids of this vector

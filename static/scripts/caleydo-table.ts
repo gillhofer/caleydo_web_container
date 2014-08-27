@@ -33,6 +33,15 @@ export interface ITable extends datatypes.IDataType {
    * @param range
    */
   view(range?:ranges.Range) : ITable;
+
+  /**
+   * reduces the current matrix to a vector using the given reduce function
+   * @param f the reduce function
+   * @param this_f the this context for the function default the matrix
+   * @param valuetype the new value type by default the same as matrix valuetype
+   * @param idtype the new vlaue type by default the same as matrix rowtype
+   */
+  reduce(f : (row : any[]) => any, this_f? : any, valuetype? : any, idtype? : idtypes.IDType) : vector.IVector
   /**
    * returns a promise for getting one cell
    * @param i
@@ -77,6 +86,10 @@ export class TableBase extends events.EventHandler {
 
   view(range:ranges.Range = ranges.all()):ITable {
     return new TableView(this._root, range);
+  }
+
+  reduce(f : (row : any[]) => any, this_f? : any, valuetype? : any, idtype? : idtypes.IDType) : vector.IVector {
+    return new MultiTableVector(<ITable>(<any>this), f, this_f, valuetype, idtype);
   }
 }
 
@@ -271,6 +284,54 @@ export class TableVector extends vector.VectorBase implements vector.IVector {
 
   size() {
     return this.table.nrow;
+  }
+}
+
+
+/**
+ * a simple projection of a matrix columns to a vector
+ */
+class MultiTableVector extends vector.VectorBase implements vector.IVector {
+  desc : datatypes.IDataDescription;
+
+  constructor(private table : ITable, private f : (row : any[]) => any, private this_f = table, public valuetype = null, public idtype = table.rowtype) {
+    super(null);
+    this.desc = {
+      name : table.desc.name+'-p',
+      type : 'vector',
+      id : table.desc.id+'-p'
+    };
+    this._root = this;
+  }
+
+  size() {
+    return this.table.nrow;
+  }
+  /**
+   * return the associated ids of this vector
+   */
+  ids(range?:ranges.Range) : C.IPromise<string[]> {
+    return this.table.rows(range);
+  }
+
+  /**
+   * returns a promise for getting one cell
+   * @param i
+   * @param j
+   */
+  at(i:number) : C.IPromise<any> {
+    return this.table.data(ranges.list(i)).then((d)=> {
+      return this.f.call(this.this_f, d[0]);
+    });
+  }
+  /**
+   * returns a promise for getting the data as two dimensional array
+   * @param range
+   */
+  data(range?:ranges.Range) : C.IPromise<any[]> {
+    return this.table.data(range).then((d)=> {
+      return d.map(this.f, this.this_f);
+    });
   }
 }
 
