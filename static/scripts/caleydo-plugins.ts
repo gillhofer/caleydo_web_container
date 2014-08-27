@@ -118,7 +118,7 @@ export function list(type : string);
  * @returns {IPluginDesc[]}
  */
 export function list(filter : any = C.constantTrue) {
-  if (typeof filter === 'String') {
+  if (typeof filter === 'string') {
     var v = filter;
      filter = (desc) => desc.type === v;
   }
@@ -134,10 +134,19 @@ export function list(filter : any = C.constantTrue) {
  * @returns {Promise}
  */
 export function load(plugins: IPluginDesc[]) :C.IPromise<IPlugin[]> {
+  if (plugins.length === 0) {
+    return C.resolved([]);
+  }
   return C.promised((resolve) => {
-    require_(plugins.map((desc) => desc.module), (...plugins : IPlugin[]) => {
-      //loaded
-      resolve(plugins);
+    require_(plugins.map((desc) => desc.module), (...impls : any[]) => {
+      //loaded now convert to plugins
+      resolve(impls.map((p,i) => {
+        return {
+          desc: plugins[i],
+          impl : p,
+          factory : p[plugins[i].factory]
+        };
+      }));
     });
   });
 }
