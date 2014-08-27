@@ -44,7 +44,7 @@ require(['jquery', './caleydo-data', './caleydo-plugins', './window/index', './c
     mw.title = multi.act.name;
     mw.pos = [400, 10];
     mw.size = [300, 300];
-    multi.on('change', function (new_) {
+    multi.on('change', function (event, new_) {
       mw.title = new_.name;
       mw.contentSize = multi.size;
     });

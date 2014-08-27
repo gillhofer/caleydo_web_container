@@ -54,6 +54,12 @@ export class MultiForm extends events.EventHandler {
     this.switchToImpl(this.visses[0]);
   }
 
+  destroy() {
+    if (this.actVis && C.isFunction(this.actVis.destroy)) {
+      this.actVis.destroy();
+    }
+  }
+
   /**
    * returns the current selected vis technique description
    * @returns {plugins.IPluginDesc}
