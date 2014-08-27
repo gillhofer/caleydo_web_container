@@ -7,7 +7,7 @@ define(['exports', 'jquery', 'jquery-ui'], function (exports, $) {
     function Window(parent) {
       this.$parent = $(parent);
       this.$div = $("<div/>").appendTo(this.$parent)
-        .addClass("ui-widget-content")
+        .addClass("ui-widget-content window")
         .css({
           position: 'absolute',
           left: 0,
@@ -18,7 +18,7 @@ define(['exports', 'jquery', 'jquery-ui'], function (exports, $) {
       $("<h3>").appendTo(this.$div)
         .addClass("ui-widget-header")
         .disableSelection(); //no selection of header for dragging
-      this.$div.append("<div/>");
+      this.$div.append("<div class='content'/>");
       this.$div.draggable({
         scroll: true, //auto scroll viewport
         handle: "> h3" //just drag using the header
@@ -51,10 +51,10 @@ define(['exports', 'jquery', 'jquery-ui'], function (exports, $) {
       Object.defineProperty(Window.prototype, "contentSize", {
         get: function () {
           var s = this.size;
-          return [s[0], s[1] - 45];
+          return [s[0], s[1] - 20];
         },
         set: function (val) {
-          this.size = [val[0], val[1] + 45];
+          this.size = [val[0], val[1] + 20];
         },
         enumerable: true,
         configurable: true

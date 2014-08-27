@@ -46,7 +46,7 @@
     }
   },
   {
-    "name": "Test Heterogenous 10x4",
+    "name": "Test Heterogeneous 10x4",
     "path": "test_h10x4.csv",
     "size": [10, 4],
     "type": "table",

@@ -2,16 +2,21 @@
  * Created by Samuel Gratzl on 27.08.2014.
  */
 
-require(['jquery', './caleydo', './caleydo-data', './caleydo-range', './caleydo-plugins', './window/index' ], function ($, C, data, range, plugins, window) {
-  'use strict';
-  // use app here
-  var $body = $('body');
+function autoload(plugins) {
+  var body = document.getElementsByTagName('body')[0];
   //load and execute the auto load plugins
   plugins.load(plugins.list('autoload')).then(function (plugins) {
     plugins.forEach(function (p) {
-      p.factory($body[0]);
+      p.factory(body);
     });
   });
+}
+
+require(['jquery', './caleydo-data', './caleydo-plugins', './window/index', './caleydo-multiform' ], function ($, data, plugins, window, multiform) {
+  'use strict';
+  autoload(plugins);
+  // use app here
+  var $body = $('body');
 
   data.get('0').then(function (matrix) {
     matrix.on("loaded", function () {
@@ -34,5 +39,24 @@ require(['jquery', './caleydo', './caleydo-data', './caleydo-range', './caleydo-
         acc += s[1] + 10;
       });
     });
+    var mw = window.create($body[0]);
+    var multi = multiform.create(matrix, mw.node);
+    mw.title = multi.act.name;
+    mw.pos = [400, 10];
+    mw.size = [300, 300];
+    multi.on('change', function (new_) {
+      mw.title = new_.name;
+      mw.contentSize = multi.size;
+    });
   });
 });
+
+/*require(['jquery', './caleydo-data', './caleydo-plugins', './caleydo-multiform' ], function ($, data, plugins, multiform) {
+  'use strict';
+  autoload(plugins);
+
+  var $body = $('body');
+  data.get('0').then(function (matrix) {
+    var m = multiform.create(matrix, $body[0]);
+  });
+});*/
