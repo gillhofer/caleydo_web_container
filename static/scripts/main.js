@@ -65,8 +65,12 @@ require([
           vis.load().then(function (plugin) {
             var w = window.create($body[0]);
             w.title = plugin.desc.name;
-            w.pos = [200,i*210];
-            w.size = [200,200];
+            w.pos = [20, i*210];
+            if (typeof plugin.desc.size === 'function') {
+              w.size = plugin.desc.size(m.dim);
+            } else {
+              w.size = [200, 200];
+            }
             plugin.factory(m, w.node);
           });
         });

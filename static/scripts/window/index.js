@@ -7,10 +7,16 @@ define(['exports', 'jquery', 'jquery-ui'], function (exports, $) {
     function Window(parent) {
       this.$parent = $(parent);
       this.$div = $("<div/>").appendTo(this.$parent).addClass("ui-widget-content");
-      $("<h3>").appendTo(this.$div).addClass("ui-widget-header");
+      $("<h3>").appendTo(this.$div)
+        .addClass("ui-widget-header")
+        .disableSelection(); //no selection of header for dragging
       this.$div.append("<div/>");
-      this.$div.draggable().resizable({
-        minHeight: 100,
+      this.$div.draggable({
+        scroll: true, //auto scroll viewport
+        handle: "> h3" //just drag using the header
+      });
+      this.$div.resizable({
+        minHeight: 145,
         minWidth: 100
       });
       Object.defineProperty(Window.prototype, "title", {
@@ -25,11 +31,11 @@ define(['exports', 'jquery', 'jquery-ui'], function (exports, $) {
       });
       Object.defineProperty(Window.prototype, "size", {
         get: function () {
-          return [this.$div.css('width'), this.$div.css('height')];
+          return [this.$div.css('width'), this.$div.css('height') - 45];
         },
         set: function (val) {
           this.$div.css('width', val[0]);
-          this.$div.css('height', val[1]);
+          this.$div.css('height', val[1] + 45); //for header
         },
         enumerable: true,
         configurable: true

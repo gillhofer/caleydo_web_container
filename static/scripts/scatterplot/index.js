@@ -10,14 +10,14 @@ define(['exports', 'd3', '../caleydo', '../tooltip/index', 'css!./style'], funct
     }
 
     ScatterPlot.prototype.build = function ($parent) {
-      var width = 100, height = 100;
+      var width = 300, height = 300;
 
       var xcol = 0;
       var ycol = 1;
 
       var svg = $parent.append("svg").attr({
-        width: 360,
-        height: 150
+        width: width,
+        height: height
       });
 
       var that = this;
@@ -51,20 +51,16 @@ define(['exports', 'd3', '../caleydo', '../tooltip/index', 'css!./style'], funct
           }));
       });
 
-      var $xaxis = $parent.append("select");
-      var $yaxis = $parent.append("select");
-
-
       function update() {
         that.data.data().then(function (arr) {
 
           // create scales
-          var x = d3.scale.linear().domain([0, d3.max(arr, function (d) {
+          var x = d3.scale.linear().domain([0, d3.max(arr.map(function (d) {
               return d[xcol];
-            })]).range([0, width]),
-            y = d3.scale.linear().domain([0, d3.max(function (d) {
+            }))]).range([0, width]),
+            y = d3.scale.linear().domain([0, d3.max(arr.map(function (d) {
               return d[ycol];
-            })]).range([height, 0]);
+            }))]).range([height, 0]);
 
           svg.selectAll('circle')
             .transition()
@@ -78,39 +74,44 @@ define(['exports', 'd3', '../caleydo', '../tooltip/index', 'css!./style'], funct
             });
         });
       }
+
+      var $xaxis = $parent.append("select")
+        .on("change", function () {
+          xcol = this.selectedIndex;
+          update();
+        });
+      var $yaxis = $parent.append("select")
+        .on("change", function () {
+          ycol = this.selectedIndex;
+          update();
+        });
+
       this.data.cols().then(function (cols) {
-        $xaxis.selectAll("option").data(cols).enter()
-          .append("option")
-          .attr("value", function (d, i) {
-            return i;
-          })
+        var $x = $xaxis.selectAll("option").data(cols);
+        $x.enter().append("option");
+        $x.attr("value", function (d, i) {
+          return i;
+        })
           .text(C.identity)
           .each(function (d, i) {
             if (i == xcol) {
               d3.select(this).attr("selected", "selected");
             }
-          })
-          .on("change", function () {
-            xcol = this.selectedIndex;
-            update();
           });
+        $x.exit().remove();
 
-        $yaxis.selectAll("option").data(cols)
-          .enter()
-          .append("option")
-          .attr("value", function (d, i) {
-            return i;
-          })
+        var $y = $yaxis.selectAll("option").data(cols);
+        $y.enter().append("option");
+        $y.attr("value", function (d, i) {
+          return i;
+        })
           .text(C.identity)
           .each(function (d, i) {
             if (i == ycol) {
               d3.select(this).attr("selected", "selected");
             }
-          })
-          .on("change", function () {
-            ycol = this.selectedIndex;
-            update();
           });
+        $y.exit().remove();
       });
     };
     return ScatterPlot;

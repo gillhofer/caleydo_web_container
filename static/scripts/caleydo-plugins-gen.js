@@ -35,7 +35,10 @@ define(function () {
       },
       {
         type: 'vis',
-        name: 'scatterplot'
+        name: 'scatterplot',
+        size: function () {
+          return [300, 300 + 40];
+        }
       },
       {
         type: 'autoload',
