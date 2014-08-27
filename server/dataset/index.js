@@ -1,6 +1,7 @@
 /*global require, module, console*/
 'use strict';
 
+var fs = require('fs');
 // global variables
 var datasetIndex = [];
 module.exports = require('express').Router();
@@ -62,8 +63,9 @@ module.exports.route('/')
   });
 
 
+
 // Load `*.js` under current directory in a module list
-require('fs').readdirSync(__dirname + '/').forEach(function (file) {
+fs.readdirSync(__dirname + '/').forEach(function (file) {
   var module;
   if (file.match(/.+\.js/g) !== null && file !== 'index.js') {
     //var name = file.replace('.js', '');
