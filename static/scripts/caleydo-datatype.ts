@@ -20,6 +20,7 @@ export interface IDataType extends events.EventHandler {
   desc: IDataDescription;
   /**
    * dimensions of this datatype
+   * rows, cols, ....
    */
   dim: number[];
 }

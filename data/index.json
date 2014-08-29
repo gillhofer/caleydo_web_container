@@ -24,6 +24,7 @@
     }
   },
   {
+    "name": "Test 10x100",
     "path": "test_10x100.csv",
     "size": [10, 100],
     "type": "matrix",

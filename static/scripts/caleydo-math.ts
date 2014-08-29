@@ -61,6 +61,7 @@ class Statistics implements IStatistics {
   }
 
   push(x: number) {
+    x = +x;
     if (isNaN(x)) {
       this.nans++;
       return;
