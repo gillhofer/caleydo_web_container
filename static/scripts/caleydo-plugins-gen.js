@@ -13,7 +13,7 @@ define(function () {
          * @returns {*[]}
          */
         size: function (dim) {
-          return [dim[1] * 20, dim[0] * 20];
+          return [dim[1] * 10, dim[0] * 10];
         },
         /**
          * optional filter for which this vis can be applied, given an IDataType
@@ -46,7 +46,7 @@ define(function () {
           return [300, 300 + 40];
         },
         filter: function (data) {
-          return data.desc.type === 'matrix' || data.desc.type === 'table';
+          return data.desc.type === 'matrix';
         }
       },
       {

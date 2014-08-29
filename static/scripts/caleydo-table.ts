@@ -64,10 +64,6 @@ export class TableBase extends events.EventHandler {
     super();
   }
 
-  get type() {
-    return 'table';
-  }
-
   get dim() {
     return this.size();
   }

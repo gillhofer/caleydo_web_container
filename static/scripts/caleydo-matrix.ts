@@ -86,10 +86,6 @@ export class MatrixBase extends events.EventHandler {
     super();
   }
 
-  get type() {
-    return 'matrix';
-  }
-
   size():number[] {
     throw new Error('not implemented');
   }

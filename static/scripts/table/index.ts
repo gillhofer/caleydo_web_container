@@ -13,7 +13,7 @@ import C = require('../caleydo');
 export class Table {
   constructor(public data:any, public parent:Element) {
     var $p = d3.select(parent);
-    switch (data.type) {
+    switch (data.desc.type) {
       case 'matrix':
         this.build($p, [this.data.cols(), this.data.rows(), this.data.data()]);
         break;

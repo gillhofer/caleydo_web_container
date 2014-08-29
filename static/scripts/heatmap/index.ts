@@ -16,8 +16,8 @@ export class HeatMap {
     var dims = this.data.dim;
     var width = dims[1], height = dims[0];
     var $svg = $parent.append('svg').attr({
-      height: width * 20 + "px",
-      width: height * 20 + "px"
+      width: width * 10 + "px",
+      height: height * 10 + "px"
     });
 
     var colScale = d3.scale.linear().domain([0, width]).range([0, 100]);
