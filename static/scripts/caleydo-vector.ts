@@ -8,6 +8,7 @@ import ranges = require('./caleydo-range');
 import idtypes = require('./caleydo-idtypes');
 import datatypes = require('./caleydo-datatype');
 import events = require('./caleydo-events');
+import math = require('./caleydo-math');
 
 export interface IVector extends datatypes.IDataType {
   /**
@@ -43,7 +44,10 @@ export interface IVector extends datatypes.IDataType {
    * @param range
    */
   data(range?:ranges.Range) : C.IPromise<any[]>;
+
+  stats() : C.IPromise<math.IStatistics>;
 }
+
 
 /**
  * base class for different Vector implementations, views, transposed,...
@@ -57,6 +61,10 @@ export class VectorBase extends events.EventHandler {
     return [this.length];
   }
 
+  data() : C.IPromise<any[]> {
+    throw new Error('not implemented');
+  }
+
   size():number {
     throw new Error('not implemented');
   }
@@ -67,6 +75,10 @@ export class VectorBase extends events.EventHandler {
 
   view(range:ranges.Range = ranges.all()):IVector {
     return new VectorView(this._root, range);
+  }
+
+  stats() : C.IPromise<math.IStatistics> {
+    return this.data().then((d) => math.computeStats(d));
   }
 }
 
