@@ -59,6 +59,16 @@ define(function () {
           return data.desc.type === 'vector' && data.desc.value.type === 'real';
         }
       },
+      //{ //template for adding a new vis
+      //  type: 'vis', //plugin type
+      //  name: 'template', //unique id of a datatype
+      //  size: function (dim) { //the size of the vis, given dattype.dim information -> [row,dim] in case of a matrix
+      //    return [100,100];
+      //  },
+      //  filter: function (data) { //filter of a specific datatype, e.g. filter to specific types
+      //    return data.desc.type === 'template';
+      //  }
+      //},
       {
         type: 'autoload',
         name: 'links'
@@ -78,6 +88,11 @@ define(function () {
         name: 'vector',
         module: './caleydo-vector'
       },
+      //{ //template for adding a new data type
+      //  type: 'datatype', //plugin type
+      //  name: 'template', //unique id of a datatype
+      //  module: './template-datatype' //module implementing this type
+      //},
       {
         type: 'ui',
         name: 'tooltip'
@@ -85,7 +100,7 @@ define(function () {
       {
         type: 'ui',
         name: 'window'
-      }
+      },
     ];
     return {
       plugins: plugins
