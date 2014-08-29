@@ -13,7 +13,7 @@ define(function () {
          * @returns {*[]}
          */
         size: function (dim) {
-          return [dim[0] * 20, dim[1] * 20];
+          return [dim[1] * 20, dim[0] * 20];
         },
         /**
          * optional filter for which this vis can be applied, given an IDataType
@@ -29,7 +29,7 @@ define(function () {
         type: 'vis',
         name: 'table',
         size: function (dim) {
-          return [dim[0] * 110, dim[1] * 22];
+          return [dim[1] * 110, dim[0] * 22];
         }
       },
       {
@@ -47,6 +47,16 @@ define(function () {
         },
         filter: function (data) {
           return data.desc.type === 'matrix' || data.desc.type === 'table';
+        }
+      },
+      {
+        type: 'vis',
+        name: 'box',
+        size: function () {
+          return [300, 50];
+        },
+        filter: function (data) {
+          return data.desc.type === 'vector' && data.desc.value.type === 'real';
         }
       },
       {

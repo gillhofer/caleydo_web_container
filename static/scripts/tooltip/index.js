@@ -9,6 +9,9 @@ define(['exports', 'd3', 'css!./style'], function (exports, d3) {
     .style("opacity", 0);
 
   function bind(toLabel) {
+    //wrap as funtion
+    toLabel = d3.functor(toLabel);
+
     return function (selection) {
       selection.on({
         'mouseenter': function (d, i) {
