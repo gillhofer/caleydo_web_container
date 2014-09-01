@@ -2,19 +2,27 @@
  * Created by Samuel Gratzl on 05.08.2014.
  */
 
+/**
+ * a tooltip module, providing a single method: 'bind'
+ */
 define(['exports', 'd3', 'css!./style'], function (exports, d3) {
   // add the tooltip area to the webpage
   var tooltip = d3.select("body").append("div")
     .attr("class", "tooltip")
     .style("opacity", 0);
 
+  /**
+   * returns a D3 compatible call method, which registers itself to show a tooltip upon mouse enter
+   * @param toLabel the text to show or a function to determine the text to show
+   * @returns {Function}
+   */
   function bind(toLabel) {
     //wrap as funtion
     toLabel = d3.functor(toLabel);
 
     return function (selection) {
       selection.on({
-        'mouseenter': function (d, i) {
+        mouseenter: function (d, i) {
           tooltip
             .html(toLabel.call(this,d,i))
             .style("left", (d3.event.pageX + 5) + "px")
@@ -24,7 +32,7 @@ define(['exports', 'd3', 'css!./style'], function (exports, d3) {
             .duration(200)
             .style("opacity", .9);
         },
-        'mouseleave': function (d, i) {
+        mouseleave: function (d, i) {
           tooltip.transition()
             .duration(200)
             .style("opacity", 0);

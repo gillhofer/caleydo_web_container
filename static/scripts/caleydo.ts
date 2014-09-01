@@ -161,3 +161,37 @@ export function argList(args:IArguments) {
     return Array.prototype.slice.call(args);
   }
 }
+
+/**
+ * utility function to get notified, when the given dom element is removed from its parent
+ * @param node
+ * @param callback
+ */
+export function onDOMNodeRemoved(s: Element[], callback: () => void);
+/**
+ * utility function to get notified, when the given dom element is removed from its parent
+ * @param node
+ * @param callback
+ */
+export function onDOMNodeRemoved(node: Element, callback: () => void);
+/**
+ * utility function to get notified, when the given dom element is removed from its parent
+ * @param node
+ * @param callback
+ */
+export function onDOMNodeRemoved(node: any, callback: () => void) {
+  var arr : any[];
+  if (!isArray(node)) {
+    arr = [node];
+  } else {
+    arr = <any[]>node;
+  }
+  arr.forEach((n) => {
+    n.addEventListener('DOMNodeRemoved', (evt) => {
+      //since this event bubbles check if it the right node
+      if (evt.target == n) {
+        callback.call(this, evt);
+      }
+    });
+  });
+}

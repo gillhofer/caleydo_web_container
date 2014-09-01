@@ -11,17 +11,19 @@ import datatypes = require('../caleydo-datatype');
 import C = require('../caleydo');
 
 export class Table {
+  public node: Element;
+
   constructor(public data:any, public parent:Element) {
     var $p = d3.select(parent);
-    switch (data.desc.type) {
+    switch (data.desc.type) { //depending on the type of the data, create a different table
       case 'matrix':
-        this.build($p, [this.data.cols(), this.data.rows(), this.data.data()]);
+        this.node = this.build($p, [this.data.cols(), this.data.rows(), this.data.data()]);
         break;
       case 'table':
-        this.build($p, [this.data.cols().map((v) => v.name), this.data.rows(), this.data.data()]);
+        this.node = this.build($p, [this.data.cols().map((v) => v.name), this.data.rows(), this.data.data()]);
         break;
       case 'vector':
-        this.build($p, [
+        this.node = this.build($p, [
           ['Value'],
           this.data.ids(),
           this.data.data().then((data) => data.map((d) => [d]))
@@ -57,6 +59,8 @@ export class Table {
       });
       $rows.exit().remove();
     });
+
+    return $table.node();
   }
 }
 

@@ -2,33 +2,30 @@
  * Created by Samuel Gratzl on 05.08.2014.
  */
 define(['exports', 'd3', 'd3.parcoords', '../caleydo'], function (exports, d3, d3_parcoords, C) {
-  var ParCo = (function () {
-    function ParCo(data, parent) {
-      this.data = data;
-      this.parent = parent;
-      this.build(d3.select(parent));
-    }
+  function ParCo(data, parent) {
+    this.data = data;
+    this.parent = parent;
+    this.node = this.build(d3.select(parent));
+  }
 
-    ParCo.prototype.build = function ($parent) {
-      var dims = this.data.dim;
-      var width = dims[1], height = dims[0];
-      var $svg = $parent.append('div').attr({
-        'class': 'parcoords',
-        style: 'width:360px;height:150px'
-      });
+  ParCo.prototype.build = function ($parent) {
+    var $base = $parent.append('div').attr({
+      'class': 'parcoords',
+      style: 'width:360px;height:150px'
+    });
 
-      this.data.data().then(function (arr) {
+    this.data.data().then(function (arr) {
 
-        var pc = d3_parcoords()($svg.node())
-          .data(arr)
-          .render()
-          .ticks(3)
-          .createAxes();
+      var pc = d3_parcoords()($base.node())
+        .data(arr)
+        .render()
+        .ticks(3)
+        .createAxes();
 
-      })
-    };
-    return ParCo;
-  })();
+    });
+
+    return $base.node();
+  };
   exports.ParCo = ParCo;
 
   function create(data, parent) {

@@ -8,8 +8,10 @@ import matrix = require('../caleydo-matrix');
 import C = require('../caleydo');
 
 export class HeatMap {
+  node: Element;
+
   constructor(public data : matrix.IMatrix, public parent: Element) {
-    this.build(d3.select(parent));
+    this.node = this.build(d3.select(parent));
   }
 
   private build($parent : D3.Selection) {
@@ -44,6 +46,7 @@ export class HeatMap {
       });
       $rows.exit().remove();
     });
+    return $svg.node();
   }
 }
 

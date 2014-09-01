@@ -5,7 +5,7 @@ define(['exports', 'd3', '../tooltip/index', 'css!./style'], function (exports, 
   function BoxPlot(data, parent) {
     this.data = data;
     this.parent = parent;
-    this.build(d3.select(parent));
+    this.node = this.build(d3.select(parent));
   }
 
   function createText(stats) {
@@ -51,6 +51,8 @@ define(['exports', 'd3', '../tooltip/index', 'css!./style'], function (exports, 
         'class' : 'mean'
       });
     });
+
+    return $svg.node();
   };
   exports.BoxPlot = BoxPlot;
 
