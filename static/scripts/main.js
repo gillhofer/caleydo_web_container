@@ -10,7 +10,7 @@ require.config({
   },
   map: {
     '*': {
-      'css': '/bower_components/require-css/css.js' // or whatever the path to require-css is
+      'css': '/bower_components/require-css/css.js', // or whatever the path to require-css is
     }
   },
   shim: {
@@ -20,7 +20,7 @@ require.config({
     }
   },
   bundles: {
-    'wrapper-bundle': ['jquery-ui']
+    'wrapper-bundle': ['jquery-ui', 'fontawesome']
   }
 });
 
