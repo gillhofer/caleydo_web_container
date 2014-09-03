@@ -56,10 +56,40 @@ define(['exports', 'jquery', '../caleydo-events', 'jquery-ui','fontawesome'], fu
       });
     }
 
+    function makeAnimatedHeader($div, $header) {
+      //on mouse enter show the toolbar on top of it
+      $div.on({
+        mouseenter: function () {
+          //move up and slide down at the same time = sliding from bottom to top
+          $header.stop().animate({
+            top: -$header.height(),
+            height: 'show'
+          });
+        },
+        mouseleave: function () {
+          $header.stop().animate({
+            top: '0',
+            height: 'hide'
+          });
+        }
+      });
+      //hide header by default
+      $header.addClass('animated').hide();
+    }
+
     function makeCloseable($toolbar, window) {
       $('<i class="fa fa-close">').appendTo($toolbar).click(function() {
         window.close();
       }).attr('title','Close');
+    }
+
+    function makeZControls($toolbar, $div) {
+      $('<i class="fa fa-caret-square-o-up">').prependTo($toolbar).click(function() {
+        $div.css('z-index','+=1')
+      }).attr('title','Move Up');
+      $('<i class="fa fa-caret-square-o-down">').prependTo($toolbar).click(function() {
+        $div.css('z-index','-=1')
+      }).attr('title','Move Down');
     }
 
     function Window(parent, options) {
@@ -68,6 +98,7 @@ define(['exports', 'jquery', '../caleydo-events', 'jquery-ui','fontawesome'], fu
         resizeable: true,
         draggable: true,
         closeable: false,
+        zcontrols: false,
         animatedHeader: false,
         minHeight: 145,
         minWidth: 100
@@ -79,7 +110,8 @@ define(['exports', 'jquery', '../caleydo-events', 'jquery-ui','fontawesome'], fu
           left: 0,
           top: 0,
           width: 100,
-          height: 100
+          height: 100,
+          'z-index': 0
         });
       //title
       this.$header = $('<div>').appendTo(this.$div)
@@ -96,30 +128,14 @@ define(['exports', 'jquery', '../caleydo-events', 'jquery-ui','fontawesome'], fu
       if (this.options.resizeable) {
         makeResizeable(this.$div, this);
       }
+      if (this.options.animatedHeader) {
+        makeAnimatedHeader(this.$div, this.$header);
+      }
       if (this.options.closeable) {
         makeCloseable(this.$toolbar, this);
       }
-
-      if (this.options.animatedHeader) {
-        var that = this;
-        //on mouse enter show the toolbar on top of it
-        this.$div.on({
-          mouseenter: function () {
-            //move up and slide down at the same time = sliding from bottom to top
-            that.$header.stop().animate({
-              top: -that.$header.height(),
-              height: 'show'
-            });
-          },
-          mouseleave: function () {
-            that.$header.stop().animate({
-              top: '0',
-              height: 'hide'
-            });
-          }
-        });
-        //hide header by default
-        this.$header.addClass('animated').hide();
+      if (this.options.zcontrols) {
+        makeZControls(this.$toolbar, this.$div);
       }
     }
 
