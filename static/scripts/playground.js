@@ -50,7 +50,8 @@ require(['jquery', 'd3', './caleydo-data', './caleydo-plugins', './window/index'
 
   function addIt(m) {
     var mw = window.create($body[0], {
-      closeable: true
+      closeable: true,
+      animatedHeader : true
     });
     var multi = multiform.create(m, mw.node);
     multiform.addSimpleVisIconChooser(multi, mw.toolbar);

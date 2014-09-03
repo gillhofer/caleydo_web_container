@@ -35,6 +35,12 @@
         margin: 0 .2em;
       }
     }
+
+    &.animated {
+      position: absolute;
+      left: 0;
+      right: 0;
+    }
   }
 
   > div.content {

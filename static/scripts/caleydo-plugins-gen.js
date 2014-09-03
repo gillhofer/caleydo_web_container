@@ -6,6 +6,10 @@ define(function () {
       {
         type: 'vis',
         name: 'heatmap',
+        /**
+         * icon of this vis type. Alternative: iconcss ... css class holding the icon
+         * @default: none
+         */
         icon: 'heatmap/icon.png',
         /**
          * optional function returning the expected size of the vis given the dimension (nrow,ncol) of the represented data

@@ -68,7 +68,7 @@ define(['exports', 'jquery', '../caleydo-events', 'jquery-ui','fontawesome'], fu
         resizeable: true,
         draggable: true,
         closeable: false,
-        hideToolbar: true,
+        animatedHeader: false,
         minHeight: 145,
         minWidth: 100
       }, options);
@@ -99,12 +99,34 @@ define(['exports', 'jquery', '../caleydo-events', 'jquery-ui','fontawesome'], fu
       if (this.options.closeable) {
         makeCloseable(this.$toolbar, this);
       }
+
+      if (this.options.animatedHeader) {
+        var that = this;
+        //on mouse enter show the toolbar on top of it
+        this.$div.on({
+          mouseenter: function () {
+            //move up and slide down at the same time = sliding from bottom to top
+            that.$header.stop().animate({
+              top: -that.$header.height(),
+              height: 'show'
+            });
+          },
+          mouseleave: function () {
+            that.$header.stop().animate({
+              top: '0',
+              height: 'hide'
+            });
+          }
+        });
+        //hide header by default
+        this.$header.addClass('animated').hide();
+      }
     }
 
     Window.prototype.close = function() {
       this.$div.remove();
       this.fire('removed', this);
-    }
+    };
     /**
      * property for getting setting the title
      */
@@ -138,10 +160,10 @@ define(['exports', 'jquery', '../caleydo-events', 'jquery-ui','fontawesome'], fu
     Object.defineProperty(Window.prototype, 'contentSize', {
       get: function () {
         var s = this.size;
-        return [s[0], s[1] - 20];
+        return [s[0], s[1] - (this.options.animatedHeader ? 0 : 20)];
       },
       set: function (val) {
-        this.size = [val[0], val[1] + 20];
+        this.size = [val[0], val[1] + (this.options.animatedHeader ? 0 : 20)];
       },
       enumerable: true,
       configurable: true
