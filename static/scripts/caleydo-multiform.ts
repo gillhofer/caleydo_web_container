@@ -36,18 +36,7 @@ export class MultiForm extends events.EventHandler {
   private build() {
     var p = this.parent;
     //create select option field
-    var $s = p.append('select');
-    var that = this;
-    $s.selectAll('option').data(this.visses)
-      .enter()
-      .append('option')
-      .attr('value', (d, i) => i)
-      .text((d) => {
-        return d.name;
-      });
-    $s.on('change', function () {
-      that.switchTo(this.selectedIndex);
-    });
+
     //create content
     this.$content = p.append('div').attr('class', 'content');
     //switch to first
@@ -74,7 +63,6 @@ export class MultiForm extends events.EventHandler {
     if (d && typeof d.size === 'function') {
       s = d.size(this.data.dim);
     }
-    s[1] += 30;
     return s;
   }
 
@@ -114,6 +102,52 @@ export class MultiForm extends events.EventHandler {
       });
     }
   }
+}
+
+export function addSimpleVisChooser(form: MultiForm, toolbar: Element) {
+  var $toolbar = d3.select(toolbar);
+  var $s = $toolbar.insert('select','*');
+  $s.selectAll('option').data(form.visses)
+    .enter()
+    .append('option')
+    .attr('value', (d, i) => i)
+    .text((d) => {
+      return d.name;
+    });
+  $s.on('change', function () {
+    form.switchTo(this.selectedIndex);
+  });
+}
+
+export function addSimpleVisIconChooser(form: MultiForm, toolbar: Element) {
+  var $toolbar = d3.select(toolbar);
+  var $s = $toolbar.insert('div','*');
+  //create
+  $s.selectAll('i').data(form.visses)
+    .enter()
+    .append('i')
+    .attr('title', (d) => d.name)
+    .attr('class', 'fa')
+    .each(function(d) {
+      var t = d3.select(this);
+      if (d.iconcss) {
+        t.classed(d.iconcss, true);
+      } else if (d.icon) {
+        t.classed('fa-fw', true).style('background-image', 'url(scripts/' + d.icon + ')').html('&nbsp');
+      } else {
+        t.text(d.name.substr(0, 1).toUpperCase());
+      }
+    })
+    .on('click', (d, i) => {
+      form.switchTo(i);
+    });
+  var l = (event: any, act: plugins.IPluginDesc, old: plugins.IPluginDesc) => {
+
+  };
+  form.on('change', l);
+  C.onDOMNodeRemoved(toolbar, () => {
+    form.off('change', l);
+  });
 }
 
 export function create(data:datatypes.IDataType, parent:Element) {

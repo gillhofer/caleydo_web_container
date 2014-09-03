@@ -6,6 +6,7 @@ define(function () {
       {
         type: 'vis',
         name: 'heatmap',
+        icon: 'heatmap/icon.png',
         /**
          * optional function returning the expected size of the vis given the dimension (nrow,ncol) of the represented data
          * default unknown
@@ -35,6 +36,7 @@ define(function () {
       {
         type: 'vis',
         name: 'parco',
+        icon: 'parco/icon.png',
         size: function (dim) {
           return [360, 150];
         }
@@ -100,7 +102,7 @@ define(function () {
       {
         type: 'ui',
         name: 'window'
-      },
+      }
     ];
     return {
       plugins: plugins

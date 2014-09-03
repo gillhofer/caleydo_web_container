@@ -59,7 +59,7 @@ define(['exports', 'jquery', '../caleydo-events', 'jquery-ui','fontawesome'], fu
     function makeCloseable($toolbar, window) {
       $('<i class="fa fa-close">').appendTo($toolbar).click(function() {
         window.close();
-      });
+      }).attr('title','Close');
     }
 
     function Window(parent, options) {
@@ -76,7 +76,6 @@ define(['exports', 'jquery', '../caleydo-events', 'jquery-ui','fontawesome'], fu
       this.$div = $('<div/>').appendTo(this.$parent)
         .addClass('ui-widget-content window')
         .css({
-          position: 'absolute',
           left: 0,
           top: 0,
           width: 100,

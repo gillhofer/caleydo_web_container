@@ -3,6 +3,8 @@
  */
 
 .window {
+  position: absolute;
+
   > .ui-widget-header {
     position: relative;
     font-size: 12px;
@@ -19,9 +21,18 @@
       margin-top: auto;
       margin-bottom: auto;
 
+      i {
+        background-size: 100%;
+        margin: 0 0.1em;
+      }
       i:hover {
         font-weight: bold;
         cursor: pointer;
+      }
+
+      div {
+        display: inline-block;
+        margin: 0 .2em;
       }
     }
   }
