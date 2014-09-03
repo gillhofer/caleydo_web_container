@@ -8,7 +8,7 @@ var __extends = this.__extends || function (d, b) {
   __.prototype = b.prototype;
   d.prototype = new __();
 };
-define(['exports', 'jquery', '../caleydo-events', 'jquery-ui'], function (exports, $, events) {
+define(['exports', 'jquery', '../caleydo-events', 'jquery-ui','fontawesome'], function (exports, $, events) {
   var Window = (function (_super) {
     __extends(Window, _super);
     function makeDraggable($div, window) {
@@ -17,7 +17,7 @@ define(['exports', 'jquery', '../caleydo-events', 'jquery-ui'], function (export
       };
       $div.draggable({
         scroll: true, //auto scroll viewport
-        handle: "> h3", //just drag using the header
+        handle: 'div.ui-widget-header h3', //just drag using the header
         start: function (event, ui) {
           window.fire('drag_start', convertDrag(ui));
         },
@@ -56,22 +56,25 @@ define(['exports', 'jquery', '../caleydo-events', 'jquery-ui'], function (export
       });
     }
 
-    function makeCloseable($div, window) {
-      //TODO
+    function makeCloseable($toolbar, window) {
+      $('<i class="fa fa-close">').appendTo($toolbar).click(function() {
+        window.close();
+      });
     }
 
     function Window(parent, options) {
       _super.call(this);
-      this.options = $.extend({}, options || {}, {
+      this.options = $.extend({}, {
         resizeable: true,
         draggable: true,
         closeable: false,
-        minHeight : 145,
+        hideToolbar: true,
+        minHeight: 145,
         minWidth: 100
-      });
+      }, options);
       this.$parent = $(parent);
-      this.$div = $("<div/>").appendTo(this.$parent)
-        .addClass("ui-widget-content window")
+      this.$div = $('<div/>').appendTo(this.$parent)
+        .addClass('ui-widget-content window')
         .css({
           position: 'absolute',
           left: 0,
@@ -80,11 +83,13 @@ define(['exports', 'jquery', '../caleydo-events', 'jquery-ui'], function (export
           height: 100
         });
       //title
-      $("<h3>").appendTo(this.$div)
-        .addClass("ui-widget-header")
+      this.$header = $('<div>').appendTo(this.$div)
+        .addClass('ui-widget-header');
+      $('<h3>').appendTo(this.$header)
         .disableSelection(); //no selection of header for dragging
+      this.$toolbar = $('<div class="toolbar">').appendTo(this.$header);
       //content
-      this.$div.append("<div class='content'/>");
+      this.$div.append('<div class="content"/>');
 
       if (this.options.draggable) {
         makeDraggable(this.$div, this);
@@ -93,76 +98,90 @@ define(['exports', 'jquery', '../caleydo-events', 'jquery-ui'], function (export
         makeResizeable(this.$div, this);
       }
       if (this.options.closeable) {
-        makeCloseable(this.$div, this);
+        makeCloseable(this.$toolbar, this);
       }
-      /**
-       * property for getting setting the title
-       */
-      Object.defineProperty(Window.prototype, "title", {
-        get: function () {
-          return this.$div.find('h3').text();
-        },
-        set: function (val) {
-          this.$div.find('h3').html(val);
-        },
-        enumerable: true,
-        configurable: true
-      });
-      /**
-       * property for the size of the window
-       */
-      Object.defineProperty(Window.prototype, "size", {
-        get: function () {
-          return [this.$div.width(), this.$div.height()];
-        },
-        set: function (val) {
-          this.$div.css('width', val[0]);
-          this.$div.css('height', val[1]); //for header
-        },
-        enumerable: true,
-        configurable: true
-      });
-      /**
-       * property for the size of the content (without header)
-       */
-      Object.defineProperty(Window.prototype, "contentSize", {
-        get: function () {
-          var s = this.size;
-          return [s[0], s[1] - 20];
-        },
-        set: function (val) {
-          this.size = [val[0], val[1] + 20];
-        },
-        enumerable: true,
-        configurable: true
-      });
-      /**
-       * property for the window position
-       */
-      Object.defineProperty(Window.prototype, "pos", {
-        get: function () {
-          var p = this.$div.position();
-          return [p.left, p.top];
-        },
-        set: function (val) {
-          this.$div.css('left', val[0]);
-          this.$div.css('top', val[1]);
-        },
-        enumerable: true,
-        configurable: true
-      });
-      /**
-       * getter of the content node
-       */
-      Object.defineProperty(Window.prototype, "node", {
-        get: function () {
-          return this.$div.find('div')[0];
-        },
-        enumerable: true,
-        configurable: true
-      });
     }
 
+    Window.prototype.close = function() {
+      this.$div.remove();
+      this.fire('removed', this);
+    }
+    /**
+     * property for getting setting the title
+     */
+    Object.defineProperty(Window.prototype, 'title', {
+      get: function () {
+        return this.$header.find('h3').text();
+      },
+      set: function (val) {
+        this.$header.find('h3').html(val);
+      },
+      enumerable: true,
+      configurable: true
+    });
+    /**
+     * property for the size of the window
+     */
+    Object.defineProperty(Window.prototype, 'size', {
+      get: function () {
+        return [this.$div.width(), this.$div.height()];
+      },
+      set: function (val) {
+        this.$div.css('width', val[0]);
+        this.$div.css('height', val[1]); //for header
+      },
+      enumerable: true,
+      configurable: true
+    });
+    /**
+     * property for the size of the content (without header)
+     */
+    Object.defineProperty(Window.prototype, 'contentSize', {
+      get: function () {
+        var s = this.size;
+        return [s[0], s[1] - 20];
+      },
+      set: function (val) {
+        this.size = [val[0], val[1] + 20];
+      },
+      enumerable: true,
+      configurable: true
+    });
+    /**
+     * property for the window position
+     */
+    Object.defineProperty(Window.prototype, 'pos', {
+      get: function () {
+        var p = this.$div.position();
+        return [p.left, p.top];
+      },
+      set: function (val) {
+        this.$div.css('left', val[0]);
+        this.$div.css('top', val[1]);
+      },
+      enumerable: true,
+      configurable: true
+    });
+    /**
+     * getter of the content node
+     */
+    Object.defineProperty(Window.prototype, 'node', {
+      get: function () {
+        return this.$div.find('div.content')[0];
+      },
+      enumerable: true,
+      configurable: true
+    });
+    /**
+     * getter of the content node
+     */
+    Object.defineProperty(Window.prototype, 'toolbar', {
+      get: function () {
+        return this.$header.find('div.toolbar')[0];
+      },
+      enumerable: true,
+      configurable: true
+    });
     return Window;
   }(events.EventHandler));
 

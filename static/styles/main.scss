@@ -3,12 +3,29 @@
  */
 
 .window {
-  > h3.ui-widget-header {
+  > .ui-widget-header {
+    position: relative;
     font-size: 12px;
-    text-align: center;
-    margin: 0;
-    cursor: pointer;
+
+    h3 {
+      margin: 0;
+      cursor: pointer;
+      text-align: center;
+    }
+    .toolbar {
+      position: absolute;
+      right: 3px;
+      top: 0;
+      margin-top: auto;
+      margin-bottom: auto;
+
+      i:hover {
+        font-weight: bold;
+        cursor: pointer;
+      }
+    }
   }
+
   > div.content {
     overflow: auto;
   }
