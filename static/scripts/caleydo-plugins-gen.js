@@ -10,7 +10,7 @@ define(function () {
          * icon of this vis type. Alternative: iconcss ... css class holding the icon
          * @default: none
          */
-        icon: 'heatmap/icon.png',
+        icon: 'heatmap/icon.svg',
         /**
          * optional function returning the expected size of the vis given the dimension (nrow,ncol) of the represented data
          * default unknown
@@ -40,7 +40,7 @@ define(function () {
       {
         type: 'vis',
         name: 'parco',
-        icon: 'parco/icon.png',
+        icon: 'parco/icon.svg',
         size: function (dim) {
           return [360, 150];
         }
