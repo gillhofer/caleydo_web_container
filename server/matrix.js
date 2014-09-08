@@ -59,4 +59,4 @@ exports.create = function (conf) {
   var rows = (conf && conf.rows) || [];
   var data = (conf && conf.data) || [];
   return new Matrix(cols, rows, data);
-}
+};

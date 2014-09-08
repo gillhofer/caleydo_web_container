@@ -4,13 +4,18 @@
 var fs = require('fs');
 // global variables
 var datasetIndex = [];
-module.exports = require('express').Router();
+var idtypes = require('../idtypes');
+var router = require('express').Router();
 
-module.exports.param('dataset_id', function (req, res, next, id) {
+router.param('dataset_id', function (req, res, next, id) {
   var desc = datasetIndex[id];
   if (desc) {
     req.dataset = [];
     desc.load(function (data) {
+      data.rowIds = idtypes.map(data.rows, desc.rowtype || desc.idtype);
+      if (desc.coltype) {
+        data.colIds = idtypes.map(data.cols, desc.coltype);
+      }
       req.dataset = data;
       next();
     });
@@ -19,7 +24,7 @@ module.exports.param('dataset_id', function (req, res, next, id) {
   }
 });
 
-module.exports.route('/:dataset_id')
+router.route('/:dataset_id')
   .all(function (req, res, next) {
     // runs for all HTTP verbs first
     console.log(req.originalUrl);
@@ -51,7 +56,7 @@ module.exports.route('/:dataset_id')
     }
   });
 
-module.exports.route('/')
+router.route('/')
   .all(function (req, res, next) {
     console.log(req.originalUrl);
     // runs for all HTTP verbs first
@@ -81,3 +86,5 @@ fs.readdirSync(__dirname + '/').forEach(function (file) {
     });
   }
 });
+
+module.exports.Router = router;

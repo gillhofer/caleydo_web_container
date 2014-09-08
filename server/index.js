@@ -5,13 +5,12 @@ var express = require('express');
 
 // application
 var app = express();
-var datasetRouter = require('./dataset');
-
 
 app.get('/api/about', function (req, res) {
   res.send(require('../package.json'));
 });
-app.use('/api/dataset', datasetRouter);
+app.use('/api/dataset', require('./dataset').Router);
+app.use('/api/idtype', require('./idtypes').Router);
 app.use('/', express.static('static'));
 
 module.exports = app;
