@@ -27,7 +27,8 @@ export interface IVector extends datatypes.IDataType {
   /**
    * return the associated ids of this vector
    */
-  ids(range?:ranges.Range) : C.IPromise<string[]>;
+  names(range?:ranges.Range) : C.IPromise<string[]>;
+  ids(range?:ranges.Range) : C.IPromise<ranges.Range>;
   /**
    * creates a new view on this matrix specified by the given range
    * @param range
@@ -109,6 +110,7 @@ export class Vector extends VectorBase implements IVector {
       return C.resolved(this._data);
     }
     return C.getJSON((<any>this.desc).uri).then(function (data) {
+      data.rowIds = ranges.list(data.rowIds);
       that._data = data; //store cache
       that.fire("loaded", this);
       return data;
@@ -134,10 +136,16 @@ export class Vector extends VectorBase implements IVector {
     });
   }
 
-  ids(range:ranges.Range = ranges.all()) {
+  names(range:ranges.Range = ranges.all()) {
     var that = this;
     return this.load().then(function (data) {
       return range.filter(data.rows, that.dim);
+    });
+  }
+  ids(range:ranges.Range = ranges.all()) {
+    var that = this;
+    return this.load().then(function (data) {
+      return range.preMultiply(data.rowIds, that.dim);
     });
   }
 
@@ -176,6 +184,9 @@ class VectorView extends VectorBase implements IVector {
     return this._root.data(this.range.preMultiply(range, this._root.dim));
   }
 
+  names(range:ranges.Range = ranges.all()) {
+    return this._root.names(this.range.preMultiply(range, this._root.dim));
+  }
   ids(range:ranges.Range = ranges.all()) {
     return this._root.ids(this.range.preMultiply(range, this._root.dim));
   }

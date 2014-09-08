@@ -60,11 +60,13 @@ export interface IMatrix extends datatypes.IDataType {
    * @returns {IPromise<string[]>}
    */
   cols(range?:ranges.Range) : C.IPromise<string[]>;
+  colIds(range?:ranges.Range) : C.IPromise<ranges.Range>;
   /**
    * returns a promise for getting the row names of the matrix
    * @param range
    */
   rows(range?:ranges.Range) : C.IPromise<string[]>;
+  rowIds(range?:ranges.Range) : C.IPromise<ranges.Range>;
   /**
    * returns a promise for getting one cell
    * @param i
@@ -146,6 +148,8 @@ export class Matrix extends MatrixBase implements IMatrix {
       return C.resolved(this._data);
     }
     return C.getJSON((<any>this.desc).uri).then(function (data) {
+      data.rowIds = ranges.list(data.rowIds);
+      data.colIds = ranges.list(data.colIds);
       that._data = data; //store cache
       that.fire("loaded", this);
       return data;
@@ -181,6 +185,12 @@ export class Matrix extends MatrixBase implements IMatrix {
       return range.dim(1).filter(d.cols, that.ncol);
     });
   }
+  colIds(range:ranges.Range = ranges.all()) {
+    var that = this;
+    return this.load().then(function (data) {
+      return range.preMultiply(data.colIds, that.dim);
+    });
+  }
 
   /**
    * return the row ids of the matrix
@@ -190,6 +200,12 @@ export class Matrix extends MatrixBase implements IMatrix {
     var that = this;
     return this.load().then(function (d : any) {
       return range.dim(0).filter(d.rows, that.nrow);
+    });
+  }
+  rowIds(range:ranges.Range = ranges.all()) {
+    var that = this;
+    return this.load().then(function (data) {
+      return range.preMultiply(data.rowIds, that.dim);
     });
   }
 
@@ -230,9 +246,15 @@ class TransposedMatrix extends MatrixBase  implements IMatrix{
   cols(range:ranges.Range = ranges.all()): C.IPromise<string[]> {
     return this.t.rows(range ? range.swap() : undefined);
   }
+  colIds(range:ranges.Range = ranges.all()) {
+    return this.t.rowIds(range ? range.swap() : undefined);
+  }
 
   rows(range:ranges.Range = ranges.all()): C.IPromise<string[]> {
     return this.t.cols(range ? range.swap() : undefined);
+  }
+  rowIds(range:ranges.Range = ranges.all()) {
+    return this.t.colIds(range ? range.swap() : undefined);
   }
 
   size() {
@@ -272,9 +294,15 @@ class MatrixView extends MatrixBase  implements IMatrix{
   cols(range: ranges.Range = ranges.all()) {
     return this._root.cols(this.range.preMultiply(range, this._root.dim));
   }
+  colIds(range: ranges.Range = ranges.all()) {
+    return this._root.colIds(this.range.preMultiply(range, this._root.dim));
+  }
 
   rows(range: ranges.Range = ranges.all()) {
     return this._root.rows(this.range.preMultiply(range, this._root.dim));
+  }
+  rowIds(range: ranges.Range = ranges.all()) {
+    return this._root.rowIds(this.range.preMultiply(range, this._root.dim));
   }
 
   size() {
@@ -332,8 +360,11 @@ class ProjectedVector extends vector.VectorBase implements vector.IVector {
   /**
    * return the associated ids of this vector
    */
-  ids(range?:ranges.Range) : C.IPromise<string[]> {
+  names(range?:ranges.Range) : C.IPromise<string[]> {
     return this.m.rows(range);
+  }
+  ids(range?:ranges.Range) {
+    return this.m.ids(range);
   }
 
   /**

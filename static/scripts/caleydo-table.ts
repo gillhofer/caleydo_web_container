@@ -27,6 +27,7 @@ export interface ITable extends datatypes.IDataType {
    * @param range
    */
   rows(range?:ranges.Range) : C.IPromise<string[]>;
+  rowIds(range?:ranges.Range) : C.IPromise<ranges.Range>;
 
   /**
    * creates a new view on this matrix specified by the given range
@@ -117,6 +118,7 @@ export class Table extends TableBase implements ITable {
       return C.resolved(this._data);
     }
     return C.getJSON((<any>this.desc).uri).then(function (data) {
+      data.rowIds = ranges.list(data.rowIds);
       that._data = data; //store cache
       //transpose to have column order for better vector access
       that._data.data = datatypes.transpose(data.data);
@@ -160,6 +162,12 @@ export class Table extends TableBase implements ITable {
     var that = this;
     return this.load().then(function (d : any) {
       return range.dim(0).filter(d.rows, that.nrow);
+    });
+  }
+  rowIds(range:ranges.Range = ranges.all()) {
+    var that = this;
+    return this.load().then(function (data) {
+      return range.preMultiply(data.rowIds, that.dim);
     });
   }
 
@@ -213,6 +221,9 @@ class TableView extends TableBase implements ITable {
 
   rows(range: ranges.Range = ranges.all()) {
     return this._root.rows(this.range.preMultiply(range, this._root.dim));
+  }
+  rowIds(range:ranges.Range = ranges.all()) {
+    return this._root.rowIds(this.range.preMultiply(range, this._root.dim));
   }
 
   view(range:ranges.Range = ranges.all()) {
@@ -271,11 +282,11 @@ export class TableVector extends vector.VectorBase implements vector.IVector {
     });
   }
 
+  names(range:ranges.Range = ranges.all()) {
+    return this.table.rows(range);
+  }
   ids(range:ranges.Range = ranges.all()) {
-    var that = this;
-    return this.load().then(function (data) {
-      return range.filter(data.rows, that.dim);
-    });
+    return this.table.rowIds(range);
   }
 
   size() {
@@ -306,8 +317,11 @@ class MultiTableVector extends vector.VectorBase implements vector.IVector {
   /**
    * return the associated ids of this vector
    */
-  ids(range?:ranges.Range) : C.IPromise<string[]> {
+  names(range?:ranges.Range) : C.IPromise<string[]> {
     return this.table.rows(range);
+  }
+  ids(range?:ranges.Range) {
+    return this.table.rowIds(range);
   }
 
   /**

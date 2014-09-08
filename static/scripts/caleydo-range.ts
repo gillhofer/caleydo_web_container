@@ -446,12 +446,6 @@ export class Range {
     return r;
   }
 
-  static none() {
-    var r = new Range();
-    r.dims = [Range1D.none(),Range1D.none()];
-    return r;
-  }
-
   union(other:Range, size:number[]) {
     if (this.isAll || other.isNone) {
       return this.clone();
@@ -473,7 +467,7 @@ export class Range {
    */
   intersect(other:Range, size:number[]) {
     if (this.isNone || other.isNone) {
-      return Range.none();
+      return none();
     }
     if (this.isAll) {
       return other.clone();
@@ -498,7 +492,7 @@ export class Range {
       return this.clone();
     }
     if (without.isAll) {
-      return Range.none();
+      return none();
     }
     var r = new Range();
     this.dims.forEach((d, i) => {
@@ -662,6 +656,11 @@ export class Range {
  */
 export function all() {
   return new Range();
+}
+export function none() {
+  var r = new Range();
+  r.dims = [Range1D.none(),Range1D.none()];
+  return r;
 }
 
 /**
