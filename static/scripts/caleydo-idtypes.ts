@@ -70,7 +70,9 @@ export class IDType extends events.EventHandler {
       return b;
     }
     this.sel[type] = new_;
-    this.fire('select', [new_, op !== SelectOperation.REMOVE ? range : ranges.none(), (op === SelectOperation.ADD ? ranges.none() : (op === SelectOperation.SET ? b : range))]);
+    var args = [type, new_, op !== SelectOperation.REMOVE ? range : ranges.none(), (op === SelectOperation.ADD ? ranges.none() : (op === SelectOperation.SET ? b : range))];
+    this.fire('select', args);
+    this.fire('select-' + type, args.slice(1));
     return b;
   }
 
@@ -79,11 +81,33 @@ export class IDType extends events.EventHandler {
   }
 }
 
+function asRange(v:any) {
+  if (C.isArray(v)) {
+    return ranges.list.apply(ranges, v);
+  }
+  return v;
+}
+
+function asSelectOperation(v: any) {
+  if (!v) {
+    return SelectOperation.SET;
+  }
+  if(typeof v === 'string') {
+    switch(v.toLowerCase()) {
+      case 'add' : return SelectOperation.ADD;
+      case 'remove' : return SelectOperation.REMOVE;
+      default : return SelectOperation.SET;
+    }
+  }
+  return +v;
+}
+
 
 export class SelectAble extends events.EventHandler {
-  private _numSelectListeners = 0;
-  private _selectionListener = (event: any, act: ranges.Range, added: ranges.Range, removed: ranges.Range) => {
-    this.ids().then((ids: ranges.Range) => {
+  private numSelectListeners = 0;
+  private selectionListeners = [];
+  private singleSelectionListener = (event:any, type:string, act:ranges.Range, added:ranges.Range, removed:ranges.Range) => {
+    this.ids().then((ids:ranges.Range) => {
       //filter to the right ids and convert to indices format
       act = ids.indexRangeOf(act);
       added = ids.indexRangeOf(added);
@@ -91,9 +115,12 @@ export class SelectAble extends events.EventHandler {
       if (act.isNone && added.isNone && removed.isNone) {
         return;
       }
-      this.fire('select',[act, added, removed]);
-    })
+      this.fire('select', [type, act, added, removed]);
+      this.fire('select-' + type, [act, added, removed]);
+    });
   };
+  private selectionCache = [];
+  private accumulateEvents = -1;
 
   ids(range?:ranges.Range) : C.IPromise<ranges.Range> {
     throw new Error('not implemented');
@@ -103,11 +130,64 @@ export class SelectAble extends events.EventHandler {
     throw new Error('not implemented');
   }
 
+  private selectionListener(idtype: IDType, index: number, total : number) {
+    var selectionListener = (event: any, type: string, act: ranges.Range, added: ranges.Range, removed: ranges.Range) => {
+      this.selectionCache[index] = {
+        act: act, added: added, removed: removed
+      };
+      if (this.accumulateEvents < 0 || (++this.accumulateEvents) == total) {
+        this.fillAndSend(type, index);
+      }
+    };
+    return selectionListener;
+  }
+
+  private fillAndSend(type: string, trigger: number) {
+    var ids = this.idtypes;
+    var full = this.selectionCache.map((entry, i) => {
+      if (entry) { return entry};
+      return {
+        act: ids[i].selections(type),
+        added: ranges.none(),
+        removed: ranges.none()
+      };
+    });
+
+    var act = ranges.join(full.map((entry) => entry.act));
+    var added = ranges.join(full.map((entry) => entry.added));
+    var removed = ranges.join(full.map((entry) => entry.removed));
+
+    this.selectionCache = [];
+    this.accumulateEvents = -1; //reset
+
+    this.ids().then((ids: ranges.Range) => {
+      //filter to the right ids and convert to indices format
+      act = ids.indexRangeOf(act);
+      added = ids.indexRangeOf(added);
+      removed = ids.indexRangeOf(removed);
+      if (act.isNone && added.isNone && removed.isNone) {
+        return;
+      }
+      this.fire('select', [type, act, added, removed]);
+      this.fire('select-' + type, [act, added, removed]);
+    });
+  }
+
   on(events, handler) {
     if (events === 'select') {
-      this._numSelectListeners ++;
-      if (this._numSelectListeners === 1) {
-        this.idtypes.forEach((i) => i.on('select', this._selectionListener));
+      this.numSelectListeners ++;
+      if (this.numSelectListeners === 1) {
+        var idt = this.idtypes;
+        if (idt.length === 1) {
+          this.selectionListeners.push(this.singleSelectionListener);
+          idt[0].on('select', this.singleSelectionListener);
+        } else {
+          idt.forEach((idtype, i) => {
+            var s = this.selectionListener(idtype, i, idt.length);
+            this.selectionListeners.push(s);
+            idtype.on('select',s);
+          });
+        }
       }
     }
     return super.on(events, handler);
@@ -115,9 +195,10 @@ export class SelectAble extends events.EventHandler {
 
   off(events, handler) {
     if (events === 'select') {
-      this._numSelectListeners --;
-      if (this._numSelectListeners === 0) {
-        this.idtypes.forEach((i) => i.off('select', this._selectionListener));
+      this.numSelectListeners --;
+      if (this.numSelectListeners === 0) {
+        this.idtypes.forEach((idtype, i) => idtype.off('select', this.selectionListeners[i]));
+        this.selectionListeners = [];
       }
     }
     return super.off(events, handler);
@@ -131,41 +212,67 @@ export class SelectAble extends events.EventHandler {
   }
 
   select(range: ranges.Range);
-  select(range: ranges.Range, op : SelectOperation);
   select(range: number[]);
+  select(range: number[][]);
+  select(range: ranges.Range, op : SelectOperation);
   select(range: number[], op : SelectOperation);
+  select(range: number[][], op : SelectOperation);
   select(type: string, range: ranges.Range);
-  select(type: string, range: ranges.Range, op : SelectOperation);
   select(type: string, range: number[]);
+  select(type: string, range: number[][]);
+  select(type: string, range: ranges.Range, op : SelectOperation);
   select(type: string, range: number[], op : SelectOperation);
-  select(r_or_t : any, r_or_op ?: any, op = SelectOperation.SET) {
-    function asRange(v:any) {
-      if (C.isArray(v)) {
-        return ranges.list(v);
-      }
-      return v;
-    }
-
-    var type = (typeof r_or_t === 'string') ? r_or_t.toString() : defaultSelectionType;
-    var range = asRange((typeof r_or_t === 'string') ? r_or_op : r_or_t);
-    op = (typeof r_or_t === 'string') ? op : (r_or_op ? r_or_op : SelectOperation.SET);
-    return this.selectImpl(range, op, type);
+  select(type: string, range: number[][], op : SelectOperation);
+  select(dim: number, range: ranges.Range);
+  select(dim: number, range: number[]);
+  select(dim: number, range: ranges.Range, op: SelectOperation);
+  select(dim: number, range: number[], op: SelectOperation);
+  select(dim: number, type: string, range: ranges.Range);
+  select(dim: number, type: string, range: number[]);
+  select(dim: number, type: string, range: ranges.Range, op: SelectOperation);
+  select(dim: number, type: string, range: number[], op: SelectOperation);
+  select() {
+    var a = C.argList(arguments);
+    var dim = (typeof a[0] === 'number') ? +a.shift() : -1,
+      type = (typeof a[0] === 'string') ? a.shift() : defaultSelectionType,
+      range = asRange(a[0]),
+      op = asSelectOperation(a[1]);
+    return this.selectImpl(range, op, type, dim);
   }
 
-  private selectImpl(range: ranges.Range, op = SelectOperation.SET, type : string = defaultSelectionType) {
+  private selectImpl(range: ranges.Range, op = SelectOperation.SET, type : string = defaultSelectionType, dim = -1) {
     return this.ids().then((ids: ranges.Range) => {
-      range = ids.preMultiply(range);
       var types = this.idtypes;
-      var r = ranges.join(range.split().map((r, i) => types[i].select(type, r, op)));
-      while(r.ndim < types.length) {
-        r.dim(r.ndim); //create intermediate ones
+      if (dim == -1) {
+        range = ids.preMultiply(range);
+        this.accumulateEvents = 0;
+        var r = ranges.join(range.split().map((r, i) => types[i].select(type, r, op)));
+        if (this.accumulateEvents > 0) { //one event has not been fires, so do it manually
+          this.fillAndSend(type, -1);
+        }
+        while (r.ndim < types.length) {
+          r.dim(r.ndim); //create intermediate ones
+        }
+        return ids.indexRangeOf(r);
+      } else {
+        //just a single dimension
+        ids = ids.split()[dim];
+        range = ids.preMultiply(range);
+        types[dim].select(type, range, op);
+        return ids.indexRangeOf(range);
       }
-      return ids.indexRangeOf(r);
     });
   }
 
-  clear(type = defaultSelectionType) {
-    return this.selectImpl(ranges.none(), SelectOperation.SET, type);
+  clear();
+  clear(type : string);
+  clear(dim : number);
+  clear(dim: number, type : string);
+  clear() {
+    var a = C.argList(arguments);
+    var dim = (typeof a[0] === 'number') ? +a.shift : -1;
+    var type = (typeof a[0] === 'string') ? a[0] : defaultSelectionType;
+    return this.selectImpl(ranges.none(), SelectOperation.SET, type, dim);
   }
 }
 

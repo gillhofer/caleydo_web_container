@@ -47,3 +47,12 @@
     overflow: auto;
   }
 }
+
+rect.select-selected {
+  stroke: orange;
+  stroke-width: 1px;
+}
+
+div.select-selected {
+  border: 1px solid orange;
+}

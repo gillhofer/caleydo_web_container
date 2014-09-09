@@ -25,10 +25,10 @@ define(['exports', 'd3', '../caleydo'], function (exports, d3, C) {
         }
       }).text(C.identity);
     });
-    var l = function (event, selected) {
-      $base.selectAll('div').style('background-color', null);
+    var l = function (event, type, selected) {
+      $base.selectAll('div').classed('select-' + type, false);
       selected.dim(0).forEach(function (i) {
-        $base.select('div:nth-child(' + (i + 1) + ')').style('background-color', 'orange');
+        $base.select('div:nth-child(' + (i + 1) + ')').classed('select-' + type, true);
       });
     };
     data.on('select', l);
@@ -36,7 +36,7 @@ define(['exports', 'd3', '../caleydo'], function (exports, d3, C) {
       data.off('select', l);
     });
     data.selections().then(function (selected) {
-      l(null, selected);
+      l(null, 'selected', selected);
     });
 
     return $base.node();

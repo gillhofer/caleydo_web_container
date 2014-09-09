@@ -4,10 +4,12 @@
 
 'use strict';
 
+import C = require('./caleydo');
 import datatypes = require('./caleydo-datatype');
-import events = require('./caleydo-events');
+import idtypes = require('./caleydo-idtypes');
+import ranges = require('./caleydo-range');
 
-export class Template extends events.EventHandler implements datatypes.IDataType {
+export class Template extends idtypes.SelectAble implements datatypes.IDataType {
   constructor(public desc: datatypes.IDataDescription) {
     super();
   }
@@ -16,6 +18,13 @@ export class Template extends events.EventHandler implements datatypes.IDataType
     return [];
   }
 
+  get idtypes() {
+    return [];
+  }
+
+  ids(range?:ranges.Range) : C.IPromise<ranges.Range> {
+    return C.resolved(ranges.none());
+  }
 }
 
 /**
