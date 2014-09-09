@@ -144,10 +144,11 @@ export class SelectAble extends events.EventHandler {
 
   private fillAndSend(type: string, trigger: number) {
     var ids = this.idtypes;
-    var full = this.selectionCache.map((entry, i) => {
+    var full = ids.map((id, i) => {
+      var entry = this.selectionCache[i];
       if (entry) { return entry};
       return {
-        act: ids[i].selections(type),
+        act: id.selections(type),
         added: ranges.none(),
         removed: ranges.none()
       };

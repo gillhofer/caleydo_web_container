@@ -102,7 +102,7 @@ export class Iterator extends AIterator<number> implements IIterator<number>{
    * whether more items are available
    */
   hasNext() {
-    return this.act !== this.to;
+    return this.act !== this.to && ((this.step > 0 && this.act < this.to) || (this.step < 0 && this.act > this.to));
   }
 
   /**
