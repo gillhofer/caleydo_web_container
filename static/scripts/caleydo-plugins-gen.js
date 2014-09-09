@@ -57,6 +57,17 @@ define(function () {
       },
       {
         type: 'vis',
+        name: 'vector',
+        module: './parco/vector',
+        size: function () {
+          return [300, 300];
+        },
+        filter: function (data) {
+          return data.desc.type === 'vector';
+        }
+      },
+      {
+        type: 'vis',
         name: 'box',
         size: function () {
           return [300, 50];

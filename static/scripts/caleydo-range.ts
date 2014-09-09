@@ -63,7 +63,7 @@ export class RangeElem {
     return v < 0 ? (size + 1 - v) : v;
   }
 
-  invert(index, size) {
+  invert(index: number, size? : number) {
     if (this.isAll) {
       return index;
     }
@@ -73,7 +73,7 @@ export class RangeElem {
    * creates an iterator of this range
   * @param size the underlying size for negative indices
   */
-  iter(size):Iterator.IIterator<number> {
+  iter(size?: number):Iterator.IIterator<number> {
     return Iterator.range(this.fix(this.from, size), this.fix(this.to, size), this.step);
   }
 
@@ -136,7 +136,7 @@ export class Range1D {
     //return indices.map(RangeElem.single);
     var r = new Array<RangeElem>(),
       deltas = indices.slice(1).map((e,i) => e-indices[i]),
-      start = 0, act = 1;
+      start = 0, act = 1, i = 0;
     while(act < indices.length) {
       while(deltas[start] == deltas[act-1] && act < indices.length) {
         act++;
@@ -145,7 +145,14 @@ export class Range1D {
         r.push(RangeElem.single(indices[start]));
       } else {
         //+1 since end is excluded
-        r.push(RangeElem.range(indices[start], indices[act-1]+1, deltas[start]));
+        //fix while just +1 -1 is allowed
+        if (Math.abs(deltas[start]) === 1) {
+          r.push(RangeElem.range(indices[start], indices[act - 1] + 1, deltas[start]));
+        } else {
+          for(i = start; i < act; i++) {
+            r.push(RangeElem.single(indices[i]));
+          }
+        }
       }
       start = act-1;
     }
@@ -193,10 +200,6 @@ export class Range1D {
     this.arr = Range1D.compress(indices);
   }
 
-  forEach(callbackfn: (value: RangeElem, index: number, array: RangeElem[]) => void, thisArg?: any): void {
-    this.arr.forEach(callbackfn, thisArg);
-  }
-
   at(index: number) : RangeElem {
     if (index < 0) {
       index += this.length;
@@ -218,7 +221,7 @@ export class Range1D {
    * @param other
    * @returns {*}
    */
-  preMultiply(sub:Range1D, size:number):Range1D {
+  preMultiply(sub:Range1D, size?:number):Range1D {
     if (this.isAll) {
       return sub.clone();
     }
@@ -240,7 +243,7 @@ export class Range1D {
    * @param other
    * @returns {RangeDim}
    */
-  union(other:Range1D, size: number) {
+  union(other:Range1D, size?: number) {
     if (this.isAll || other.isNone) {
       return this.clone();
     }
@@ -249,11 +252,11 @@ export class Range1D {
     }
     var r = this.iter(size).asList();
     var it2 = other.iter(size);
-    for(var i = 0; it2.hasNext(); i = it2.next()) {
+    it2.forEach((i) => {
       if (r.indexOf(i) < 0) {
         r.push(i);
       }
-    }
+    });
     return Range1D.from(r.sort());
   }
 
@@ -262,7 +265,7 @@ export class Range1D {
    * @param other
    * @returns {RangeDim}
    */
-  intersect(other:Range1D, size: number) {
+  intersect(other:Range1D, size?: number) {
     if (this.isNone || other.isNone) {
       return Range1D.none();
     }
@@ -275,11 +278,11 @@ export class Range1D {
     var it1 = this.iter(size).asList();
     var it2 = other.iter(size);
     var r = new Array<number>();
-    for(var i = 0; it2.hasNext(); i = it2.next()) {
+    it2.forEach((i) => {
       if (it1.indexOf(i) >= 0) {
         r.push(i);
       }
-    }
+    });
     return Range1D.from(r.sort());
   }
 
@@ -288,7 +291,7 @@ export class Range1D {
    * @param other
    * @returns {RangeDim}
    */
-  without(without:Range1D, size: number) {
+  without(without:Range1D, size?: number) {
     if (this.isNone || without.isNone) {
       return this.clone();
     }
@@ -298,11 +301,11 @@ export class Range1D {
     var it1 = this.iter(size);
     var it2 = without.iter(size).asList();
     var r = new Array<number>();
-    for(var i = 0; it1.hasNext(); i = it1.next()) {
+    it1.forEach((i) => {
       if (it2.indexOf(i) < 0) {
         r.push(i);
       }
-    }
+    });
     return Range1D.from(r.sort());
   }
 
@@ -320,12 +323,12 @@ export class Range1D {
    * @param size the underlying size for negative indices
    * @returns {*}
    */
-  invert(index: number, size: number) {
+  invert(index: number, size?: number) {
     if (this.isAll) {
       return index;
     }
     if (this.isNone) {
-      return -1;
+      return -1; //not mapped
     }
     var act = 0, s = this.arr[0].size(size), total :number = s;
     while (total > index && act < this.length) {
@@ -333,7 +336,25 @@ export class Range1D {
       s = this.arr[act].size(size);
       total += s;
     }
+    if (act >= this.arr.length) {
+      return -1; //not mapped
+    }
     return this.arr[act-1].invert(index - total + s,size);
+  }
+
+  indexRangeOf(r : Range1D, size?: number) {
+    if (r.isNone || this.isNone) {
+      return Range1D.none();
+    }
+    var arr = this.iter().asList();
+    var result = [];
+    r.forEach((d) => {
+      var i = arr.indexOf(d);
+      if (i >= 0) {
+        result.push(i);
+      }
+    });
+    return Range1D.from(result);
   }
 
   /**
@@ -367,11 +388,15 @@ export class Range1D {
    * creates an iterator of this range
    * @param size the underlying size for negative indices
    */
-  iter(size):Iterator.IIterator<number> {
+  iter(size?: number):Iterator.IIterator<number> {
     if (this.isList) {
       return Iterator.forList(this.arr.map((d) => d.from));
     }
     return Iterator.concat.apply(Iterator, this.arr.map((d) => d.iter(size)));
+  }
+
+  forEach(callbackfn: (value: number) => void, thisArg?: any): void {
+    return this.iter().forEach(callbackfn, thisArg);
   }
 
   toString() {
@@ -399,11 +424,9 @@ export class Range1D {
  * multi dimensional version of a RangeDim
  */
 export class Range {
-  /**
-   * the list of internal RangeDims
-   * @type {any[]}
-   */
-  dims = new Array<Range1D>();
+  constructor(public dims = new Array<Range1D>()) {
+
+  }
 
   /**
    * checks if this range is all
@@ -425,6 +448,14 @@ export class Range {
     return this.dims.length;
   }
 
+  eq(other: Range) {
+    if ((this.isAll && other.isAll) || (this.isNone && other.isNone)) {
+      return true;
+    }
+    //TODO more performant comparison
+    return this.toString() == other.toString();
+  }
+
   /**
    * combines this range with another and returns a new one
    * this = (1,3,4), sub = (2) -> (2)
@@ -432,7 +463,7 @@ export class Range {
    * @param other
    * @returns {*}
    */
-  preMultiply(other:Range, size:number[]) {
+  preMultiply(other:Range, size?:number[]) {
     if (this.isAll) {
       return other.clone();
     }
@@ -441,12 +472,12 @@ export class Range {
     }
     var r = new Range();
     this.dims.forEach((d, i) => {
-      r.dims[i] = d.preMultiply(other.dims[i], size[i]);
+      r.dims[i] = d.preMultiply(other.dims[i], size ? size[i] : undefined);
     });
     return r;
   }
 
-  union(other:Range, size:number[]) {
+  union(other:Range, size?:number[]) {
     if (this.isAll || other.isNone) {
       return this.clone();
     }
@@ -455,7 +486,7 @@ export class Range {
     }
     var r = new Range();
     this.dims.forEach((d, i) => {
-      r.dims[i] = d.union(other.dims[i], size[i]);
+      r.dims[i] = d.union(other.dims[i], size ? size[i] : undefined);
     });
     return r;
   }
@@ -465,7 +496,7 @@ export class Range {
    * @param other
    * @returns {RangeDim}
    */
-  intersect(other:Range, size:number[]) {
+  intersect(other:Range, size?:number[]) {
     if (this.isNone || other.isNone) {
       return none();
     }
@@ -496,7 +527,7 @@ export class Range {
     }
     var r = new Range();
     this.dims.forEach((d, i) => {
-      r.dims[i] = d.without(without.dims[i], size[i]);
+      r.dims[i] = d.without(without.dims[i], size? size[i]: undefined);
     });
     return r;
   }
@@ -570,15 +601,24 @@ export class Range {
    * @param indices
    * @param size the underlying size for negative indices
    */
-  invert(indices:number[], size:number[]):number[] {
+  invert(indices:number[], size?:number[]):number[] {
     if (this.isAll) {
       return indices;
     }
     return indices.map((index, i) => {
-      return this.dim(i).invert(index, size[i]);
+      return this.dim(i).invert(index, size ? size[i]: undefined);
     });
   }
 
+  indexRangeOf(r : Range, size?:number[]) : Range {
+    if (r.isNone || this.isNone) {
+      return none();
+    }
+    if (this.isNone || r.isAll) {
+      return this.clone();
+    }
+    return new Range(this.dims.map((d,i) => d.indexRangeOf(r.dim(i), size ? size[i] : undefined)));
+  }
   /**
    * returns the range size
    * @param size the underlying size for negative indices

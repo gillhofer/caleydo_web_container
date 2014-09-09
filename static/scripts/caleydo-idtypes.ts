@@ -9,11 +9,17 @@ import ranges = require('./caleydo-range');
 
 var cache = {}, filledUp = false;
 
-var defaultSelectionType = 'selected';
+export var defaultSelectionType = 'selected';
+export var hoverSelectionType = 'hovered';
+
+export enum SelectOperation {
+  SET, ADD, REMOVE
+}
 
 export class IDType extends events.EventHandler {
   private sel = {};
-  constructor(public name: string, public names: string) {
+
+  constructor(public name:string, public names:string) {
     super();
   }
 
@@ -24,98 +30,90 @@ export class IDType extends events.EventHandler {
     return this.sel[type] = ranges.none();
   }
 
-  set(type : string, range : ranges.Range): ranges.Range;
-  set(range: ranges.Range): ranges.Range;
-  set(first : any, r?: ranges.Range) {
-    var type = (typeof first === 'string') ? first : defaultSelectionType;
-    var range = (typeof first === 'string') ? r : first;
-    return this.setImpl(range, type);
+  select(range:ranges.Range);
+  select(range:ranges.Range, op:SelectOperation);
+  select(range:number[]);
+  select(range:number[], op:SelectOperation);
+  select(type:string, range:ranges.Range);
+  select(type:string, range:ranges.Range, op:SelectOperation);
+  select(type:string, range:number[]);
+  select(type:string, range:number[], op:SelectOperation);
+  select(r_or_t:any, r_or_op ?:any, op = SelectOperation.SET) {
+    function asRange(v:any) {
+      if (C.isArray(v)) {
+        return ranges.list(v);
+      }
+      return v;
+    }
+
+    var type = (typeof r_or_t === 'string') ? r_or_t.toString() : defaultSelectionType;
+    var range = asRange((typeof r_or_t === 'string') ? r_or_op : r_or_t);
+    op = (typeof r_or_t === 'string') ? op : (r_or_op ? r_or_op : SelectOperation.SET);
+    return this.selectImpl(range, op, type);
   }
 
-  private setImpl(range: ranges.Range, type: string) {
+  private selectImpl(range:ranges.Range, op = SelectOperation.SET, type:string = defaultSelectionType) {
     var b = this.selections(type);
-    this.sel[type] = range;
-    this.fire('select', [range, range, b]);
+    var new_:ranges.Range = ranges.none();
+    switch (op) {
+      case SelectOperation.SET:
+        new_ = range;
+        break;
+      case SelectOperation.ADD:
+        new_ = b.union(range);
+        break;
+      case SelectOperation.REMOVE:
+        new_ = b.without(range);
+        break;
+    }
+    if (b.eq(new_)) {
+      return b;
+    }
+    this.sel[type] = new_;
+    this.fire('select', [new_, op !== SelectOperation.REMOVE ? range : ranges.none(), (op === SelectOperation.ADD ? ranges.none() : (op === SelectOperation.SET ? b : range))]);
     return b;
   }
 
   clear(type = defaultSelectionType) {
-    return this.setImpl(ranges.none(), type);
-  }
-
-  add(type :string, range : ranges.Range): ranges.Range;
-  add(range: ranges.Range): ranges.Range;
-  add(first : any, r?: ranges.Range) {
-    var type = (typeof first === 'string') ? first : defaultSelectionType;
-    var range = (typeof first === 'string') ? r : first;
-    return this.addImpl(range, type);
-  }
-
-  private addImpl(range: ranges.Range, type: string) {
-    var b = this.selections(type);
-    if (this.sel.hasOwnProperty(type)) {
-      this.sel[type] = b.union(range);
-    } else {
-      this.sel[type] = range;
-    }
-    this.fire('select', [this.sel[type], range, ranges.none()]);
-    return b;
-  }
-
-  remove(type :string, range : ranges.Range): ranges.Range;
-  remove(range: ranges.Range): ranges.Range;
-  remove(first : any, r?: ranges.Range) {
-    var type = (typeof first === 'string') ? first : defaultSelectionType;
-    var range = (typeof first === 'string') ? r : first;
-    return this.removeImpl(range, type);
-  }
-
-  private removeImpl(range: ranges.Range, type: string) {
-    var b = this.selections(type);
-    if (this.sel.hasOwnProperty(type)) {
-      this.sel[type] = b.without(range);
-    }
-    this.fire('select', [this.sel[type] || ranges.none(), ranges.none(), range]);
-    return b;
+    return this.selectImpl(ranges.none(), SelectOperation.SET, type);
   }
 }
 
-function fillUp(entries) {
+function fillUpData(entries) {
   entries.forEach(function (row) {
     var entry = cache[row.id];
     if (entry) {
       entry.name = row.name;
       entry.names = row.names;
     } else {
-      entry = new IDType(entry.name, entry.names);
+      entry = new IDType(row.name, row.names);
     }
-    cache[entry.id] = entry;
+    cache[row.id] = entry;
   });
 }
 
-function load() {
-  if(filledUp) {
-    return C.resolved(cache);
+function fillUp() {
+  if (filledUp) {
+    return;
   }
-  return C.getJSON('api/idtype/').then(function(c) {
-    fillUp(c);
-    filledUp = true;
+  filledUp = true;
+  C.getJSON('api/idtype/').then(function (c) {
+    fillUpData(c);
     return cache;
   });
 }
 
-export function resolve(id: string) : IDType {
-  return register(id, new IDType(id, id+'s'));
+export function resolve(id:string):IDType {
+  return register(id, new IDType(id, id + 's'));
 }
 
 export function list() {
-  return load();
+  fillUp(); //trigger loading of the meta data
+  return this.cache;
 }
 
-export function register(id : string, idtype : IDType) {
-  if(!filledUp) {
-    load(); //trigger loading of the meta data
-  }
+export function register(id:string, idtype:IDType) {
+  fillUp(); //trigger loading of the meta data
   if (cache.hasOwnProperty(id)) {
     return cache[id];
   }

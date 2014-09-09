@@ -243,12 +243,15 @@ class TableView extends TableBase implements ITable {
  */
 export class TableVector extends vector.VectorBase implements vector.IVector {
   valuetype:any;
-  idtype:idtypes.IDType = null;
 
   constructor(private table: Table, private index: number, public desc:datatypes.IDataDescription) {
     super(null);
     this._root = this;
     this.valuetype = (<any>desc).value;
+  }
+
+  get idtype() {
+    return this.table.rowtype;
   }
 
   /**
@@ -301,7 +304,7 @@ export class TableVector extends vector.VectorBase implements vector.IVector {
 class MultiTableVector extends vector.VectorBase implements vector.IVector {
   desc : datatypes.IDataDescription;
 
-  constructor(private table : ITable, private f : (row : any[]) => any, private this_f = table, public valuetype = null, public idtype = table.rowtype) {
+  constructor(private table : ITable, private f : (row : any[]) => any, private this_f = table, public valuetype = null, private _idtype = table.rowtype) {
     super(null);
     this.desc = {
       name : table.desc.name+'-p',
@@ -309,6 +312,10 @@ class MultiTableVector extends vector.VectorBase implements vector.IVector {
       id : table.desc.id+'-p'
     };
     this._root = this;
+  }
+
+  get idtype() {
+    return this._idtype;
   }
 
   size() {

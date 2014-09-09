@@ -364,7 +364,7 @@ class ProjectedVector extends vector.VectorBase implements vector.IVector {
     return this.m.rows(range);
   }
   ids(range?:ranges.Range) {
-    return this.m.ids(range);
+    return this.m.rowIds(range);
   }
 
   /**

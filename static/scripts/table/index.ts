@@ -25,7 +25,7 @@ export class Table {
       case 'vector':
         this.node = this.build($p, [
           ['Value'],
-          this.data.ids(),
+          this.data.names(),
           this.data.data().then((data) => data.map((d) => [d]))
         ]);
         break;
