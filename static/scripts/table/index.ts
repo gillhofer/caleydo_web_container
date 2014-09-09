@@ -38,6 +38,7 @@ export class Table {
     });
     $table.append('thead').append('tr');
     $table.append('tbody');
+    var data = this.data;
     C.all(promises).then((arr) => {
       var cols = arr[0], rows = arr[1], d = arr[2];
       var $headers = $table.select('thead tr').selectAll('th').data(['ID'].concat(cols));
@@ -46,7 +47,15 @@ export class Table {
       $headers.exit().remove();
 
       var $rows = $table.select('tbody').selectAll('tr').data(d);
-      $rows.enter().append('tr');
+      $rows.enter().append('tr').on('click', function (d, i) {
+        if ((<any>d3.event).ctrlKey) {
+          data.select(0, [i], 1);
+        } else if (d3.event.altKey) {
+          data.select(0, [i], 2);
+        } else {
+          data.select(0, [i], 0);
+        }
+      });
       $rows.each(function (row, i) {
         var $header = d3.select(this).selectAll('th').data(rows.slice(i, i + 1));
         $header.enter().append('th');
@@ -58,6 +67,21 @@ export class Table {
         $row.exit().remove();
       });
       $rows.exit().remove();
+    });
+
+    var l = function (event, type, selected) {
+      var $body = $table.select('tbody');
+      $body.selectAll('tr').classed('select-' + type,false);
+      selected.dim(0).forEach((i) => {
+        $body.select('tr:nth-child('+(i+1)+')').classed('select-' + type,true);
+      });
+    };
+    data.on('select', l);
+    C.onDOMNodeRemoved($table.node(), function () {
+      data.off('select', l);
+    });
+    data.selections().then(function (selected) {
+      l(null, 'selected', selected);
     });
 
     return $table.node();

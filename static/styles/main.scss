@@ -54,7 +54,7 @@ rect.select-selected {
   fill: orange;
 }
 
-div.select-selected {
+div.select-selected, tr.select-selected, td.select-selected {
   border: 1px solid orange;
   background-color: orange;
 }
