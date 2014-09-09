@@ -27,7 +27,7 @@ export interface ITable extends datatypes.IDataType {
    * @param range
    */
   rows(range?:ranges.Range) : C.IPromise<string[]>;
-  rowIds(range?:ranges.Range) : C.IPromise<ranges.Range>;
+  rowIds(range?:ranges.Range) : C.IPromise<ranges.Range>
 
   /**
    * creates a new view on this matrix specified by the given range
@@ -60,7 +60,7 @@ export interface ITable extends datatypes.IDataType {
 /**
  * base class for different Table implementations, views, transposed,...
  */
-export class TableBase extends events.EventHandler {
+export class TableBase extends idtypes.SelectAble {
   constructor(public _root:ITable) {
     super();
   }
@@ -127,6 +127,10 @@ export class Table extends TableBase implements ITable {
     });
   }
 
+  get idtypes() {
+    return [this.rowtype];
+  }
+
   col(i: number) {
     return this.vectors[i];
   }
@@ -169,6 +173,9 @@ export class Table extends TableBase implements ITable {
     return this.load().then(function (data) {
       return range.preMultiply(data.rowIds, that.dim);
     });
+  }
+  ids(range:ranges.Range = ranges.all()) {
+    return this.rowIds(range);
   }
 
   private swap(d : number[]) {
@@ -225,6 +232,9 @@ class TableView extends TableBase implements ITable {
   rowIds(range:ranges.Range = ranges.all()) {
     return this._root.rowIds(this.range.preMultiply(range, this._root.dim));
   }
+  ids(range:ranges.Range = ranges.all()) {
+    return this.rowIds(range);
+  }
 
   view(range:ranges.Range = ranges.all()) {
     if (range.isAll) {
@@ -235,6 +245,10 @@ class TableView extends TableBase implements ITable {
 
   get rowtype() {
     return this._root.rowtype;
+  }
+
+  get idtypes() {
+    return [this.rowtype];
   }
 }
 
@@ -252,6 +266,10 @@ export class TableVector extends vector.VectorBase implements vector.IVector {
 
   get idtype() {
     return this.table.rowtype;
+  }
+
+  get idtypes() {
+    return [this.idtype];
   }
 
   /**
@@ -316,6 +334,10 @@ class MultiTableVector extends vector.VectorBase implements vector.IVector {
 
   get idtype() {
     return this._idtype;
+  }
+
+  get idtypes() {
+    return [this.idtype];
   }
 
   size() {

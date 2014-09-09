@@ -3,7 +3,10 @@
  */
 
 'use strict';
+import C = require('./caleydo');
 import events = require('./caleydo-events');
+import idtypes = require('./caleydo-idtypes');
+import ranges = require('./caleydo-range');
 
 /**
  * basic description elements
@@ -16,7 +19,7 @@ export interface IDataDescription {
 /**
  * basic data type interface
  */
-export interface IDataType extends events.EventHandler {
+export interface IDataType extends idtypes.SelectAble {
   desc: IDataDescription;
   /**
    * dimensions of this datatype
@@ -28,12 +31,20 @@ export interface IDataType extends events.EventHandler {
 /**
  * dummy data type just holding the description
  */
-export class DummyDataType extends events.EventHandler implements IDataType {
+export class DummyDataType extends idtypes.SelectAble implements IDataType {
   constructor(public desc: IDataDescription) {
     super();
   }
 
   get dim() {
+    return [];
+  }
+
+  ids(range:ranges.Range = ranges.all()) : C.IPromise<ranges.Range> {
+    return C.resolved(ranges.none());
+  }
+
+  get idtypes() {
     return [];
   }
 }

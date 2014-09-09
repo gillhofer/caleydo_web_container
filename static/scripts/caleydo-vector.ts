@@ -28,7 +28,6 @@ export interface IVector extends datatypes.IDataType {
    * return the associated ids of this vector
    */
   names(range?:ranges.Range) : C.IPromise<string[]>;
-  ids(range?:ranges.Range) : C.IPromise<ranges.Range>;
   /**
    * creates a new view on this matrix specified by the given range
    * @param range
@@ -53,92 +52,9 @@ export interface IVector extends datatypes.IDataType {
 /**
  * base class for different Vector implementations, views, transposed,...
  */
-export class VectorBase extends events.EventHandler {
-  private _numSelectListeners = 0;
-  private _selectionListener = (event: any, act: ranges.Range, added: ranges.Range, removed: ranges.Range) => {
-    this.ids().then((ids: ranges.Range) => {
-      //filter to the right ids and convert to indices format
-      act = ids.indexRangeOf(act);
-      added = ids.indexRangeOf(added);
-      removed = ids.indexRangeOf(removed);
-      if (act.isNone && added.isNone && removed.isNone) {
-        return;
-      }
-      this.fire('select',[act, added, removed]);
-    })
-  };
-
+export class VectorBase extends idtypes.SelectAble {
   constructor(public _root:IVector) {
     super();
-  }
-
-  ids(range?:ranges.Range) : C.IPromise<ranges.Range> {
-    throw new Error('not implemented');
-  }
-
-  get idtype() : idtypes.IDType {
-    throw new Error('not implemented');
-  }
-
-  on(events, handler) {
-    if (events === 'select') {
-      this._numSelectListeners ++;
-      if (this._numSelectListeners === 1) {
-        this.idtype.on('select', this._selectionListener);
-      }
-    }
-    return super.on(events, handler);
-  }
-
-  off(events, handler) {
-    if (events === 'select') {
-      this._numSelectListeners --;
-      if (this._numSelectListeners === 0) {
-        this.idtype.off('select', this._selectionListener);
-      }
-    }
-    return super.off(events, handler);
-  }
-
-  selections(type = idtypes.defaultSelectionType) {
-    return this.ids().then((ids: ranges.Range) => {
-      var r = this.idtype.selections(type);
-      return ids.indexRangeOf(r);
-    });
-  }
-
-  select(range: ranges.Range);
-  select(range: ranges.Range, op : idtypes.SelectOperation);
-  select(range: number[]);
-  select(range: number[], op : idtypes.SelectOperation);
-  select(type: string, range: ranges.Range);
-  select(type: string, range: ranges.Range, op : idtypes.SelectOperation);
-  select(type: string, range: number[]);
-  select(type: string, range: number[], op : idtypes.SelectOperation);
-  select(r_or_t : any, r_or_op ?: any, op = idtypes.SelectOperation.SET) {
-    function asRange(v:any) {
-      if (C.isArray(v)) {
-        return ranges.list(v);
-      }
-      return v;
-    }
-
-    var type = (typeof r_or_t === 'string') ? r_or_t.toString() : idtypes.defaultSelectionType;
-    var range = asRange((typeof r_or_t === 'string') ? r_or_op : r_or_t);
-    op = (typeof r_or_t === 'string') ? op : (r_or_op ? r_or_op : idtypes.SelectOperation.SET);
-    return this.selectImpl(range, op, type);
-  }
-
-  private selectImpl(range: ranges.Range, op = idtypes.SelectOperation.SET, type : string = idtypes.defaultSelectionType) {
-    return this.ids().then((ids: ranges.Range) => {
-      range = ids.preMultiply(range);
-      var r = this.idtype.select(type, range, op);
-      return ids.indexRangeOf(r);
-    });
-  }
-
-  clear(type = idtypes.defaultSelectionType) {
-    return this.selectImpl(ranges.none(), idtypes.SelectOperation.SET, type);
   }
 
   get dim() {
@@ -236,6 +152,10 @@ export class Vector extends VectorBase implements IVector {
     });
   }
 
+  get idtypes() {
+    return [this.idtype];
+  }
+
   size() {
     return (<any>this.desc).size;
   }
@@ -291,6 +211,10 @@ class VectorView extends VectorBase implements IVector {
 
   get idtype() {
     return this._root.idtype;
+  }
+
+  get idtypes() {
+    return [this.idtype];
   }
 }
 

@@ -654,6 +654,12 @@ export class Range {
     return this;
   }
 
+  split() : Range[] {
+    return this.dims.map((dim) => {
+      return new Range([dim]);
+    });
+  }
+
   /**
    * encoded the given range in a string
    */
@@ -730,21 +736,42 @@ export function range() {
   }
   return r;
 }
+export function join(ranges : Range[]);
+export function join(...ranges : Range[]);
+export function join() {
+  if (arguments.length === 0) {
+    return all();
+  }
+  var r = new Range();
+  var ranges = arguments[0];
+  if (!C.isArray(ranges)) { //array mode
+    ranges = C.argList(arguments);
+  }
+  r.dims = ranges.map((r) => r.dim(0));
+  return r;
+}
 
 export function list(...indices: number[]);
 export function list(...indexarrays : number[][]);
+export function list(...dims : Range1D[]);
+export function list(dims : Range1D[]);
 export function list() {
   if (arguments.length === 0) {
     return all();
   }
   var r = new Range();
   if (C.isArray(arguments[0])) { //array mode
-    C.argList(arguments).forEach((arr : number[], i) => {
-      r.dim(i).setList(arr);
+    C.argList(arguments).forEach((arr : any, i) => {
+      if (arr instanceof Range1D) {
+        r.dims[i] = arr;
+      } else {
+        r.dim(i).setList(arr);
+      }
     })
-  }
-  if (typeof arguments[0] === 'number') { //single slice mode
+  } else if (typeof arguments[0] === 'number') { //single slice mode
     r.dim(0).setList(C.argList(arguments));
+  } else if (arguments[0] instanceof Range1D) {
+    r.dims = C.argList(arguments);
   }
   return r;
 }
