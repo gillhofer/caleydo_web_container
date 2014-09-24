@@ -10,6 +10,8 @@ import $ = require('jquery');
  */
 export var version = '0.0.1-alpha';
 
+export var server_url = '/api';
+
 /**
  * wraps the given resolver function to be a promise
  * @param resolver

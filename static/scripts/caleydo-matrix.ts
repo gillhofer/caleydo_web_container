@@ -148,7 +148,7 @@ export class Matrix extends MatrixBase implements IMatrix {
     if (this._data) { //in the cache
       return C.resolved(this._data);
     }
-    return C.getJSON((<any>this.desc).uri).then(function (data) {
+    return C.getJSON(C.server_url+'/dataset/'+this.desc.id).then(function (data) {
       data.rowIds = ranges.list(data.rowIds);
       data.colIds = ranges.list(data.colIds);
       data.ids = ranges.list(data.rowIds.dim(0), data.colIds.dim(0));

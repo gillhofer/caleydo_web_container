@@ -81,7 +81,6 @@ fs.readdirSync(__dirname + '/').forEach(function (file) {
         return module.load(desc, callback);
       };
       desc.id = datasetIndex.length; //assign unique id
-      desc.uri = '/api/dataset/'+desc.id; //FIXME dynamic prefix
       datasetIndex.push(desc);
     });
   }

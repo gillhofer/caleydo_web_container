@@ -11,6 +11,7 @@ app.get('/api/about', function (req, res) {
 });
 app.use('/api/dataset', require('./dataset').Router);
 app.use('/api/idtype', require('./idtypes').Router);
+app.use('/api/mapper', require('./mapper').Router);
 app.use('/', express.static('static'));
 
 module.exports = app;

@@ -112,7 +112,7 @@ export class Vector extends VectorBase implements IVector {
     if (this._data) { //in the cache
       return C.resolved(this._data);
     }
-    return C.getJSON((<any>this.desc).uri).then(function (data) {
+    return C.getJSON(C.server_url+'/dataset/'+this.desc.id).then(function (data) {
       data.rowIds = ranges.list(data.rowIds);
       that._data = data; //store cache
       that.fire("loaded", this);

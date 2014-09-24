@@ -23,6 +23,10 @@ export class IDType extends events.EventHandler {
     super();
   }
 
+  toString() {
+    return name;
+  }
+
   selections(type = defaultSelectionType) {
     if (this.sel.hasOwnProperty(type)) {
       return this.sel[type];
@@ -295,7 +299,7 @@ function fillUp() {
     return;
   }
   filledUp = true;
-  C.getJSON('api/idtype/').then(function (c) {
+  C.getJSON(C.server_url+'/idtype/').then(function (c) {
     fillUpData(c);
     return cache;
   });
