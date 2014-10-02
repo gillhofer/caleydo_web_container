@@ -20,7 +20,6 @@ require.config({
       exports: 'd3.parcoords'
     },
     'jquery-ui': ['css!/bower_components/jquery-ui/themes/smoothness/jquery-ui.css', 'jquery']
-
   },
   bundles: {
     'wrapper-bundle': ['fontawesome', 'foundation-icons', 'lineupjs']

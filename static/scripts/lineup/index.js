@@ -36,7 +36,7 @@ define(['exports', 'd3', '../caleydo', 'lineupjs', 'css!./style'], function (exp
   LineUp.prototype.build = function ($parent) {
     var width = 800, height = 300;
 
-    var $div = $parent.append('div').classed('lineup',true);
+    var $div = $parent.append('div').classed('lineup', true);
 
     var that = this;
 
@@ -50,9 +50,7 @@ define(['exports', 'd3', '../caleydo', 'lineupjs', 'css!./style'], function (exp
           _id : rowNames[i]
         }, obj);
       });
-      var spec = {};
-      spec.storage = new LineUpJS.LineUpLocalStorage(data, columns, null, '_id');
-      that.lineup = new LineUpJS(spec, $div);
+      that.lineup = LineUpJS.create(LineUpJS.createLocalStorage(data, columns, null, '_id'), $div);
       that.lineup.startVis();
     });
     return $div.node();

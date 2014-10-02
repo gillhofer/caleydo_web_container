@@ -9,7 +9,7 @@
     "require-css": "~0.1.5",
     "d3.parcoords": "http://syntagmatic.github.io/parallel-coordinates/d3.parcoords.js",
     "d3.parcoords-css": "http://syntagmatic.github.io/parallel-coordinates/d3.parcoords.css",
-    "lineupjs": "https://github.com/Caleydo/lineup.js/archive/singlesvg.zip"
+    "lineupjs": "git@github.com:Caleydo/lineup.js.git#singlesvg"
   },
   "devDependencies": {}
 }
