@@ -84,5 +84,112 @@
         }
       }
     ]
+  },
+  {
+    "name": "WUR 2013",
+    "path": "wur2013.txt",
+    "separator" : "\t",
+    "size": [906, 15],
+    "type": "table",
+    "rowtype": "university",
+    "columns": [
+      {
+        "name": "School Name",
+        "value" : {
+          "type": "string"
+        }
+      },
+      {
+        "name": "QS Stars",
+        "value" : {
+          "type": "int",
+          "range": [0, 6]
+        }
+      },
+      {
+        "name": "Overall",
+        "value" : {
+          "type": "real",
+          "range": [0, 100]
+        }
+      },
+      {
+        "name": "Academic",
+        "value" : {
+          "type": "real",
+          "range": [0, 100]
+        }
+      },
+      {
+        "name": "Employer",
+        "value" : {
+          "type": "real",
+          "range": [0, 100]
+        }
+      },
+      {
+        "name": "Faculty",
+        "value" : {
+          "type": "real",
+          "range": [0, 100]
+        }
+      },
+      {
+        "name": "International",
+        "value" : {
+          "type": "real",
+          "range": [0, 100]
+        }
+      },
+      {
+        "name": "International Students",
+        "value" : {
+          "type": "real",
+          "range": [0, 100]
+        }
+      },
+      {
+        "name": "Citations",
+        "value" : {
+          "type": "real",
+          "range": [0, 100]
+        }
+      },
+      {
+        "name": "Arts",
+        "value" : {
+          "type": "real",
+          "range": [0, 100]
+        }
+      },
+      {
+        "name": "Engineering",
+        "value" : {
+          "type": "real",
+          "range": [0, 100]
+        }
+      },
+      {
+        "name": "Life",
+        "value" : {
+          "type": "real",
+          "range": [0, 100]
+        }
+      },
+      {
+        "name": "Natural",
+        "value" : {
+          "type": "real",
+          "range": [0, 100]
+        }
+      },
+      {
+        "name": "Social",
+        "value" : {
+          "type": "real",
+          "range": [0, 100]
+        }
+      }
+    ]
   }
 ]

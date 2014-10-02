@@ -79,8 +79,8 @@ define(function () {
       {
         type: 'vis',
         name: 'lineup',
-        size: function () {
-          return [800, 300];
+        size: function (dim) {
+          return [Math.min(dim[1] * 100, 1000), Math.min(dim[0] * 20, 600)];
         },
         filter: function (data) {
           return data.desc.type === 'table';

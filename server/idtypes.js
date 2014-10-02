@@ -20,38 +20,6 @@ router.route('/')
     res.json(idtypes);
   });
 
-router.route('/:dataset_id')
-  .all(function (req, res, next) {
-    // runs for all HTTP verbs first
-    console.log(req.originalUrl);
-    next();
-  })
-  .get(function (req, res, next) {
-    // validate query
-    if (req.query.start < 0 || req.query.start >= req.dataset.nrow) {
-      next(new Error('"start" has to be larger than 0 and smaller than ' + req.dataset.nrow + '.'));
-    }
-
-    if (req.query.end < 0 || req.query.end >= req.dataset.nrow) {
-      next(new Error('"end" has to be larger than 0 and smaller than ' + req.dataset.nrow + '.'));
-    }
-
-    if (req.query.start > req.query.end) {
-      next(new Error('"start" must not be larger than "end".'));
-    }
-
-    // apply query
-    if (req.query.start && req.query.end) {
-      res.json(req.dataset.rslice(req.query.start, req.query.end));
-    } else if (req.query.start && !req.query.end) {
-      res.json(req.dataset.rslice(req.query.start));
-    } else if (!req.query.start && req.query.end) {
-      res.json(req.dataset.rslice(0, req.query.end));
-    } else {
-      res.json(req.dataset);
-    }
-  });
-
 module.exports.Router = router;
 module.exports.map = function (ids, idtype) {
   if (!idsmapping.hasOwnProperty(idtype)) {

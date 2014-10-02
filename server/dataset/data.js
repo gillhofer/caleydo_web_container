@@ -35,7 +35,12 @@ function convertData(data) {
 exports.load = function (desc, callback) {
   var dataset = [];
   csv
-    .fromPath(datasetBasePath + desc.path)
+    .fromPath(datasetBasePath + desc.path, {
+      ignoreEmpty : true,
+      delimiter : desc.separator || ',',
+      trim: true,
+      comment: '#'
+    })
     .on('record', function (data) {
       dataset.push(data);
     })
