@@ -76,6 +76,16 @@ define(function () {
           return data.desc.type === 'vector' && data.desc.value.type === 'real';
         }
       },
+      {
+        type: 'vis',
+        name: 'lineup',
+        size: function () {
+          return [800, 300];
+        },
+        filter: function (data) {
+          return data.desc.type === 'table';
+        }
+      },
       //{ //template for adding a new vis
       //  type: 'vis', //plugin type
       //  name: 'template', //unique id of a datatype

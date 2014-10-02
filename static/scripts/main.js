@@ -5,6 +5,7 @@ require.config({
     jquery: '/bower_components/jquery/jquery',
     'jquery-ui': '/bower_components/jquery-ui/ui/jquery-ui',
     d3: '/bower_components/d3/d3',
+    underscore: '/bower_components/underscore/underscore',
     'caleydo-plugins-gen': './caleydo-plugins-gen',
     'd3.parcoords': '/bower_components/d3.parcoords/index'
   },
@@ -19,9 +20,10 @@ require.config({
       exports: 'd3.parcoords'
     },
     'jquery-ui': ['css!/bower_components/jquery-ui/themes/smoothness/jquery-ui.css', 'jquery']
+
   },
   bundles: {
-    'wrapper-bundle': ['fontawesome', 'foundation-icons']
+    'wrapper-bundle': ['fontawesome', 'foundation-icons', 'lineupjs']
   }
 });
 

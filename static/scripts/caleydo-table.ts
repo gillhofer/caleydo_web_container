@@ -55,6 +55,11 @@ export interface ITable extends datatypes.IDataType {
    */
   data(range?:ranges.Range) : C.IPromise<any[][]>;
 
+  /**
+   * returns a promise for getting the data as an array of objects
+   * @param range
+   */
+  objects(range?:ranges.Range) : C.IPromise<any[]>;
 }
 
 /**
@@ -121,9 +126,21 @@ export class Table extends TableBase implements ITable {
       data.rowIds = ranges.list(data.rowIds);
       that._data = data; //store cache
       //transpose to have column order for better vector access
+      that._data.objs = that.toObjects(data.data);
       that._data.data = datatypes.transpose(data.data);
       that.fire("loaded", this);
       return data;
+    });
+  }
+
+  private toObjects(data: any[][]) {
+    var vecs = this.vectors;
+    return data.map((row) => {
+      var r : any = {};
+      vecs.forEach((col, i) => {
+        r[col.desc.name] =  row[i];
+      });
+      return r;
     });
   }
 
@@ -155,6 +172,14 @@ export class Table extends TableBase implements ITable {
     var that = this;
     return this.load().then(function (data) {
       return datatypes.transpose(range.swap().filter(data.data, that.swap(that.size())));
+    });
+  }
+
+  objects(range:ranges.Range = ranges.all()) {
+    var that = this;
+    return this.load().then(function (data) {
+      //TODO filter to specific properties by the second range
+      return range.filter(data.objs, that.size());
     });
   }
 
@@ -224,6 +249,10 @@ class TableView extends TableBase implements ITable {
 
   data(range:ranges.Range = ranges.all()) {
     return this._root.data(this.range.preMultiply(range, this._root.dim));
+  }
+
+  objects(range:ranges.Range = ranges.all()) {
+    return this._root.objects(this.range.preMultiply(range, this._root.dim));
   }
 
   rows(range: ranges.Range = ranges.all()) {
