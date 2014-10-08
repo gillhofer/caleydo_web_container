@@ -16,6 +16,9 @@ router.param('dataset_id', function (req, res, next, id) {
       if (desc.coltype) {
         data.colIds = idtypes.map(data.cols, desc.coltype);
       }
+      if (desc.type === 'vector') {
+        data.data = data.data.map(function (row) { return row[0]; });
+      }
       req.dataset = data;
       next();
     });
