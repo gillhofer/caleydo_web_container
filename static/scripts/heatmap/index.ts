@@ -5,6 +5,7 @@
 
 import d3 = require('d3');
 import matrix = require('../caleydo-matrix');
+import idtypes = require('../caleydo-idtypes');
 import C = require('../caleydo');
 
 export class HeatMap {
@@ -32,13 +33,7 @@ export class HeatMap {
       $rows.each(function (row, i) {
         var $cols = d3.select(this).selectAll("rect").data(row);
         $cols.enter().append("rect").on('click', function (d, j) {
-          if ((<any>d3.event).ctrlKey) {
-            data.select([[i],[j]], 1);
-          } else if (d3.event.altKey) {
-            data.select([[i],[j]], 2);
-          } else {
-            data.select([[i],[j]], 0);
-          }
+          data.select([[i],[j]], idtypes.toSelectOperation(d3.event));
         }).append("title").text(C.identity);
         $cols.attr({
           fill: function (d) {

@@ -16,6 +16,29 @@ export enum SelectOperation {
   SET, ADD, REMOVE
 }
 
+export function toSelectOperation(event: any);
+export function toSelectOperation(ctryKey: boolean, altKey: boolean, shiftKey: boolean, metaKey: boolean);
+export function toSelectOperation(event: any) {
+  var ctryKeyDown, shiftDown, altDown, metaDown;
+  if (typeof event === 'boolean') {
+    ctryKeyDown = event;
+    altDown = arguments[1] || false;
+    shiftDown = arguments[2] || false;
+    metaDown = arguments[3] || false;
+  } else {
+    ctryKeyDown = event.ctrlKey || false;
+    altDown = event.altKey || false;
+    shiftDown = event.shiftKey || false;
+    metaDown = event.metaKey || false;
+  }
+  if (ctryKeyDown || shiftDown) {
+    return SelectOperation.ADD;
+  } else if (altDown || metaDown) {
+    return SelectOperation.REMOVE;
+  }
+  return SelectOperation.SET;
+}
+
 export class IDType extends events.EventHandler {
   private sel = {};
 

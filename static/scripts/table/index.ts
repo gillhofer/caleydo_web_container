@@ -8,6 +8,7 @@ import matrix = require('../caleydo-matrix');
 import table = require('../caleydo-table');
 import vector = require('../caleydo-vector');
 import datatypes = require('../caleydo-datatype');
+import idtypes = require('../caleydo-idtypes');
 import C = require('../caleydo');
 
 export class Table {
@@ -48,13 +49,7 @@ export class Table {
 
       var $rows = $table.select('tbody').selectAll('tr').data(d);
       $rows.enter().append('tr').on('click', function (d, i) {
-        if ((<any>d3.event).ctrlKey) {
-          data.select(0, [i], 1);
-        } else if (d3.event.altKey) {
-          data.select(0, [i], 2);
-        } else {
-          data.select(0, [i], 0);
-        }
+        data.select(0, [i], idtypes.toSelectOperation(d3.event));
       });
       $rows.each(function (row, i) {
         var $header = d3.select(this).selectAll('th').data(rows.slice(i, i + 1));

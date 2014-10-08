@@ -1,7 +1,7 @@
 /**
  * Created by Samuel Gratzl on 05.08.2014.
  */
-define(['exports', 'd3', '../caleydo'], function (exports, d3, C) {
+define(['exports', 'd3', '../caleydo', '../caleydo-idtypes'], function (exports, d3, C, idtypes) {
   function ParCo(data, parent) {
     this.data = data;
     this.parent = parent;
@@ -16,13 +16,7 @@ define(['exports', 'd3', '../caleydo'], function (exports, d3, C) {
     data.data().then(function (v) {
       var $v = $base.selectAll('div').data(v);
       $v.enter().append('div').on('click', function (d, i) {
-        if (d3.event.ctrlKey) {
-          data.select([i], 1);
-        } else if (d3.event.altKey) {
-          data.select([i], 2);
-        } else {
-          data.select([i], 0);
-        }
+        data.select([i], idtypes.toSelectOperation(d3.event));
       }).text(C.identity);
     });
     var l = function (event, type, selected) {
