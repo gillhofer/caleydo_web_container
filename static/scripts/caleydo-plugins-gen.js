@@ -78,6 +78,17 @@ define(function () {
       },
       {
         type: 'vis',
+        name: 'axis',
+        icon: 'axis/icon.svg',
+        size: function () {
+          return [50, 300];
+        },
+        filter: function (data) {
+          return data.desc.type === 'vector' && data.desc.value.type === 'real';
+        }
+      },
+      {
+        type: 'vis',
         name: 'lineup',
         size: function (dim) {
           return [Math.min(dim[1] * 100, 1000), Math.min(dim[0] * 20, 600)];

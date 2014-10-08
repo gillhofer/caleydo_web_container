@@ -1,0 +1,15 @@
+.axis {
+  .domain {
+
+  }
+
+  .tick line, path {
+    fill: none;
+    stroke: black;
+    shape-rendering: crispEdges;
+  }
+
+  circle {
+
+  }
+}
