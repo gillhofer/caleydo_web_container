@@ -1,7 +1,7 @@
 /**
  * Created by Samuel Gratzl on 08.10.2014.
  */
-define(['exports', 'd3', '../caleydo', 'css!./style'], function (exports, d3, C) {
+define(['exports', 'd3', '../caleydo', '../caleydo-d3utils', 'css!./style'], function (exports, d3, C, utils) {
   function Axis(data, parent, options) {
     this.data = data;
     this.options = C.mixin({
@@ -20,8 +20,8 @@ define(['exports', 'd3', '../caleydo', 'css!./style'], function (exports, d3, C)
       height: h,
       'class': 'axis'
     });
+    var $axis = $svg.append('g').attr('class', 'makeover');
     var $points = $svg.append('g');
-    var $axis = $svg.append('g');
     var s = d3.scale.linear().domain(this.data.desc.value.range).range([shift, ((o.orient === 'left' || o.orient === 'right') ? h : w) - shift]).clamp(true);
     var axis = d3.svg.axis()
       .tickSize(o.tickSize)
@@ -49,15 +49,17 @@ define(['exports', 'd3', '../caleydo', 'css!./style'], function (exports, d3, C)
 
     $axis.call(axis);
     var cxy = (o.orient === 'left' || o.orient === 'right') ? 'cy' : 'cx';
+
+    var onClick = utils.selectionUtil(this.data, $points, 'circle');
+
     this.data.data().then(function (data) {
       var $p = $points.selectAll('circle').data(data);
-      $p.enter().append('circle').attr('r', o.r);
+      $p.enter().append('circle').attr('r', o.r).on('click', onClick);
       $p.exit().remove();
       $p.attr(cxy, function (d) {
         return s(d);
       });
     });
-
     return $svg.node();
   };
   exports.Axis = Axis;

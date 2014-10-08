@@ -8,7 +8,7 @@ import matrix = require('../caleydo-matrix');
 import table = require('../caleydo-table');
 import vector = require('../caleydo-vector');
 import datatypes = require('../caleydo-datatype');
-import idtypes = require('../caleydo-idtypes');
+import utils = require('../caleydo-d3utils');
 import C = require('../caleydo');
 
 export class Table {
@@ -40,6 +40,7 @@ export class Table {
     $table.append('thead').append('tr');
     $table.append('tbody');
     var data = this.data;
+    var onClick = utils.selectionUtil(this.data, $table.select('tbody'), 'tr');
     C.all(promises).then((arr) => {
       var cols = arr[0], rows = arr[1], d = arr[2];
       var $headers = $table.select('thead tr').selectAll('th').data(['ID'].concat(cols));
@@ -48,9 +49,7 @@ export class Table {
       $headers.exit().remove();
 
       var $rows = $table.select('tbody').selectAll('tr').data(d);
-      $rows.enter().append('tr').on('click', function (d, i) {
-        data.select(0, [i], idtypes.toSelectOperation(d3.event));
-      });
+      $rows.enter().append('tr').on('click', onClick);
       $rows.each(function (row, i) {
         var $header = d3.select(this).selectAll('th').data(rows.slice(i, i + 1));
         $header.enter().append('th');
@@ -62,21 +61,6 @@ export class Table {
         $row.exit().remove();
       });
       $rows.exit().remove();
-    });
-
-    var l = function (event, type, selected) {
-      var $body = $table.select('tbody');
-      $body.selectAll('tr').classed('select-' + type,false);
-      selected.dim(0).forEach((i) => {
-        $body.select('tr:nth-child('+(i+1)+')').classed('select-' + type,true);
-      });
-    };
-    data.on('select', l);
-    C.onDOMNodeRemoved($table.node(), function () {
-      data.off('select', l);
-    });
-    data.selections().then(function (selected) {
-      l(null, 'selected', selected);
     });
 
     return $table.node();

@@ -48,13 +48,13 @@
   }
 }
 
-rect.select-selected {
+.select-selected {
+  //svg variant
   stroke: orange;
   stroke-width: 1px;
   fill: orange;
-}
 
-div.select-selected, tr.select-selected, td.select-selected {
+  //html variant
   border: 1px solid orange;
   background-color: orange;
 }

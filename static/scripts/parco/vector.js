@@ -1,7 +1,7 @@
 /**
  * Created by Samuel Gratzl on 05.08.2014.
  */
-define(['exports', 'd3', '../caleydo', '../caleydo-idtypes'], function (exports, d3, C, idtypes) {
+define(['exports', 'd3', '../caleydo', '../caleydo-d3utils'], function (exports, d3, C, utils) {
   function ParCo(data, parent) {
     this.data = data;
     this.parent = parent;
@@ -12,25 +12,10 @@ define(['exports', 'd3', '../caleydo', '../caleydo-idtypes'], function (exports,
     var $base = $parent.append('div').attr({
       'class': 'vector'
     });
-    var data = this.data;
-    data.data().then(function (v) {
+    var onClick = utils.selectionUtil(this.data, $base, 'div');
+    this.data.data().then(function (v) {
       var $v = $base.selectAll('div').data(v);
-      $v.enter().append('div').on('click', function (d, i) {
-        data.select([i], idtypes.toSelectOperation(d3.event));
-      }).text(C.identity);
-    });
-    var l = function (event, type, selected) {
-      $base.selectAll('div').classed('select-' + type, false);
-      selected.dim(0).forEach(function (i) {
-        $base.select('div:nth-child(' + (i + 1) + ')').classed('select-' + type, true);
-      });
-    };
-    data.on('select', l);
-    C.onDOMNodeRemoved($base.node(), function () {
-      data.off('select', l);
-    });
-    data.selections().then(function (selected) {
-      l(null, 'selected', selected);
+      $v.enter().append('div').on('click', onClick).text(C.identity);
     });
 
     return $base.node();
