@@ -43,6 +43,9 @@ define(function () {
         icon: 'parco/icon.svg',
         size: function (dim) {
           return [360, 150];
+        },
+        filter: function (data) {
+          return data.desc.type === 'table';
         }
       },
       {
@@ -53,17 +56,6 @@ define(function () {
         },
         filter: function (data) {
           return data.desc.type === 'matrix';
-        }
-      },
-      {
-        type: 'vis',
-        name: 'vector',
-        module: './parco/vector',
-        size: function () {
-          return [300, 300];
-        },
-        filter: function (data) {
-          return data.desc.type === 'vector';
         }
       },
       {
