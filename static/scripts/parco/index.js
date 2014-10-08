@@ -14,35 +14,53 @@ define(['exports', 'd3', 'd3.parcoords', '../caleydo'], function (exports, d3, d
       style: 'width:360px;height:150px'
     }), data = this.data;
 
-    var pc = d3_parcoords()($base.node());
-    /*, types = {};
-    pc.dimensions(this.data.cols().map(function (col) {
+    var pc = d3_parcoords()($base.node()), types = {},
+      dims;
+    dims = this.data.cols().map(function (col) {
       var val = col.desc.value, type;
       switch (val.type) {
       case 'real':
       case 'int':
         type = 'number';
-        pc.scale(col.name, val.range);
+        //pc.scale(col.name, val.range);
         break;
       case 'categorical':
         type = 'string';
-        pc.scale(col.name, val.categories);
+        //pc.scale(col.name, val.categories);
         break;
       default:
         type = 'string';
         break;
       }
-      types[col.name] = type;
-      return col.name;
-    }));
-    pc.types(types);*/
+      types[col.desc.name] = type;
+      return col.desc.name;
+    });
+    pc.types(types).dimensions(dims);
 
+    pc.on('brush', function (brushed) {
+      var ori = pc.data();
+      //clear selection if all or none are selected
+      if (brushed.length === ori.length || brushed.length === 0) {
+        data.clear();
+      } else {
+        //select subset
+        var indices = brushed.map(function (row) {
+          return row._i;
+        });
+        data.select(0, indices);
+      }
+    });
 
-    this.data.objects().then(function (arr) {
-      pc.data(arr);
+    pc.ticks(3);
+
+    data.objects().then(function (arr) {
+      //zip with index
+      pc.data(arr.map(function (row, i) {
+        return C.mixin({_i: i}, row);
+      }));
       pc.render();
-      pc.ticks(3)
-        .createAxes();
+      pc.reorderable();
+      pc.brushable();
     });
 
     var l = function (event, type, selected) {
