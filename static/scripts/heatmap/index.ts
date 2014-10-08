@@ -5,7 +5,8 @@
 
 import d3 = require('d3');
 import matrix = require('../caleydo-matrix');
-import idtypes = require('../caleydo-idtypes');
+import idtypes = require('../caleydo-idtypes')
+import geom = require('../caleydo-geom');
 import ranges = require('../caleydo-range');
 import C = require('../caleydo');
 
@@ -34,7 +35,7 @@ export class HeatMap {
     }
     var xw = l(range.dim(1), width);
     var yh = l(range.dim(0), height);
-    return C.resolved({ x : xw[0], w : xw[1], y : yh[0], h : yh[1]});
+    return C.resolved(geom.rect(xw[0],yh[0],xw[1],yh[1]));
   }
 
   private build($parent:D3.Selection) {

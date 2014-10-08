@@ -12,7 +12,7 @@ import events = require('caleydo-events');
 /**
  * a simple multi form class using a select to switch
  */
-export class MultiForm extends events.EventHandler {
+export class MultiForm extends events.EventHandler implements plugins.IVisInstance {
   parent:D3.Selection;
   /**
    * list of all possibles vis techniques
@@ -47,6 +47,13 @@ export class MultiForm extends events.EventHandler {
     if (this.actVis && C.isFunction(this.actVis.destroy)) {
       this.actVis.destroy();
     }
+  }
+
+  locate() {
+    if (this.actVis && C.isFunction(this.actVis.locate)) {
+      return this.actVis.locate.apply(this.actVis, C.argList(arguments));
+    }
+    return undefined;
   }
 
   /**

@@ -8,7 +8,7 @@ var __extends = this.__extends || function (d, b) {
   __.prototype = b.prototype;
   d.prototype = new __();
 };
-define(['exports', 'jquery', '../caleydo-events', 'jquery-ui','fontawesome'], function (exports, $, events) {
+define(['exports', 'jquery', '../caleydo-events', '../caleydo', '../caleydo-geom', 'jquery-ui','fontawesome'], function (exports, $, events, C, geom) {
   var Window = (function (_super) {
     __extends(Window, _super);
     function makeDraggable($div, window) {
@@ -139,10 +139,39 @@ define(['exports', 'jquery', '../caleydo-events', 'jquery-ui','fontawesome'], fu
       }
     }
 
+    /**
+     * closes this window
+     */
     Window.prototype.close = function() {
       this.$div.remove();
       this.fire('removed', this);
     };
+
+    /**
+     * return an adapter for a IVisInstance, which is shifted by the own position
+     * @param vis
+     * @returns {{data: *, locate: locate}}
+     */
+    Window.prototype.adapter = function(vis) {
+      var that = this;
+      var r = {
+        data : vis.data,
+        locate : function () {
+          return vis.locate.apply(vis, C.argList(arguments)).then(function (r) {
+            var p = that.pos;
+            if (C.isArray(r)) {
+              return r.map( function (loc) {
+                return geom.wrap(loc).shift(p);
+              })
+            } else {
+              geom.wrap(r).shift(p);
+            }
+          })
+        }
+      };
+      return r;
+    };
+
     /**
      * property for getting setting the title
      */

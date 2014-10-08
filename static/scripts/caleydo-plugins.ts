@@ -4,6 +4,7 @@
 import C = require('./caleydo');
 import require_ = require('require');
 import datatypes = require('./caleydo-datatype');
+import ranges = require('./caleydo-range');
 import plugindescs = require('caleydo-plugins-gen');
 
 /**
@@ -57,6 +58,11 @@ export interface IPlugin {
    * link to the referenced method as described in the description
    */
   factory(): any;
+}
+
+export interface IVisInstance {
+  data: datatypes.IDataType;
+  locate(...range: ranges.Range[]): C.IPromise<any>;
 }
 
 /**

@@ -3,55 +3,75 @@
  */
 
 function autoload(plugins) {
+  var autoload = {};
   var body = document.getElementsByTagName('body')[0];
   //load and execute the auto load plugins
   plugins.load(plugins.list('autoload')).then(function (plugins) {
     plugins.forEach(function (p) {
-      p.factory(body);
+      autoload[p.desc.name] = p.factory(body);
     });
   });
+  return autoload;
 }
 
 require(['jquery', 'd3', './caleydo-data', './caleydo-plugins', './window/index', './caleydo-multiform' ], function ($, d3, data, plugins, window, multiform) {
   'use strict';
-  autoload(plugins);
+  var autoload = autoload(plugins);
   // use app here
   var $body = $('body');
 
   /*
-  data.get('0').then(function (matrix) {
-    var m = matrix;
-    plugins.load(plugins.listVis(m)).then(function (visses) {
-      var acc = 10;
-      visses.forEach(function (plugin) {
-        var w = window.create($body[0]);
-        w.title = plugin.desc.name;
-        w.pos = [20, acc];
-        if (typeof plugin.desc.size === 'function') {
-          w.contentSize = plugin.desc.size(m.dim);
-        } else {
-          w.contentSize = [200, 200];
-        }
-        plugin.factory(m, w.node);
-        var s = w.size;
-        acc += s[1] + 10;
-      });
-    });
-    var mw = window.create($body[0]);
-    var multi = multiform.create(matrix, mw.node);
-    mw.title = multi.act.name;
-    mw.pos = [400, 10];
-    mw.size = [300, 300];
-    multi.on('change', function (event, new_) {
-      mw.title = new_.name;
-      mw.contentSize = multi.size;
-    });
-  });*/
+   data.get('0').then(function (matrix) {
+   var m = matrix;
+   plugins.load(plugins.listVis(m)).then(function (visses) {
+   var acc = 10;
+   visses.forEach(function (plugin) {
+   var w = window.create($body[0]);
+   w.title = plugin.desc.name;
+   w.pos = [20, acc];
+   if (typeof plugin.desc.size === 'function') {
+   w.contentSize = plugin.desc.size(m.dim);
+   } else {
+   w.contentSize = [200, 200];
+   }
+   plugin.factory(m, w.node);
+   var s = w.size;
+   acc += s[1] + 10;
+   });
+   });
+   var mw = window.create($body[0]);
+   var multi = multiform.create(matrix, mw.node);
+   mw.title = multi.act.name;
+   mw.pos = [400, 10];
+   mw.size = [300, 300];
+   multi.on('change', function (event, new_) {
+   mw.title = new_.name;
+   mw.contentSize = multi.size;
+   });
+   });*/
+
+  function removeLink(vis) {
+    if (autoload.hasOwnProperty('links')) {
+      autoload.links.remove(vis);
+    }
+  }
+
+  function addLink(vis) {
+    if (autoload.hasOwnProperty('links')) {
+      autoload.links.push(vis);
+    }
+  }
+
+  function updateLinks() {
+    if (autoload.hasOwnProperty('links')) {
+      autoload.links.update();
+    }
+  }
 
   function addIt(m) {
     var mw = window.create($body[0], {
       closeable: true,
-      animatedHeader : true,
+      animatedHeader: true,
       zcontrols: true
     });
     var multi = multiform.create(m, mw.node);
@@ -63,14 +83,26 @@ require(['jquery', 'd3', './caleydo-data', './caleydo-plugins', './window/index'
       mw.title = m.desc.name + ' @ ' + new_.name;
       mw.contentSize = multi.size;
     });
+    var vis = mw.adapter(multi);
+    mw.on('removed', function () {
+      removeLink(vis);
+    });
+    mw.on('drag_stop', updateLinks);
+    addLink(vis);
   }
 
   data.list().then(function (list) {
     var b = d3.select('body');
     b.append('span').text('Select Dataset: ');
     var $select = b.append('select').attr('class', 'dataselector');
+    //for all inhomogeneous add them as extra columns, too
+    list.forEach(function(m) {
+      if (m.desc.type === 'table') {
+        list.push.apply(list, m.cols());
+      }
+    });
     list = d3.entries(list);
-    list.splice(0, 0, {});
+    list.unshift({});
     var $options = $select.selectAll('option').data(list);
     $options.enter().append('option').text(function (d) {
       return d.value ? d.value.desc.name : '';
