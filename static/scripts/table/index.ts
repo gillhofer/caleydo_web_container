@@ -7,12 +7,14 @@ import d3 = require('d3');
 import matrix = require('../caleydo-matrix');
 import table = require('../caleydo-table');
 import vector = require('../caleydo-vector');
+import ranges = require('../caleydo-range');
+import geom = require('../caleydo-geom');
 import datatypes = require('../caleydo-datatype');
 import utils = require('../caleydo-d3utils');
 import C = require('../caleydo');
 
 export class Table {
-  public node: Element;
+  public node:Element;
 
   constructor(public data:any, public parent:Element) {
     var $p = d3.select(parent);
@@ -33,13 +35,33 @@ export class Table {
     }
   }
 
+  locate(...range:ranges.Range[]) {
+    if (range.length === 1) {
+      return this.locateImpl(range[0]);
+    }
+    return C.all(range.map(this.locateImpl, this));
+  }
+
+  private locateImpl(range:ranges.Range) {
+    var $tbody = d3.select(this.node).select('tbody');
+    var offset = (<HTMLElement>$tbody.node()).offsetTop, w = $tbody.node().clientWidth;
+    var a, b;
+    if (range.isAll || range.isNone) {
+      b = $tbody.select('tr:last').node();
+      return C.resolved(geom.rect(0, offset, w, b.offsetTop + b.clientHeight));
+    }
+    var ex:any = d3.extent(range.dim(0).iter().asList());
+    a = $tbody.select('tr:nth-child(' + (ex[0] + 1) + ')').node();
+    b = $tbody.select('tr:nth-child(' + (ex[1] + 1) + ')').node();
+    return C.resolved(geom.rect(0, offset + a.offsetTop, w, b.offsetTop + b.clientHeight - a.offsetTop));
+  }
+
   private build($parent:D3.Selection, promises:any[]) {
-    var $table = $parent.append('table').attr('class','table').style({
-      'font-size' : 'smaller'
+    var $table = $parent.append('table').attr('class', 'table').style({
+      'font-size': 'smaller'
     });
     $table.append('thead').append('tr');
     $table.append('tbody');
-    var data = this.data;
     var onClick = utils.selectionUtil(this.data, $table.select('tbody'), 'tr');
     C.all(promises).then((arr) => {
       var cols = arr[0], rows = arr[1], d = arr[2];
