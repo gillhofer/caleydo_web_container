@@ -6,7 +6,33 @@ define(['exports', 'd3', 'd3.parcoords', '../caleydo'], function (exports, d3, d
     this.data = data;
     this.parent = parent;
     this.node = this.build(d3.select(parent));
+
+    this.options = {
+      margin: { top: 24, right: 0, bottom: 12, left: 0 }
+    };
   }
+
+  ParCo.prototype.locate = function () {
+    if (arguments.length === 1) {
+      return this.locateImpl(arguments[0]);
+    }
+    return C.all(C.argList(arguments).map(this.locateImpl, this));
+  };
+
+  ParCo.prototype.locateImpl = function (range) {
+    var dim0 = this.dims[0],
+      yscale = this.pc.yscale[dim0],
+      x = this.pc.xscale(dim0),
+      offset = this.options.margin.top;
+    if (range.isAll || range.isNone) {
+      var r = yscale.range();
+      return C.resolved({ x: x, w : 6, y: offset + r[0], h: r[1] - r[0] });
+    }
+    return this.data.objects(range).then(function (data) {
+      var ex = d3.extent(data, function (row) { return yscale(row[dim0]); });
+      return { x: x, w: 6, y: offset + ex[0], h: ex[1] - ex[0] };
+    });
+  };
 
   ParCo.prototype.build = function ($parent) {
     var $base = $parent.append('div').attr({
@@ -14,8 +40,9 @@ define(['exports', 'd3', 'd3.parcoords', '../caleydo'], function (exports, d3, d
       style: 'width:360px;height:150px'
     }), data = this.data;
 
-    var pc = d3_parcoords()($base.node()), types = {},
+    var pc = d3_parcoords(this.options)($base.node()), types = {},
       dims;
+    this.pc = pc;
     dims = this.data.cols().map(function (col) {
       var val = col.desc.value, type;
       switch (val.type) {
@@ -35,6 +62,7 @@ define(['exports', 'd3', 'd3.parcoords', '../caleydo'], function (exports, d3, d
       types[col.desc.name] = type;
       return col.desc.name;
     });
+    this.dims = dims;
     pc.types(types).dimensions(dims);
 
     pc.on('brush', function (brushed) {
