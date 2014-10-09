@@ -291,6 +291,7 @@ export class TableVector extends vector.VectorBase implements vector.IVector {
     super(null);
     this._root = this;
     this.valuetype = (<any>desc).value;
+    this.desc.type = 'vector';
   }
 
   get idtype() {
@@ -328,7 +329,7 @@ export class TableVector extends vector.VectorBase implements vector.IVector {
   data(range:ranges.Range = ranges.all()) {
     var that = this;
     return this.load().then(function (data) {
-      return range.filter(data.data, that.dim);
+      return range.filter(data, that.dim);
     });
   }
 

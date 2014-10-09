@@ -16,7 +16,7 @@ function autoload(plugins) {
 
 require(['jquery', 'd3', './caleydo-data', './caleydo-plugins', './window/index', './caleydo-multiform' ], function ($, d3, data, plugins, window, multiform) {
   'use strict';
-  var autoload = autoload(plugins);
+  var singletons = autoload(plugins);
   // use app here
   var $body = $('body');
 
@@ -51,20 +51,20 @@ require(['jquery', 'd3', './caleydo-data', './caleydo-plugins', './window/index'
    });*/
 
   function removeLink(vis) {
-    if (autoload.hasOwnProperty('links')) {
-      autoload.links.remove(vis);
+    if (singletons.hasOwnProperty('links')) {
+      singletons.links.remove(vis);
     }
   }
 
   function addLink(vis) {
-    if (autoload.hasOwnProperty('links')) {
-      autoload.links.push(vis);
+    if (singletons.hasOwnProperty('links')) {
+      singletons.links.push(vis);
     }
   }
 
   function updateLinks() {
-    if (autoload.hasOwnProperty('links')) {
-      autoload.links.update();
+    if (singletons.hasOwnProperty('links')) {
+      singletons.links.update();
     }
   }
 
@@ -96,12 +96,18 @@ require(['jquery', 'd3', './caleydo-data', './caleydo-plugins', './window/index'
     b.append('span').text('Select Dataset: ');
     var $select = b.append('select').attr('class', 'dataselector');
     //for all inhomogeneous add them as extra columns, too
-    list.forEach(function(m) {
-      if (m.desc.type === 'table') {
-        list.push.apply(list, m.cols());
+
+    list = d3.entries(list);
+    list.forEach(function (entry) {
+      if (entry.value.desc.type === 'table') {
+        list.push.apply(list, entry.value.cols().map(function (col) {
+          return {
+            key: entry.key + '.' + col.desc.name,
+            value : col
+          };
+        }));
       }
     });
-    list = d3.entries(list);
     list.unshift({});
     var $options = $select.selectAll('option').data(list);
     $options.enter().append('option').text(function (d) {

@@ -65,7 +65,7 @@ define(function () {
           return [300, 50];
         },
         filter: function (data) {
-          return data.desc.type === 'vector' && data.desc.value.type === 'real';
+          return data.desc.type === 'vector' && (data.desc.value.type === 'real' || data.desc.value.type === 'int');
         }
       },
       {
