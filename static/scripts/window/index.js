@@ -157,14 +157,17 @@ define(['exports', 'jquery', '../caleydo-events', '../caleydo', '../caleydo-geom
       var r = {
         data : vis.data,
         locate : function () {
+          if (!C.isFunction(vis.locate)) {
+            return C.resolved((arguments.length === 1 ? undefined: new Array(arguments.length)));
+          }
           return vis.locate.apply(vis, C.argList(arguments)).then(function (r) {
             var p = that.pos;
             if (C.isArray(r)) {
               return r.map( function (loc) {
-                return geom.wrap(loc).shift(p);
+                return loc ? geom.wrap(loc).shift(p) : loc;
               })
             } else {
-              return geom.wrap(r).shift(p);
+              return r ? geom.wrap(r).shift(p) : r;
             }
           });
         }

@@ -53,7 +53,7 @@ export class MultiForm extends events.EventHandler implements plugins.IVisInstan
     if (this.actVis && C.isFunction(this.actVis.locate)) {
       return this.actVis.locate.apply(this.actVis, C.argList(arguments));
     }
-    return undefined;
+    return C.resolved((arguments.length === 1 ? undefined: new Array(arguments.length)));
   }
 
   /**

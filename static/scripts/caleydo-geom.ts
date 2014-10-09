@@ -166,6 +166,9 @@ export function circle(x:number, y:number, radius:number) {
 }
 
 export function wrap(obj: any): AShape {
+  if(!obj) {
+    return obj;
+  }
   if (obj instanceof AShape) {
     return <AShape>obj;
   }
