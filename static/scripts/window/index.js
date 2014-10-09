@@ -164,9 +164,9 @@ define(['exports', 'jquery', '../caleydo-events', '../caleydo', '../caleydo-geom
                 return geom.wrap(loc).shift(p);
               })
             } else {
-              geom.wrap(r).shift(p);
+              return geom.wrap(r).shift(p);
             }
-          })
+          });
         }
       };
       return r;

@@ -342,6 +342,26 @@ export class Range1D {
     return this.arr[act-1].invert(index - total + s,size);
   }
 
+  indexOf(indices: number[]) : number[];
+  indexOf(index: number): number;
+  indexOf(...index: number[]) : number[];
+  indexOf() : any {
+    var arr: number[];
+    var base = this.iter().asList();
+    if (arguments.length === 1) {
+      if (typeof arguments[0] === 'number') {
+        return base.indexOf(<number>arguments[0]);
+      }
+      arr = arguments[0];
+    } else {
+      arr = C.argList(arguments);
+    }
+    if (arr.length === 0) {
+      return [];
+    }
+    return arr.map((index, i) => base.indexOf(index));
+  }
+
   indexRangeOf(r : Range1D, size?: number) {
     if (r.isNone || this.isNone) {
       return Range1D.none();
@@ -559,7 +579,7 @@ export class Range {
    * @param size the underlying size for negative indices
    * @returns {*}
    */
-  filter(data:any[], size:number[] = []) {
+  filter(data:any[], size:number[]) {
     if (this.isAll) {
       return data;
     }
@@ -572,7 +592,7 @@ export class Range {
       }
       var d = that.dim(i);
       var next = filterDim(i + 1); //compute next transform
-      var s = size[i];
+      var s = size ? size[i] : undefined;
       return (elem) => { //if the value is an array, filter it else return the value
         return C.isArray(elem) ? d.filter(elem, s, next) : elem;
       };
@@ -618,6 +638,25 @@ export class Range {
       return this.clone();
     }
     return new Range(this.dims.map((d,i) => d.indexRangeOf(r.dim(i), size ? size[i] : undefined)));
+  }
+
+  indexOf(indices: number[]) : number[];
+  indexOf(index: number): number;
+  indexOf(...index: number[]) : number[];
+  indexOf() : any {
+    var arr: number[];
+    if (arguments.length === 1) {
+      if (typeof arguments[0] === 'number') {
+        return this.dim(0).indexOf(<number>arguments[0]);
+      }
+      arr = arguments[0];
+    } else {
+      arr = C.argList(arguments);
+    }
+    if (arr.length === 0) {
+      return [];
+    }
+    return arr.map((index, i) => this.dim(i).indexOf(index));
   }
   /**
    * returns the range size
