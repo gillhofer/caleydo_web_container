@@ -33,7 +33,7 @@ define(['exports', 'd3', '../tooltip/index', '../caleydo', 'css!./style'], funct
       return { x: r[0], w: r[1] - r[0], y: 0, h : 50 };
     }
     return this.data.data(range).then(function (data) {
-      var ex = d3.extend(data, that.scale);
+      var ex = d3.extent(data, that.scale);
       return { x: ex[0], w: ex[1] - ex[0], y: 0, h : 50 };
     });
   };

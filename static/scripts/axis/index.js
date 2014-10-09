@@ -26,10 +26,10 @@ define(['exports', 'd3', '../caleydo', '../caleydo-d3utils', 'css!./style'], fun
     var that = this;
     if (range.isAll || range.isNone) {
       var r = this.scale.range();
-      return that.wrap({ y: r[0], h: r[1] - r[0] });
+      return C.resolved(that.wrap({ y: r[0], h: r[1] - r[0] }));
     }
     return this.data.data(range).then(function (data) {
-      var ex = d3.extend(data, that.scale);
+      var ex = d3.extent(data, that.scale);
       return that.wrap({ y: ex[0], h: ex[1] - ex[0] });
     });
   };
