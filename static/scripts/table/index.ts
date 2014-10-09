@@ -53,7 +53,7 @@ export class Table {
     var ex:any = d3.extent(range.dim(0).iter().asList());
     a = $tbody.select('tr:nth-child(' + (ex[0] + 1) + ')').node();
     b = $tbody.select('tr:nth-child(' + (ex[1] + 1) + ')').node();
-    return C.resolved(geom.rect(0, offset + a.offsetTop, w, b.offsetTop + b.clientHeight - a.offsetTop));
+    return C.resolved(geom.rect(0, a.offsetTop, w, b.offsetTop + b.clientHeight - a.offsetTop));
   }
 
   private build($parent:D3.Selection, promises:any[]) {

@@ -13,6 +13,17 @@ function nextID() {
   return _id++;
 }
 
+function selectCorners(a: geom.AShape, b: geom.AShape) {
+  var ac = a.aabb(),
+    bc = b.aabb();
+  if (ac.cx > bc.cx) {
+    return ['w','e'];
+  } else {
+    return ['e','w'];
+  }
+  //TODO better
+}
+
 export class LinksRenderer {
   private $parent: D3.Selection;
   private $div: D3.Selection;
@@ -124,12 +135,13 @@ export class LinksRenderer {
         var links = [];
         locs.forEach((loc, i) => {
           if (loc && ex.locs[i]) {
-            var r = [loc.center, ex.locs[i].center];
+            var cs = selectCorners(loc, ex.locs[i]);
+            var r = [loc.corner(cs[0]), ex.locs[i].corner(cs[1])];
             links.push(swap ? r.reverse() : r);
           }
         });
         var $links = $g.selectAll('path').data(links);
-        $links.enter().append('path');
+        $links.enter().append('path').attr('class','select-selected');
         $links.exit().remove();
         $links.attr('d', (d) => {
           return line(d);

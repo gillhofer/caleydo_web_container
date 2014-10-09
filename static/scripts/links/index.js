@@ -12,6 +12,16 @@ define(["require", "exports", 'd3', '../caleydo-range', '../caleydo'], function(
         return _id++;
     }
 
+    function selectCorners(a, b) {
+        var ac = a.aabb(), bc = b.aabb();
+        if (ac.cx > bc.cx) {
+            return ['w', 'e'];
+        } else {
+            return ['e', 'w'];
+        }
+        //TODO better
+    }
+
     var LinksRenderer = (function () {
         function LinksRenderer(parent) {
             this.visses = [];
@@ -121,12 +131,13 @@ define(["require", "exports", 'd3', '../caleydo-range', '../caleydo'], function(
                     var links = [];
                     locs.forEach(function (loc, i) {
                         if (loc && ex.locs[i]) {
-                            var r = [loc.center, ex.locs[i].center];
+                            var cs = selectCorners(loc, ex.locs[i]);
+                            var r = [loc.corner(cs[0]), ex.locs[i].corner(cs[1])];
                             links.push(swap ? r.reverse() : r);
                         }
                     });
                     var $links = $g.selectAll('path').data(links);
-                    $links.enter().append('path');
+                    $links.enter().append('path').attr('class', 'select-selected');
                     $links.exit().remove();
                     $links.attr('d', function (d) {
                         return line(d);

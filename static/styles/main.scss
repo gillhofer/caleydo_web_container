@@ -4,6 +4,7 @@
 
 .window {
   position: absolute;
+  background-color: transparent !important;
 
   > .ui-widget-header {
     position: relative;
@@ -43,6 +44,10 @@
     }
   }
 
+  div {
+    background-color: transparent;
+  }
+
   > div.content {
     overflow: auto;
   }
@@ -50,13 +55,13 @@
 
 .select-selected {
   //svg variant
-  stroke: orange;
+  stroke: orange !important;
   stroke-width: 1px;
-  fill: orange;
+  fill: orange !important;
 
   //html variant
-  border: 1px solid orange;
-  background-color: orange;
+  border: 1px solid orange !important;
+  background-color: orange !important;
 }
 
 .layer {

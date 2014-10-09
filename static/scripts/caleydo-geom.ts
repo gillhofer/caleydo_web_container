@@ -7,6 +7,18 @@ export interface IVec2 {
   y: number;
 }
 
+export var CORNER : any = <any>[];
+CORNER['N']  = CORNER[0] = 'n';
+CORNER['NE'] = CORNER[1] = 'ne';
+CORNER['E']  = CORNER[2] = 'e';
+CORNER['SE'] = CORNER[3] = 'se';
+CORNER['S']  = CORNER[4] = 's';
+CORNER['SW'] = CORNER[5] = 'sw';
+CORNER['W']  = CORNER[6] = 'w';
+CORNER['NW'] = CORNER[7] = 'nw';
+
+
+
 export class AShape {
   shift(x:number, y:number) : AShape;
   shift(xy:IVec2) : AShape;
@@ -33,6 +45,29 @@ export class AShape {
     throw new Error('not implemented');
   }
 
+  corner(corner: string) : IVec2 {
+    var r = this.aabb();
+    switch(corner) {
+      case CORNER.N:
+        return { x : r.cx, y : r.y};
+      case CORNER.S:
+        return { x : r.cx, y : r.y2};
+      case CORNER.W:
+        return { x : r.x, y : r.cy};
+      case CORNER.E:
+        return { x : r.x2, y : r.cy};
+      case CORNER.NE:
+        return { x : r.x2, y : r.y};
+      case CORNER.NW:
+        return r;
+      case CORNER.SE:
+        return { x : r.x2, y : r.y2};
+      case CORNER.SW:
+        return { x : r.x, y : r.y2};
+    }
+    return this.center;
+  }
+
   /**
    * bounding sphere (ro)
    */
@@ -54,6 +89,38 @@ export class Rect extends AShape {
     return 'Rect(x=' + this.x + ',y=' + this.y + ',w=' + this.w + ',h=' + this.h + ')';
   }
 
+  get cx() {
+    return this.x + this.w / 2;
+  }
+
+  get cy() {
+    return this.y + this.h / 2;
+  }
+
+  set cx(val: number) {
+    this.x = val - this.w / 2;
+  }
+
+  set cy(val: number) {
+    this.y = val - this.y / 2;
+  }
+
+  get x2() {
+    return this.x + this.w;
+  }
+
+  get y2() {
+    return this.y + this.h;
+  }
+
+  set x2(val: number) {
+    this.w = val - this.x;
+  }
+
+  set y2(val: number) {
+    this.h = val - this.y;
+  }
+
   shiftImpl(x, y) {
     this.x += x;
     this.y += y;
@@ -64,7 +131,7 @@ export class Rect extends AShape {
   }
 
   bs() : Circle {
-    return circle(this.x+ this.w/2, this.y + this.h/2,Math.sqrt(this.w*2+this.h*2));
+    return circle(this.cx, this.cy, Math.sqrt(this.w*2+this.h*2));
   }
 }
 
