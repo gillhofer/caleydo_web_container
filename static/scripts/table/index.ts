@@ -58,7 +58,8 @@ export class Table {
 
   private build($parent:D3.Selection, promises:any[]) {
     var $table = $parent.append('table').attr('class', 'table').style({
-      'font-size': 'smaller'
+      'font-size': 'smaller',
+      'border-collapse': 'collapse'
     });
     $table.append('thead').append('tr');
     $table.append('tbody');

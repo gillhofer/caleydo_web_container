@@ -2,13 +2,12 @@
  * Created by Samuel Gratzl on 27.08.2014.
  */
 
-function autoload(plugins) {
+function autoload(plugins, container) {
   var autoload = {};
-  var body = document.getElementsByTagName('body')[0];
   //load and execute the auto load plugins
   plugins.load(plugins.list('autoload')).then(function (plugins) {
     plugins.forEach(function (p) {
-      autoload[p.desc.name] = p.factory(body);
+      autoload[p.desc.name] = p.factory(container);
     });
   });
   return autoload;
@@ -16,9 +15,10 @@ function autoload(plugins) {
 
 require(['jquery', 'd3', './caleydo-data', './caleydo-plugins', './window/index', './caleydo-multiform' ], function ($, d3, data, plugins, window, multiform) {
   'use strict';
-  var singletons = autoload(plugins);
+  var windows = $('<div>').css('position', 'absolute').appendTo('body')[0];
+  var singletons = autoload(plugins, $('body')[0]);
+  var menu = $('<div>').css('position', 'fixed').appendTo('body')[0];
   // use app here
-  var $body = $('body');
 
   /*
    data.get('0').then(function (matrix) {
@@ -69,7 +69,7 @@ require(['jquery', 'd3', './caleydo-data', './caleydo-plugins', './window/index'
   }
 
   function addIt(m) {
-    var mw = window.create($body[0], {
+    var mw = window.create(windows, {
       closeable: true,
       animatedHeader: true,
       zcontrols: true
@@ -92,7 +92,7 @@ require(['jquery', 'd3', './caleydo-data', './caleydo-plugins', './window/index'
   }
 
   data.list().then(function (list) {
-    var b = d3.select('body');
+    var b = d3.select(menu);
     b.append('span').text('Select Dataset: ');
     var $select = b.append('select').attr('class', 'dataselector');
     //for all inhomogeneous add them as extra columns, too
