@@ -78,12 +78,28 @@ export class HeatMap {
     });
     var l = function (event, type, selected) {
       $svg.selectAll('rect').classed('select-' + type, false);
-      selected.dim(0).forEach((i) => {
-        var row = $svg.select('g:nth-child(' + (i + 1) + ')');
-        selected.dim(1).forEach((j) => {
-          row.select('rect:nth-child(' + (j + 1) + ')').classed('select-' + type, true);
+      if (selected.isNone) {
+        return;
+      }
+      var dim0 = selected.dim(0), dim1 = selected.dim(1);
+      if (selected.isAll) {
+        $svg.select('rect').classed('select-' + type, true);
+      } else if (dim0.isAll || dim0.isNone) {
+        dim1.forEach((j) => {
+          $svg.selectAll('g rect:nth-child(' + (j + 1) + ')').classed('select-' + type, true);
         });
-      });
+      } else if (dim1.isAll || dim1.isNone) {
+        dim0.forEach((i) => {
+          $svg.selectAll('g:nth-child(' + (i + 1) + ') rect').classed('select-' + type, true);
+        });
+      } else {
+        dim0.forEach((i) => {
+          var row = $svg.select('g:nth-child(' + (i + 1) + ')');
+          dim1.forEach((j) => {
+            row.select('rect:nth-child(' + (j + 1) + ')').classed('select-' + type, true);
+          });
+        });
+      }
     };
     data.on('select', l);
     C.onDOMNodeRemoved($svg.node(), function () {
