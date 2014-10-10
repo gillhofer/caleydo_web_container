@@ -16,7 +16,7 @@
     ],
     "requirejs-config": {
       "shim": {
-        "lineupjs": ["css!${basedir}/lineupjs/css/style"]
+        "lineupjs": ["css!${baseUrl}/lineupjs/css/style"]
       }
     }
   }

@@ -9,7 +9,7 @@
   "caleydo" : {
     "requirejs-config": {
       "shim": {
-        "jquery-ui": ["css!${basedir}/jquery-ui/themes/smoothness/jquery-ui.css", "jquery"]
+        "jquery-ui": ["css!${baseUrl}/jquery-ui/themes/smoothness/jquery-ui.css", "jquery"]
       }
     }
   }
