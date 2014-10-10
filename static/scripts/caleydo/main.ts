@@ -3,6 +3,8 @@
  */
 /// <reference path="../../../tsd.d.ts" />
 import $ = require('jquery');
+import module_ = require('module');
+var config = module_.config();
 'use strict';
 
 /**
@@ -10,7 +12,7 @@ import $ = require('jquery');
  */
 export var version = '0.0.1-alpha';
 
-export var server_url = '/api';
+export var server_url : string = config.apiUrl;
 
 /**
  * wraps the given resolver function to be a promise

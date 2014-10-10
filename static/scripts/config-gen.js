@@ -28,6 +28,9 @@ require.config({
   deps: ['./main'],
 
   config : {
+    'caleydo/main' : {
+      apiUrl: '/api'
+    },
     //plugin config
     'caleydo/plugin' : {
       baseUrl : '/scripts',
@@ -35,7 +38,7 @@ require.config({
         {
           type: 'vis',
           id: 'caleydo-vis-heatmap',
-		  name: 'HeatMap',
+          name: 'HeatMap',
           /**
            * icon of this vis type. Alternative: iconcss ... css class holding the icon
            * @default: none
@@ -61,7 +64,7 @@ require.config({
         {
           type: 'vis',
           id: 'caleydo-vis-table',
-		  name: 'Table',
+          name: 'Table',
           size: function (dim) {
             return [dim[1] * 110, dim[0] * 22];
           }
@@ -69,7 +72,7 @@ require.config({
         {
           type: 'vis',
           id: 'caleydo-vis-parco',
-		  name: 'Parallel Coordinate Plot',
+          name: 'Parallel Coordinate Plot',
           icon: 'icon.svg',
           size: [360, 150],
           filter: 'table'
@@ -77,14 +80,14 @@ require.config({
         {
           type: 'vis',
           id: 'caleydo-vis-scatterplot',
-		  name: 'Scatterplot',
+          name: 'Scatterplot',
           size: [300, 340],
           filter: 'matrix'
         },
         {
           type: 'vis',
           id: 'caleydo-vis-box',
-		  name: 'BoxPlot',
+          name: 'BoxPlot',
           size: [300, 50],
           filter: function (data) {
             return data.desc.type === 'vector' && (data.desc.value.type === 'real' || data.desc.value.type === 'int');
@@ -93,7 +96,7 @@ require.config({
         {
           type: 'vis',
           id: 'caleydo-vis-axis',
-		  name: 'Axis',
+          name: 'Axis',
           icon: 'icon.svg',
           size: [50, 300],
           filter: function (data) {
@@ -103,7 +106,7 @@ require.config({
         {
           type: 'vis',
           id: 'caleydo-vis-lineup',
-		  name: 'LineUp',
+          name: 'LineUp',
           size: function (dim) {
             return [Math.min(dim[1] * 100, 1000), Math.min(dim[0] * 20, 600)];
           },

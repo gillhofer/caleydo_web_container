@@ -20,7 +20,12 @@ export interface IPluginDesc {
   /**
    * name of the plugin, should be unique within a type
    */
-  name : string;
+  id : string;
+
+  /**
+   * human readable name of this plugin
+   */
+  name: string;
   /**
    * name of the require.js module to load
    * @default ./<name>/index
@@ -95,11 +100,12 @@ function parsePlugins(descs : any[]) {
   return descs.map((desc) => {
     //provide some default values
     desc = C.mixin({
-      'module' : desc.name+'/main',
+      name : desc.id,
+      'module' : desc.id+'/main',
       factory: 'create',
       description: '',
       version: '1.0',
-      baseUrl: config.baseUrl + '/' + desc.name
+      baseUrl: config.baseUrl + '/' + desc.id
     },desc);
     desc.module = '../'+desc.module;
     desc.load = loadHelper(<IPluginDesc>desc);
