@@ -7,7 +7,8 @@ require.config({
     d3: '/bower_components/d3/d3',
     underscore: '/bower_components/underscore/underscore',
     'caleydo-plugins-gen': './caleydo-plugins-gen',
-    'd3.parcoords': '/bower_components/d3.parcoords/index'
+    'd3.parcoords': '/bower_components/d3.parcoords/index',
+    lineupjs: '/bower_components/lineupjs/dist/LineUpJS'
   },
   map: {
     '*': {
@@ -19,10 +20,11 @@ require.config({
       deps: ['css!/bower_components/d3.parcoords-css/index', 'd3'],
       exports: 'd3.parcoords'
     },
-    'jquery-ui': ['css!/bower_components/jquery-ui/themes/smoothness/jquery-ui.css', 'jquery']
+    'jquery-ui': ['css!/bower_components/jquery-ui/themes/smoothness/jquery-ui.css', 'jquery'],
+    lineupjs: ['css!/bower_components/lineupjs/css/style.css', 'font-awesome']
   },
   bundles: {
-    'wrapper-bundle': ['fontawesome', 'foundation-icons', 'lineupjs']
+    'wrapper-bundle': ['font-awesome', 'foundation-icons']
   }
 });
 

@@ -34,8 +34,6 @@ define(['exports', 'd3', '../caleydo', 'lineupjs', 'css!./style'], function (exp
   }
 
   LineUp.prototype.build = function ($parent) {
-    var width = 800, height = 300;
-
     var $div = $parent.append('div').classed('lineup', true);
 
     var that = this;
