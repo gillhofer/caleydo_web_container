@@ -93,7 +93,7 @@ function parsePlugins(descs : any[]) {
   return descs.map((desc) => {
     //provide some default values
     desc = C.mixin({
-      'module' : './'+desc.name+'/index',
+      'module' : '../'+desc.name+'/index',
       factory: 'create',
       description: '',
       version: '1.0'

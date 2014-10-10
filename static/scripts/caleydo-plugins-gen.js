@@ -106,17 +106,17 @@ define(function () {
       {
         type: 'datatype',
         name: 'matrix',
-        module: './caleydo/matrix'
+        module: '../caleydo/matrix'
       },
       {
         type: 'datatype',
         name: 'table',
-        module: './caleydo/table'
+        module: '../caleydo/table'
       },
       {
         type: 'datatype',
         name: 'vector',
-        module: './caleydo/vector'
+        module: '../caleydo/vector'
       },
       //{ //template for adding a new data type
       //  type: 'datatype', //plugin type
