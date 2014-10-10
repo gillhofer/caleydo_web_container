@@ -34,7 +34,8 @@ require.config({
       plugins: [
         {
           type: 'vis',
-          name: 'heatmap',
+          id: 'caleydo-vis-heatmap',
+		  name: 'HeatMap',
           /**
            * icon of this vis type. Alternative: iconcss ... css class holding the icon
            * @default: none
@@ -59,27 +60,31 @@ require.config({
         },
         {
           type: 'vis',
-          name: 'table',
+          id: 'caleydo-vis-table',
+		  name: 'Table',
           size: function (dim) {
             return [dim[1] * 110, dim[0] * 22];
           }
         },
         {
           type: 'vis',
-          name: 'parco',
+          id: 'caleydo-vis-parco',
+		  name: 'Parallel Coordinate Plot',
           icon: 'icon.svg',
           size: [360, 150],
           filter: 'table'
         },
         {
           type: 'vis',
-          name: 'scatterplot',
+          id: 'caleydo-vis-scatterplot',
+		  name: 'Scatterplot',
           size: [300, 340],
           filter: 'matrix'
         },
         {
           type: 'vis',
-          name: 'box',
+          id: 'caleydo-vis-box',
+		  name: 'BoxPlot',
           size: [300, 50],
           filter: function (data) {
             return data.desc.type === 'vector' && (data.desc.value.type === 'real' || data.desc.value.type === 'int');
@@ -87,7 +92,8 @@ require.config({
         },
         {
           type: 'vis',
-          name: 'axis',
+          id: 'caleydo-vis-axis',
+		  name: 'Axis',
           icon: 'icon.svg',
           size: [50, 300],
           filter: function (data) {
@@ -96,7 +102,8 @@ require.config({
         },
         {
           type: 'vis',
-          name: 'lineup',
+          id: 'caleydo-vis-lineup',
+		  name: 'LineUp',
           size: function (dim) {
             return [Math.min(dim[1] * 100, 1000), Math.min(dim[0] * 20, 600)];
           },
@@ -104,7 +111,7 @@ require.config({
         },
         //{ //template for adding a new vis
         //  type: 'vis', //plugin type
-        //  name: 'template', //unique id of a datatype
+        //  id: 'template', //unique id of a datatype
         //  size: function (dim) { //the size of the vis, given dattype.dim information -> [row,dim] in case of a matrix
         //    return [100,100];
         //  },
@@ -114,21 +121,21 @@ require.config({
         //},
         {
           type: 'autoload',
-          name: 'links'
+          id: 'caleydo-links'
         },
         {
           type: 'datatype',
-          name: 'matrix',
+          id: 'matrix',
           module: 'caleydo/matrix'
         },
         {
           type: 'datatype',
-          name: 'table',
+          id: 'table',
           module: 'caleydo/table'
         },
         {
           type: 'datatype',
-          name: 'vector',
+          id: 'vector',
           module: 'caleydo/vector'
         }
         //{ //template for adding a new data type

@@ -1,0 +1,19 @@
+{
+  "name" : "caleydo-vis-axis",
+  "version": "0.0.1",
+  "dependencies": {
+    "d3": "~3.4.11"
+  },
+  "caleydo" : {
+    "plugins": [
+      {
+        "type": "vis",
+        "id": "caleydo-vis-axis",
+        "name": "Axis",
+        "icon": "icon.svg",
+        "size": [50, 300],
+        "filter": "eval!function (data) { return data.desc.type === 'vector' && data.desc.value.type === 'real'; }"
+      }
+    ]
+  }
+}

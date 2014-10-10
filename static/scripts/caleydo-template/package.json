@@ -1,0 +1,18 @@
+{
+  "name" : "caleydo-template",
+  "version": "0.0.1",
+  "dependencies": {
+    "d3": "~3.4.11"
+  },
+  "caleydo" : {
+    "plugins": [
+      {
+        "type": "vis",
+        "id": "caleydo-template",
+        "name": "Template",
+        "size": [100,100],
+        "filter": "template"
+      }
+    ]
+  }
+}

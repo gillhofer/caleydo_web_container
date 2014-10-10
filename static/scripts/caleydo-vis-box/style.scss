@@ -1,0 +1,14 @@
+.box {
+  path.axis {
+    stroke: darkgrey;
+  }
+
+  line.mean {
+    stroke: black;
+    stroke-width: 3px;
+  }
+
+  rect.box {
+    fill: steelblue;
+  }
+}

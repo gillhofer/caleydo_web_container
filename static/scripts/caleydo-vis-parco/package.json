@@ -1,0 +1,32 @@
+{
+  "name" : "caleydo-vis-parco",
+  "version": "0.0.1",
+  "dependencies": {
+    "d3": "~3.4.11",
+    "d3.parcoords": "http://syntagmatic.github.io/parallel-coordinates/d3.parcoords.js",
+    "d3.parcoords-css": "http://syntagmatic.github.io/parallel-coordinates/d3.parcoords.css"
+  },
+  "caleydo" : {
+    "plugins": [
+      {
+        "type": "vis",
+        "id": "caleydo-vis-parco",
+        "name": "Parallel Coordinates Plot",
+        "icon": "icon.svg",
+        "size": [360, 150],
+        "filter": "table"
+      }
+    ],
+    "requirejs-config": {
+      "paths": {
+        "d3.parcoords": "${baseUrl}/d3.parcoords/index"
+      },
+      "shim": {
+        "d3.parcoords": {
+          "deps": ["css!${baseUrl}/d3.parcoords-css/index", "d3"],
+          "exports": "d3.parcoords"
+        }
+      }
+    }
+  }
+}

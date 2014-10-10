@@ -1,5 +1,5 @@
 {
-  "name" : "heatmap",
+  "name" : "caleydo",
   "version": "0.0.1",
   "dependencies": {
     "d3": "~3.4.11",
@@ -9,17 +9,17 @@
     "plugins": [
       {
         "type": "datatype",
-        "name": "matrix",
+        "id": "matrix",
         "module": "caleydo/matrix"
       },
       {
         "type": "datatype",
-        "name": "table",
+        "id": "table",
         "module": "caleydo/table"
       },
       {
         "type": "datatype",
-        "name": "vector",
+        "id": "vector",
         "module": "caleydo/vector"
       }
     ]

@@ -1,0 +1,16 @@
+{
+  "name" : "caleydo-window",
+  "version": "0.0.1",
+  "dependencies": {
+    "jquery": "~1.10.2",
+    "jquery-ui": "~1.10.2",
+    "font-awesome": ">=4.2.0"
+  },
+  "caleydo" : {
+    "requirejs-config": {
+      "shim": {
+        "jquery-ui": ["css!${baseUrl}/jquery-ui/themes/smoothness/jquery-ui.css", "jquery"]
+      }
+    }
+  }
+}
