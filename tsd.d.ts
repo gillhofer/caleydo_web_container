@@ -7,6 +7,6 @@ declare module 'require' {
   export = r;
 }
 
-declare module 'caleydo-plugins-gen' {
-  export var plugins : any[];
+declare module 'module' {
+  export function config(): any;
 }
