@@ -1,16 +1,16 @@
 {
-    "name": "caleydo-web",
-    "version": "0.0.0",
-    "dependencies": {
-        "requirejs": "~2.1.8",
-        "require-css": "~0.1.5",
-        "d3": "~3.4.11",
-        "jquery": "~1.10.2",
-        "lineupjs": "git@github.com:Caleydo/lineup.js.git#singlesvg",
-        "d3.parcoords": "http://syntagmatic.github.io/parallel-coordinates/d3.parcoords.js",
-        "d3.parcoords-css": "http://syntagmatic.github.io/parallel-coordinates/d3.parcoords.css",
-        "jquery-ui": "~1.10.2",
-        "font-awesome": ">=4.2.0"
-    },
-    "devDependencies": {}
+  "name": "caleydo-web",
+  "version": "0.0.0",
+  "dependencies": {
+    "requirejs": "~2.1.8",
+    "require-css": "~0.1.5",
+    "d3": "~3.4.11",
+    "jquery": "~1.10.2",
+    "lineupjs": "git@github.com:Caleydo/lineup.js.git#singlesvg",
+    "d3.parcoords": "http://syntagmatic.github.io/parallel-coordinates/d3.parcoords.js",
+    "d3.parcoords-css": "http://syntagmatic.github.io/parallel-coordinates/d3.parcoords.css",
+    "jquery-ui": "~1.10.2",
+    "font-awesome": ">=4.2.0"
+  },
+  "devDependencies": {}
 }

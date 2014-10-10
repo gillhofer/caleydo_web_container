@@ -101,7 +101,7 @@ function resolveConfig(config) {
 
 function dumpConfig() {
   var deferred = Q.defer();
-  var config = JSON.stringify(requirejs_config, null, 4);
+  var config = JSON.stringify(requirejs_config, null, 2);
   config = resolveConfig(config);
   var config_full = '/*global require */\r\nrequire.config(' +
     config +
@@ -179,7 +179,7 @@ function dumpBower() {
     }
     var bower = JSON.parse(data);
     bower.dependencies = bower_dependencies;
-    fs.writeFile(bower_file, JSON.stringify(bower, null, 4), function (err) {
+    fs.writeFile(bower_file, JSON.stringify(bower, null, 2), function (err) {
       if (err) {
         throw err;
       }
