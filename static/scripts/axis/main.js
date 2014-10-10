@@ -1,7 +1,7 @@
 /**
  * Created by Samuel Gratzl on 08.10.2014.
  */
-define(['exports', 'd3', '../caleydo/caleydo', '../caleydo/d3util', 'css!./style'], function (exports, d3, C, utils) {
+define(['exports', 'd3', '../caleydo/main', '../caleydo/d3util', 'css!./style'], function (exports, d3, C, utils) {
   var h = 300, w = 50, shift = 10;
 
   function Axis(data, parent, options) {

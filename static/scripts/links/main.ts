@@ -6,7 +6,7 @@
 import d3 = require('d3');
 import geom = require('../caleydo/geom');
 import ranges = require('../caleydo/range');
-import C = require('../caleydo/caleydo');
+import C = require('../caleydo/main');
 
 var _id = 0, line = d3.svg.line().x((d) => d.x).y((d) => d.y);
 function nextID() {

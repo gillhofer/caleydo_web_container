@@ -3,7 +3,7 @@
  */
 
 'use strict';
-import C = require('./caleydo');
+import C = require('./main');
 import ranges = require('./range');
 import idtypes = require('./idtype');
 import datatypes = require('./datatype');

@@ -11,7 +11,7 @@ import ranges = require('../caleydo/range');
 import geom = require('../caleydo/geom');
 import datatypes = require('../caleydo/datatype');
 import utils = require('../caleydo/d3util');
-import C = require('../caleydo/caleydo');
+import C = require('../caleydo/main');
 
 export class Table {
   public node:Element;

@@ -1,7 +1,7 @@
 /**
  * Created by Samuel Gratzl on 05.08.2014.
  */
-define(['exports', 'd3', 'd3.parcoords', '../caleydo/caleydo'], function (exports, d3, d3_parcoords, C) {
+define(['exports', 'd3', 'd3.parcoords', '../caleydo/main'], function (exports, d3, d3_parcoords, C) {
   function ParCo(data, parent) {
     this.data = data;
     this.parent = parent;

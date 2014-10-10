@@ -8,7 +8,7 @@ import matrix = require('../caleydo/matrix');
 import idtypes = require('../caleydo/idtype')
 import geom = require('../caleydo/geom');
 import ranges = require('../caleydo/range');
-import C = require('../caleydo/caleydo');
+import C = require('../caleydo/main');
 
 export class HeatMap {
   node:Element;

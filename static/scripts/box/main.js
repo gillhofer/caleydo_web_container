@@ -1,7 +1,7 @@
 /**
  * Created by Marc Streit on 06.08.2014.
  */
-define(['exports', 'd3', '../tooltip/index', '../caleydo/caleydo', 'css!./style'], function (exports, d3, tooltip, C) {
+define(['exports', 'd3', '../tooltip/main', '../caleydo/main', 'css!./style'], function (exports, d3, tooltip, C) {
   function BoxPlot(data, parent) {
     this.data = data;
     this.parent = parent;

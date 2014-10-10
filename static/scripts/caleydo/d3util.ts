@@ -1,7 +1,7 @@
 /**
  * Created by Samuel Gratzl on 08.10.2014.
  */
-import C = require('./caleydo');
+import C = require('./main');
 import idtypes = require('./idtype');
 import datatype = require('./datatype');
 import d3 = require('d3');

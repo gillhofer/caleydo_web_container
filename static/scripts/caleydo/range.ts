@@ -2,7 +2,7 @@
  * Created by Samuel Gratzl on 04.08.2014.
  */
 
-import C = require('./caleydo');
+import C = require('./main');
 import Iterator = require('./iterator');
 'use strict';
 

@@ -4,7 +4,7 @@
 
 'use strict';
 import d3 = require('d3');
-import C = require('./caleydo');
+import C = require('./main');
 import plugins = require('./plugin');
 import datatypes = require('./datatype');
 import events = require('./event');

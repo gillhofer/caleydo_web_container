@@ -1,7 +1,7 @@
 /**
  * Created by Samuel Gratzl on 05.08.2014.
  */
-import C = require('./caleydo');
+import C = require('./main');
 import require_ = require('require');
 import datatypes = require('./datatype');
 import ranges = require('./range');
