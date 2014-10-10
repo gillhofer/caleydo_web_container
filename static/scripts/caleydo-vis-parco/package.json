@@ -27,6 +27,9 @@
           "exports": "d3.parcoords"
         }
       }
+    },
+    "requirejs-bower" : {
+      "ignore" : ["d3.parcoords-css"]
     }
   }
 }
