@@ -142,7 +142,7 @@ export function addSimpleVisIconChooser(form: MultiForm, toolbar: Element) {
       if (d.iconcss) {
         t.classed(d.iconcss, true);
       } else if (d.icon) {
-        t.classed('fa-fw', true).style('background-image', 'url(scripts/' + d.icon + ')').html('&nbsp');
+        t.classed('fa-fw', true).style('background-image', 'url(' + d.baseUrl + '/' + d.icon + ')').html('&nbsp');
       } else {
         t.text(d.name.substr(0, 1).toUpperCase());
       }

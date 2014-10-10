@@ -7,6 +7,8 @@ import datatypes = require('./datatype');
 import ranges = require('./range');
 import module_ = require('module');
 
+var config = module_.config();
+
 /**
  * basic interface of a plugin
  */
@@ -96,19 +98,17 @@ function parsePlugins(descs : any[]) {
       'module' : desc.name+'/main',
       factory: 'create',
       description: '',
-      version: '1.0'
+      version: '1.0',
+      baseUrl: config.baseUrl + '/' + desc.name
     },desc);
     desc.module = '../'+desc.module;
-    if (desc.icon) {
-      desc.icon = desc.name + '/' + desc.icon;
-    }
     desc.load = loadHelper(<IPluginDesc>desc);
     return <IPluginDesc>desc;
   });
 }
 
 //map to descriptions
-var plugins = parsePlugins(module_.config().plugins);
+var plugins = parsePlugins(config.plugins);
 
 /**
  * returns a list of matching plugin descs

@@ -30,6 +30,7 @@ require.config({
   config : {
     //plugin config
     'caleydo/plugin' : {
+      baseUrl : '/scripts',
       plugins: [
         {
           type: 'vis',
