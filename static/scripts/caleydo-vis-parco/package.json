@@ -18,9 +18,6 @@
       }
     ],
     "requirejs-config": {
-      "paths": {
-        "d3.parcoords": "${baseUrl}/d3.parcoords/index"
-      },
       "shim": {
         "d3.parcoords": {
           "deps": ["css!${baseUrl}/d3.parcoords-css/index", "d3"],
