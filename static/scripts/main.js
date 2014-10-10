@@ -53,20 +53,20 @@ require(['jquery', 'd3', './caleydo/data', './caleydo/plugin', './caleydo-window
    });*/
 
   function removeLink(vis) {
-    if (singletons.hasOwnProperty('links')) {
-      singletons.links.remove(vis);
+    if (singletons.hasOwnProperty('caleydo-links')) {
+      singletons['caleydo-links'].remove(vis);
     }
   }
 
   function addLink(vis) {
-    if (singletons.hasOwnProperty('links')) {
-      singletons.links.push(vis);
+    if (singletons.hasOwnProperty('caleydo-links')) {
+      singletons['caleydo-links'].push(vis);
     }
   }
 
   function updateLinks() {
-    if (singletons.hasOwnProperty('links')) {
-      singletons.links.update();
+    if (singletons.hasOwnProperty('caleydo-links')) {
+      singletons['caleydo-links'].update();
     }
   }
 
