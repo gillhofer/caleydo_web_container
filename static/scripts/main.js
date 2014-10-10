@@ -96,32 +96,48 @@ require(['jquery', 'd3', './caleydo/data', './caleydo/plugin', './caleydo-window
   data.list().then(function (list) {
     var b = d3.select(menu);
     b.append('span').text('Select Dataset: ');
-    var $select = b.append('select').attr('class', 'dataselector');
-    //for all inhomogeneous add them as extra columns, too
+    var $select = b.append('select').attr('class', 'dataselector')
 
-    list = d3.entries(list);
+    //for all inhomogeneous add them as extra columns, too
+    list = d3.entries(list).map(function(e) {
+      e.group = '_dataSets';
+      return e;
+    });
     list.forEach(function (entry) {
       if (entry.value.desc.type === 'table') {
         list.push.apply(list, entry.value.cols().map(function (col) {
           return {
-            key: entry.key + '.' + col.desc.name,
+            group: entry.value.desc.name,
+            key: col.desc.name,
             value : col
           };
         }));
       }
     });
-    list.unshift({});
-    var $options = $select.selectAll('option').data(list);
-    $options.enter().append('option').text(function (d) {
-      return d.value ? d.value.desc.name : '';
+    list.unshift({group : '_dataSets'});
+    var nest = d3.nest().key(function (d) {
+      return d.group;
+    }).entries(list);
+    var $options = $select.selectAll('optgroup').data(nest);
+    $options.enter().append('optgroup').attr('label', function (d) {
+      return d.key;
+    }).each(function (d) {
+      var $op = d3.select(this).selectAll('option').data(d.values);
+      $op.enter().append('option').text(function (d) {
+        return d.value ? d.value.desc.name : '';
+      });
     });
     $select.on('change', function () {
-      var i = $select.node().selectedIndex;
-      if (i <= 0) {
+      var n = $select.node();
+      var i = n.selectedIndex;
+      if (i < 0) {
         return;
       }
-      var l = list[i];
-      addIt(l.value);
+      var op = n.options[i];
+      var d = d3.select(op).data()[0];
+      if (d && d.value) {
+        addIt(d.value);
+      }
     });
   });
 });
