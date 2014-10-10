@@ -22,8 +22,18 @@ export interface IStatistics {
   skewness: number;
 }
 
+
 export interface IIterable<T> {
   forEach(callbackfn: (value: T) => void, thisArg?: any): void;
+}
+
+export interface IHistogram extends IIterable<number> {
+  bins: number;
+  largestFrequency : number;
+  count: number;
+  frequency(bin: number) : number;
+  binOf(value: any) : number;
+  missing: number;
 }
 
 
@@ -103,4 +113,103 @@ export function computeStats(arr: IIterable<number>) : IStatistics {
   var r = new Statistics();
   arr.forEach(r.push,r);
   return r;
+}
+
+export function hist(arr: IIterable<number>, bins: number, range: number[]) : IHistogram {
+  var r = new Histogram(bins, range);
+  arr.forEach(r.push, r);
+  return r;
+}
+
+export function categoricalHist(arr: IIterable<string>, categories: string[]) : IHistogram {
+  var r = new CatHistogram(categories);
+  arr.forEach(r.push, r);
+  return r;
+}
+
+class AHistogram implements IHistogram {
+  private bins_ : number[];
+  private missing_ : number = 0;
+
+  constructor(bins: number) {
+    this.bins_ = [];
+    for(var i = 0; i < bins; ++i) {
+      this.bins_.push(0);
+    }
+  }
+
+  get largestFrequency() {
+    return Math.max(Math.max.apply(Math,this.bins_), this.missing_);
+  }
+
+  get count() {
+    return this.bins_.reduce((p,s) => p+s, this.missing_);
+  }
+
+  get bins() {
+    return this.bins_.length;
+  }
+
+  binOf(value: any) {
+    return -1;
+  }
+
+  frequency(bin: number) {
+    return this.bins_[bin];
+  }
+
+  get missing() {
+    return this.missing_;
+  }
+
+  push(x: any) {
+    var bin = this.binOf(x);
+    if (bin < 0) {
+      this.missing_ ++;
+    } else {
+      this.bins_[bin]++;
+    }
+  }
+
+  forEach(callbackfn: (value: number) => void, thisArg?: any) {
+    return this.bins_.forEach(callbackfn, thisArg);
+  }
+}
+
+class Histogram extends AHistogram {
+  constructor(bins: number, private range: number[]) {
+    super(bins);
+  }
+
+  binOf(value: any) {
+    if (typeof value === 'number') {
+      return this.binOfImpl(<number>value);
+    }
+    return -1;
+  }
+
+  private binOfImpl(value: number) {
+    if (isNaN(value)) {
+      return -1;
+    }
+    var n = (value - this.range[0]) / (this.range[1] - this.range[0]);
+    var bin = Math.round(n * (this.bins - 1));
+    if (bin < 0) {
+      bin = 0;
+    }
+    if (bin >= this.bins) {
+      bin = this.bins - 1;
+    }
+    return bin;
+  }
+}
+
+class CatHistogram extends AHistogram {
+  constructor(private categories: string[]) {
+    super(categories.length);
+  }
+
+  binOf(value: any) {
+    return this.categories.indexOf(value);
+  }
 }

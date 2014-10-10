@@ -2,9 +2,9 @@
  * Created by Samuel Gratzl on 08.10.2014.
  */
 define(['exports', 'd3', '../caleydo/main', '../caleydo/d3util', 'css!./style'], function (exports, d3, C, utils) {
-  var h = 300, w = 50, shift = 10;
+  var h = 200, w = 200;
 
-  function Axis(data, parent, options) {
+  function Vis(data, parent, options) {
     this.data = data;
     this.options = C.mixin({
       tickSize: 2,
@@ -15,14 +15,14 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/d3util', 'css!./style'],
     this.node = this.build(d3.select(parent));
   }
 
-  Axis.prototype.locate = function (range) {
+  Vis.prototype.locate = function (range) {
     if (arguments.length === 1) {
       return this.locateImpl(range);
     }
     return C.all(C.argList(arguments).map(this.locateImpl, this));
   };
 
-  Axis.prototype.locateImpl = function (range) {
+  Vis.prototype.locateImpl = function (range) {
     var that = this;
     if (range.isAll || range.isNone) {
       var r = this.scale.range();
@@ -34,37 +34,7 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/d3util', 'css!./style'],
     });
   };
 
-  Axis.prototype.wrap = function (base) {
-    switch (this.options.orient) {
-    case 'left':
-      base.x = w - shift;
-      base.w = 0;
-      break;
-    case 'right':
-      base.x = shift;
-      base.w = 0;
-      break;
-    case 'top':
-      base.x = base.y;
-      base.w = base.h;
-      base.y = shift;
-      base.h = 0;
-      break;
-    case 'bottom':
-      base.x = base.y;
-      base.w = base.h;
-      base.y = h - shift;
-      base.h = 0;
-      break;
-    }
-    base.x -= this.options.r;
-    base.y -= this.options.r;
-    base.w += 2 * this.options.r;
-    base.h += 2 * this.options.r;
-    return base;
-  };
-
-  Axis.prototype.build = function ($parent) {
+  Vis.prototype.build = function ($parent) {
     var o = this.options;
     var $svg = $parent.append("svg").attr({
       width: w,
@@ -112,10 +82,10 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/d3util', 'css!./style'],
     });
     return $svg.node();
   };
-  exports.Axis = Axis;
+  exports.Pie = Vis;
 
   function create(data, parent, options) {
-    return new Axis(data, parent, options);
+    return new Vis(data, parent, options);
   }
 
   exports.create = create;

@@ -46,6 +46,8 @@ export interface IVector extends datatypes.IDataType {
   data(range?:ranges.Range) : C.IPromise<any[]>;
 
   stats() : C.IPromise<math.IStatistics>;
+
+  hist(bins? : number) : C.IPromise<math.IHistogram>;
 }
 
 
