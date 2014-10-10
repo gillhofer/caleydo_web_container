@@ -3,9 +3,8 @@
  */
 /* global define */
 define({
-  type: 'autoload',
-  name: 'links',
-  version: "0.0.1",
+  type: 'ui',
+  name: 'tooltip',
   dependencies: {
     d3: "~3.4.11"
   }

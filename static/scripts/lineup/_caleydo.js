@@ -1,21 +1,18 @@
 /**
  * Created by Samuel Gratzl on 09.10.2014.
  */
-/** global define */
+/* global define */
 define({
   type: 'vis',
   name: 'lineup',
-  version: "0.0.1",
+  version: '0.0.1',
   dependencies: {
-    d3: "~3.4.11",
-    lineupjs : "git@github.com:Caleydo/lineup.js.git#singlesvg"
+    d3: '~3.4.11',
+    lineupjs : 'git@github.com:Caleydo/lineup.js.git#singlesvg'
   },
-  "requirejs-config": {
-    paths: {
-      'lineupjs': '${basedir}/lineupjs/dist/LineUpJS'
-    },
+  'requirejs-config': {
     shim: {
-      'lineupjs': ['css!${basedir}/lineupjs/css/style']
+      lineupjs: ['css!${basedir}/lineupjs/css/style']
     }
   },
   size: function (dim) {

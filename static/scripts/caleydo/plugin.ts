@@ -5,7 +5,7 @@ import C = require('./caleydo');
 import require_ = require('require');
 import datatypes = require('./datatype');
 import ranges = require('./range');
-import plugindescs = require('caleydo-plugins-gen');
+import module_ = require('module');
 
 /**
  * basic interface of a plugin
@@ -93,7 +93,7 @@ function parsePlugins(descs : any[]) {
   return descs.map((desc) => {
     //provide some default values
     desc = C.mixin({
-      'module' : '../'+desc.name+'/index',
+      'module' : '../'+desc.name+'/main',
       factory: 'create',
       description: '',
       version: '1.0'
@@ -104,7 +104,7 @@ function parsePlugins(descs : any[]) {
 }
 
 //map to descriptions
-var plugins = parsePlugins(plugindescs.plugins);
+var plugins = parsePlugins(module_.config().plugins);
 
 /**
  * returns a list of matching plugin descs

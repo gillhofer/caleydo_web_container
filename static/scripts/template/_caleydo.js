@@ -1,7 +1,7 @@
 /**
  * Created by Samuel Gratzl on 09.10.2014.
  */
-/** global define */
+/* global define */
 define({
   type: 'vis',
   name: 'template',

@@ -225,4 +225,4 @@ define(["require", "exports", 'd3', '../caleydo/range', '../caleydo/caleydo'], f
     }
     exports.create = create;
 });
-//# sourceMappingURL=index.js.map
+//# sourceMappingURL=main.js.map
