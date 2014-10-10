@@ -8,8 +8,7 @@ var plugindir = 'static/scripts';
 var config_file = 'static/scripts/config-gen.js';
 var bower_file = 'bower.json';
 var bower_components_url = '/bower_components';
-var bower_components = require('.bowerrc').directory;
-var ignoredBoweredDependencies = [];
+var bower_components = 'static/bower_components';
 var metadata_file = '/package.json';
 
 var caleydo_plugins = [];
@@ -18,7 +17,7 @@ var requirejs_config = {
   paths: {},
   map: {
     '*': {
-      'css': '/${baseUrl}/require-css/css.js' // or whatever the path to require-css is
+      'css': '${baseUrl}/require-css/css.js' // or whatever the path to require-css is
     }
   },
   deps: ['./main'],
@@ -38,6 +37,7 @@ var bower_dependencies = {
   requirejs: '~2.1.8',
   'require-css': '~0.1.5'
 };
+var ignoredBoweredDependencies = ['requirejs', 'require-css'];
 
 //see https://github.com/vladmiller/dextend/blob/master/lib/dextend.js
 var TYPE_OBJECT = '[object Object]';
@@ -238,11 +238,11 @@ function addBowerRequireJSConfig(dir) {
       script = script[0]; //take the first one
       //TODO multiple support
     }
-    if (script && script.match(/.*\.js^/i)) {
-      value = bower_components_url + '/' + dir + '/' + script.substring(0, script.length - 2);
+    if (script && script.match(/.*\.js$/i)) {
+      value = bower_components_url + '/' + dir + '/' + script.substring(0, script.length - 3);
       requirejs_config.paths[dir] = value;
-    } else if (script && script.match(/.*\.css^/i)) {
-      value = requirejs_config.map['*'].css + '!' + bower_components_url + '/' + dir + '/' + script.substring(0, script.length - 3);
+    } else if (script && script.match(/.*\.css$/i)) {
+      value = requirejs_config.map['*'].css + '!' + bower_components_url + '/' + dir + '/' + script.substring(0, script.length - 4);
       requirejs_config.map['*'][dir] = value;
     }
     deferred.resolve(dir);
@@ -257,7 +257,12 @@ function deriveBowerRequireJSConfig() {
     var i = 0, l = files.length;
     function next() {
       if (i < l) {
-        addBowerRequireJSConfig(files[i++]).then(next);
+        var f = files[i++];
+        if (ignoredBoweredDependencies.indexOf(f) >= 0) {
+          next();
+        } else {
+          addBowerRequireJSConfig(f).then(next);
+        }
       } else {
         deferred.resolve(files);
       }
@@ -281,17 +286,13 @@ fs.readdir(plugindir, function (err, files) {
   function next() {
     if (i < l) {
       var f = files[i++];
-      if (ignoredBoweredDependencies.indexOf(f) >= 0) {
-        next();
-      } else {
-        fs.stat(plugindir + '/' + f, function (err, stats) {
-          if (stats.isDirectory()) {
-            addPlugin(f).then(next);
-          } else {
-            next();
-          }
-        });
-      }
+      fs.stat(plugindir + '/' + f, function (err, stats) {
+        if (stats.isDirectory()) {
+          addPlugin(f).then(next);
+        } else {
+          next();
+        }
+      });
     } else {
       createConfig();
     }
