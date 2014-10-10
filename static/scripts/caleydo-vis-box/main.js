@@ -46,7 +46,7 @@ define(['exports', 'd3', '../caleydo-tooltip/main', '../caleydo/main', 'css!./st
       'class': 'box'
     });
 
-    var s = this.scale = d3.scale.linear().range([0, w]).clamp(true);
+    var s = this.scale = d3.scale.linear().domain(this.data.desc.value.range).range([0, w]).clamp(true);
 
     $svg.append('path').attr({
       d: 'M0,0 L0,$ M0,§ L%,§ M%,0 L%,$'.replace(/%/g, w).replace(/\$/g, h).replace(/\§/g, h / 2),
@@ -54,8 +54,6 @@ define(['exports', 'd3', '../caleydo-tooltip/main', '../caleydo/main', 'css!./st
     });
 
     this.data.stats().then(function (stats) {
-      s.domain([stats.min, stats.max]);
-
       var text = createText(stats);
 
       $svg.append('rect').attr({

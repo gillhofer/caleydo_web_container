@@ -12,7 +12,7 @@
         "name": "Axis",
         "icon": "icon.svg",
         "size": [50, 300],
-        "filter": "eval!function (data) { return data.desc.type === 'vector' && data.desc.value.type === 'real'; }"
+        "filter": "eval!function (data) { return data.desc.type === 'vector' && (data.desc.value.type === 'real' || data.desc.value.type === 'int'); }"
       }
     ]
   }

@@ -48,7 +48,7 @@ export class HeatMap {
 
     var colScale = d3.scale.linear().domain([0, width]).range([0, 100]);
     var rowScale = d3.scale.linear().domain([0, height]).range([0, 100]);
-    var c = d3.scale.linear().domain([0, 1]).range(["black", "white"]);
+    var c = d3.scale.linear().domain((<any>this.data.desc).value.range).range(["black", "white"]);
     var data = this.data;
     data.data().then((arr) => {
       var $rows = $svg.selectAll("g").data(arr);

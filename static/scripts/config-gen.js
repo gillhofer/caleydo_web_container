@@ -63,7 +63,7 @@ require.config({
             50,
             300
           ],
-          "filter": function (data) { return data.desc.type === 'vector' && data.desc.value.type === 'real'; }
+          "filter": function (data) { return data.desc.type === 'vector' && (data.desc.value.type === 'real' || data.desc.value.type === 'int'); }
         },
         {
           "type": "vis",

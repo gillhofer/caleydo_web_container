@@ -15,6 +15,16 @@
     "names": "Universities"
   },
   {
+    "id": "country",
+    "name": "Country",
+    "names": "Countries"
+  },
+  {
+    "id": "artist",
+    "name": "Artist",
+    "names": "Artists"
+  },
+  {
     "id": "testh10x4_col",
     "internal": true,
     "name": "testh10x4 Columns"
