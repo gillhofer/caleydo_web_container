@@ -3,8 +3,8 @@
  */
 import C = require('./caleydo');
 import require_ = require('require');
-import datatypes = require('./caleydo-datatype');
-import ranges = require('./caleydo-range');
+import datatypes = require('./datatype');
+import ranges = require('./range');
 import plugindescs = require('caleydo-plugins-gen');
 
 /**

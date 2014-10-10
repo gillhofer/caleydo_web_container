@@ -4,14 +4,14 @@
 /// <reference path='../../../tsd.d.ts' />
 
 import d3 = require('d3');
-import matrix = require('../caleydo-matrix');
-import table = require('../caleydo-table');
-import vector = require('../caleydo-vector');
-import ranges = require('../caleydo-range');
-import geom = require('../caleydo-geom');
-import datatypes = require('../caleydo-datatype');
-import utils = require('../caleydo-d3utils');
-import C = require('../caleydo');
+import matrix = require('../caleydo/matrix');
+import table = require('../caleydo/table');
+import vector = require('../caleydo/vector');
+import ranges = require('../caleydo/range');
+import geom = require('../caleydo/geom');
+import datatypes = require('../caleydo/datatype');
+import utils = require('../caleydo/d3util');
+import C = require('../caleydo/caleydo');
 
 export class Table {
   public node:Element;

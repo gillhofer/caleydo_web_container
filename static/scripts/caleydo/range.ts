@@ -3,7 +3,7 @@
  */
 
 import C = require('./caleydo');
-import Iterator = require('./caleydo-iterator');
+import Iterator = require('./iterator');
 'use strict';
 
 export class RangeElem {

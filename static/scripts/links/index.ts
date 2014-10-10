@@ -4,9 +4,9 @@
 /// <reference path="../../../tsd.d.ts" />
 
 import d3 = require('d3');
-import geom = require('../caleydo-geom');
-import ranges = require('../caleydo-range');
-import C = require('../caleydo');
+import geom = require('../caleydo/geom');
+import ranges = require('../caleydo/range');
+import C = require('../caleydo/caleydo');
 
 var _id = 0, line = d3.svg.line().x((d) => d.x).y((d) => d.y);
 function nextID() {

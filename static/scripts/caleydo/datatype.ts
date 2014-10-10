@@ -4,9 +4,9 @@
 
 'use strict';
 import C = require('./caleydo');
-import events = require('./caleydo-events');
-import idtypes = require('./caleydo-idtypes');
-import ranges = require('./caleydo-range');
+import events = require('./event');
+import idtypes = require('./idtype');
+import ranges = require('./range');
 
 /**
  * basic description elements

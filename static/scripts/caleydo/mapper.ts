@@ -1,10 +1,10 @@
 /**
  * Created by Samuel Gratzl on 24.09.2014.
  */
-/// <reference path="../../tsd.d.ts" />
+/// <reference path="../../../tsd.d.ts" />
 import C = require('./caleydo');
-import idtypes = require('./caleydo-idtypes');
-import ranges = require('./caleydo-range');
+import idtypes = require('./idtype');
+import ranges = require('./range');
 import d3 = require('d3');
 'use strict';
 

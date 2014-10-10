@@ -4,11 +4,11 @@
 
 'use strict';
 import C = require('./caleydo');
-import ranges = require('./caleydo-range');
-import idtypes = require('./caleydo-idtypes');
-import datatypes = require('./caleydo-datatype');
-import events = require('./caleydo-events');
-import math = require('./caleydo-math');
+import ranges = require('./range');
+import idtypes = require('./idtype');
+import datatypes = require('./datatype');
+import events = require('./event');
+import math = require('./math');
 
 export interface IVector extends datatypes.IDataType {
   /**

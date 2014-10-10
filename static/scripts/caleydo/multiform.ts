@@ -4,10 +4,10 @@
 
 'use strict';
 import d3 = require('d3');
-import C = require('caleydo');
-import plugins = require('caleydo-plugins');
-import datatypes = require('caleydo-datatype');
-import events = require('caleydo-events');
+import C = require('./caleydo');
+import plugins = require('./plugin');
+import datatypes = require('./datatype');
+import events = require('./event');
 
 /**
  * a simple multi form class using a select to switch

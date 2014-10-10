@@ -3,8 +3,8 @@
  */
 
 import C = require('./caleydo');
-import events = require('./caleydo-events');
-import ranges = require('./caleydo-range');
+import events = require('./event');
+import ranges = require('./range');
 'use strict';
 
 var cache = {}, filledUp = false;

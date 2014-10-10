@@ -2,7 +2,7 @@
 * Created by Samuel Gratzl on 05.08.2014.
 */
 /// <reference path="../../../tsd.d.ts" />
-define(["require", "exports", 'd3', '../caleydo-range', '../caleydo'], function(require, exports, d3, ranges, C) {
+define(["require", "exports", 'd3', '../caleydo/range', '../caleydo/caleydo'], function(require, exports, d3, ranges, C) {
     var _id = 0, line = d3.svg.line().x(function (d) {
         return d.x;
     }).y(function (d) {

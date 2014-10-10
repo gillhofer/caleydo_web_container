@@ -2,8 +2,8 @@
  * Created by Samuel Gratzl on 08.10.2014.
  */
 import C = require('./caleydo');
-import idtypes = require('./caleydo-idtypes');
-import datatype = require('./caleydo-datatype');
+import idtypes = require('./idtype');
+import datatype = require('./datatype');
 import d3 = require('d3');
 'use strict';
 

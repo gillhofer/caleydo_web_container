@@ -4,11 +4,11 @@
 /// <reference path="../../../tsd.d.ts" />
 
 import d3 = require('d3');
-import matrix = require('../caleydo-matrix');
-import idtypes = require('../caleydo-idtypes')
-import geom = require('../caleydo-geom');
-import ranges = require('../caleydo-range');
-import C = require('../caleydo');
+import matrix = require('../caleydo/matrix');
+import idtypes = require('../caleydo/idtype')
+import geom = require('../caleydo/geom');
+import ranges = require('../caleydo/range');
+import C = require('../caleydo/caleydo');
 
 export class HeatMap {
   node:Element;

@@ -8,7 +8,7 @@ var __extends = this.__extends || function (d, b) {
   __.prototype = b.prototype;
   d.prototype = new __();
 };
-define(['exports', 'jquery', '../caleydo-events', '../caleydo', '../caleydo-geom', 'jquery-ui','font-awesome'], function (exports, $, events, C, geom) {
+define(['exports', 'jquery', '../caleydo/event', '../caleydo/caleydo', '../caleydo/geom', 'jquery-ui','font-awesome'], function (exports, $, events, C, geom) {
   var Window = (function (_super) {
     __extends(Window, _super);
     function makeDraggable($div, window) {

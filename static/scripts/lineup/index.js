@@ -1,7 +1,7 @@
 /**
  * Created by Marc Streit on 06.08.2014.
  */
-define(['exports', 'd3', '../caleydo', 'lineupjs', 'css!./style'], function (exports, d3, C, LineUpJS) {
+define(['exports', 'd3', '../caleydo/caleydo', 'lineupjs', 'css!./style'], function (exports, d3, C, LineUpJS) {
   function LineUp(data, parent) {
     this.data = data;
     this.parent = parent;

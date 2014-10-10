@@ -4,10 +4,10 @@
 
 'use strict';
 
-import C = require('./caleydo');
-import datatypes = require('./caleydo-datatype');
-import idtypes = require('./caleydo-idtypes');
-import ranges = require('./caleydo-range');
+import C = require('../caleydo/caleydo');
+import datatypes = require('../caleydo/datatype');
+import idtypes = require('../caleydo/idtype');
+import ranges = require('../caleydo/range');
 
 export class Template extends idtypes.SelectAble implements datatypes.IDataType {
   constructor(public desc: datatypes.IDataDescription) {

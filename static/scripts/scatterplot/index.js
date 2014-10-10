@@ -1,7 +1,7 @@
 /**
  * Created by Marc Streit on 06.08.2014.
  */
-define(['exports', 'd3', '../caleydo', '../tooltip/index', 'css!./style'], function (exports, d3, C, tooltip) {
+define(['exports', 'd3', '../caleydo/caleydo', '../tooltip/index', 'css!./style'], function (exports, d3, C, tooltip) {
   function ScatterPlot(data, parent) {
     this.data = data;
     this.parent = parent;

@@ -2,8 +2,8 @@
  * Created by Samuel Gratzl on 04.08.2014.
  */
 import C = require('./caleydo');
-import plugins = require('./caleydo-plugins');
-import datatypes = require('./caleydo-datatype');
+import plugins = require('./plugin');
+import datatypes = require('./datatype');
 'use strict';
 
 //find all datatype plugins
