@@ -93,11 +93,15 @@ function parsePlugins(descs : any[]) {
   return descs.map((desc) => {
     //provide some default values
     desc = C.mixin({
-      'module' : '../'+desc.name+'/main',
+      'module' : desc.name+'/main',
       factory: 'create',
       description: '',
       version: '1.0'
     },desc);
+    desc.module = '../'+desc.module;
+    if (desc.icon) {
+      desc.icon = desc.name + '/' + desc.icon;
+    }
     desc.load = loadHelper(<IPluginDesc>desc);
     return <IPluginDesc>desc;
   });
@@ -163,5 +167,6 @@ export function load(plugins: IPluginDesc[]) :C.IPromise<IPlugin[]> {
  * @returns {IPluginDesc[]}
  */
 export function listVis(data:datatypes.IDataType):IPluginDesc[] {
-  return list('vis').filter((desc: any) => (!desc.filter || desc.filter(data)));
+  //filter additionally with the filter attribute, which can be a function or the expected data type
+  return list('vis').filter((desc: any) => (!desc.filter || (C.isFunction(desc.filter) && desc.filter(data)) || (typeof desc.filter === 'string' && data.desc.type === desc.filter)));
 }

@@ -31,6 +31,8 @@ require(['jquery', 'd3', './caleydo/data', './caleydo/plugin', './window/main', 
    w.pos = [20, acc];
    if (typeof plugin.desc.size === 'function') {
    w.contentSize = plugin.desc.size(m.dim);
+   } else if (Array.isArray(plugin.desc.size)){
+   w.contentSize = plugin.dec.size;
    } else {
    w.contentSize = [200, 200];
    }

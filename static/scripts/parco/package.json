@@ -11,7 +11,7 @@
       {
         "type": "vis",
         "name": "heatmap",
-        "icon": "parco/icon.svg",
+        "icon": "icon.svg",
         "size": [360, 150],
         "filter": "table"
       }

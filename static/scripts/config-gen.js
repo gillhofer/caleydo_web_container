@@ -38,7 +38,7 @@ require.config({
            * icon of this vis type. Alternative: iconcss ... css class holding the icon
            * @default: none
            */
-          icon: 'heatmap/icon.svg',
+          icon: 'icon.svg',
           /**
            * optional function returning the expected size of the vis given the dimension (nrow,ncol) of the represented data
            * default unknown
@@ -54,9 +54,7 @@ require.config({
            * @param data
            * @returns {boolean}
            */
-          filter: function (data) {
-            return data.desc.type === 'matrix';
-          }
+          filter: 'matrix'
         },
         {
           type: 'vis',
@@ -68,30 +66,20 @@ require.config({
         {
           type: 'vis',
           name: 'parco',
-          icon: 'parco/icon.svg',
-          size: function (dim) {
-            return [360, 150];
-          },
-          filter: function (data) {
-            return data.desc.type === 'table';
-          }
+          icon: 'icon.svg',
+          size: [360, 150],
+          filter: 'table'
         },
         {
           type: 'vis',
           name: 'scatterplot',
-          size: function () {
-            return [300, 300 + 40];
-          },
-          filter: function (data) {
-            return data.desc.type === 'matrix';
-          }
+          size: [300, 340],
+          filter: 'matrix'
         },
         {
           type: 'vis',
           name: 'box',
-          size: function () {
-            return [300, 50];
-          },
+          size: [300, 50],
           filter: function (data) {
             return data.desc.type === 'vector' && (data.desc.value.type === 'real' || data.desc.value.type === 'int');
           }
@@ -99,10 +87,8 @@ require.config({
         {
           type: 'vis',
           name: 'axis',
-          icon: 'axis/icon.svg',
-          size: function () {
-            return [50, 300];
-          },
+          icon: 'icon.svg',
+          size: [50, 300],
           filter: function (data) {
             return data.desc.type === 'vector' && data.desc.value.type === 'real';
           }
@@ -113,9 +99,7 @@ require.config({
           size: function (dim) {
             return [Math.min(dim[1] * 100, 1000), Math.min(dim[0] * 20, 600)];
           },
-          filter: function (data) {
-            return data.desc.type === 'table';
-          }
+          filter: 'table'
         },
         //{ //template for adding a new vis
         //  type: 'vis', //plugin type
@@ -134,17 +118,17 @@ require.config({
         {
           type: 'datatype',
           name: 'matrix',
-          module: '../caleydo/matrix'
+          module: 'caleydo/matrix'
         },
         {
           type: 'datatype',
           name: 'table',
-          module: '../caleydo/table'
+          module: 'caleydo/table'
         },
         {
           type: 'datatype',
           name: 'vector',
-          module: '../caleydo/vector'
+          module: 'caleydo/vector'
         }
         //{ //template for adding a new data type
         //  type: 'datatype', //plugin type

@@ -67,8 +67,10 @@ export class MultiForm extends events.EventHandler implements plugins.IVisInstan
   get size() {
     var s = [200,200];
     var d : any = this.actDesc;
-    if (d && typeof d.size === 'function') {
+    if (d && C.isFunction(d.size)) {
       s = d.size(this.data.dim);
+    } else if (d && C.isArray(d.size)) {
+      s = d.size;
     }
     return s;
   }
