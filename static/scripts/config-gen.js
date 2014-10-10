@@ -24,9 +24,11 @@ require.config({
     'jquery-ui': ['css!/bower_components/jquery-ui/themes/smoothness/jquery-ui', 'jquery'],
     lineupjs: ['css!/bower_components/lineupjs/css/style', 'font-awesome']
   },
-  deps: ['./playground'],
+  //main file
+  deps: ['./main'],
 
   config : {
+    //plugin config
     'caleydo/plugin' : {
       plugins: [
         {

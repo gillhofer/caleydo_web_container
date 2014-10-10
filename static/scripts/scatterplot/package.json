@@ -1,0 +1,17 @@
+{
+  "name" : "scatterplot",
+  "version": "0.0.1",
+  "dependencies": {
+    "d3": "~3.4.11"
+  },
+  "caleydo" : {
+    "plugins": [
+      {
+        "type": "vis",
+        "name": "scatterplot",
+        "size": [300, 340],
+        "filter": "matrix"
+      }
+    ]
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "name" : "heatmap",
+  "version": "0.0.1",
+  "dependencies": {
+    "d3": "~3.4.11",
+    "jquery": "~1.10.2"
+  },
+  "caleydo" : {
+    "plugins": [
+      {
+        "type": "datatype",
+        "name": "matrix",
+        "module": "caleydo/matrix"
+      },
+      {
+        "type": "datatype",
+        "name": "table",
+        "module": "caleydo/table"
+      },
+      {
+        "type": "datatype",
+        "name": "vector",
+        "module": "caleydo/vector"
+      }
+    ]
+  }
+}

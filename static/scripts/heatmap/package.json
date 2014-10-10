@@ -1,0 +1,18 @@
+{
+  "name" : "heatmap",
+  "version": "0.0.1",
+  "dependencies": {
+    "d3": "~3.4.11"
+  },
+  "caleydo" : {
+    "plugins": [
+      {
+        "type": "vis",
+        "name": "heatmap",
+        "icon": "heatmap/icon.svg",
+        "size": "eval!function (dim) { return [dim[1] * 10, dim[0] * 10]; }",
+        "filter": "matrix"
+      }
+    ]
+  }
+}

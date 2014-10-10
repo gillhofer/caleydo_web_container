@@ -1,0 +1,16 @@
+{
+  "name" : "table",
+  "version": "0.0.1",
+  "dependencies": {
+    "d3": "~3.4.11"
+  },
+  "caleydo" : {
+    "plugins": [
+      {
+        "type": "vis",
+        "name": "table",
+        "size": "eval!function (dim) { return [dim[1] * 110, dim[0] * 22]; }"
+      }
+    ]
+  }
+}
