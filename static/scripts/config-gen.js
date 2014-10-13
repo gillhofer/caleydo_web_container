@@ -85,6 +85,16 @@ require.config({
         },
         {
           "type": "vis",
+          "id": "caleydo-vis-histogram",
+          "name": "Histogram",
+          "size": [
+            200,
+            100
+          ],
+          "filter": "vector"
+        },
+        {
+          "type": "vis",
           "id": "caleydo-vis-lineup",
           "name": "LineUp",
           "size": function (dim) { return [Math.min(dim[1] * 100, 1000), Math.min(dim[0] * 20, 600)]; },
@@ -106,8 +116,8 @@ require.config({
           "id": "caleydo-vis-pie",
           "name": "Pie",
           "size": [
-            200,
-            200
+            100,
+            100
           ],
           "filter": function (data) { return data.desc.type === 'vector' && (data.desc.value.type === 'categorical'); }
         },

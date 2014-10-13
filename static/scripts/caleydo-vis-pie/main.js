@@ -6,7 +6,7 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-too
   function Vis(data, parent, options) {
     this.data = data;
     this.options = C.mixin({
-      radius: 100,
+      radius: 50,
       innerRadius: 0
     }, options);
     this.parent = parent;
@@ -77,12 +77,15 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-too
 
     this.data.hist().then(function (hist) {
       that.hist = hist;
-      scale.domain([0, hist.count]);
+      var total = hist.count;
+      scale.domain([0, total]);
       var hist_data = that.hist_data = [], prev = 0, cats = that.data.desc.value.categories;
       hist.forEach(function (b, i) {
         hist_data[i] = {
           name: (typeof cats[i] === 'string') ? cats[i] : cats[i].name,
           start: prev,
+          size: b,
+          ratio: b / total,
           end: prev + b,
           color: (cats[i].color === undefined) ? cols(i) : cats[i].color,
           range: hist.range(i)
@@ -93,7 +96,7 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-too
       $m.enter()
         .append('path')
         .call(tooltip.bind(function (d) {
-          return d.name;
+          return d.name + ' ' + (d.size) + ' entries (' + Math.round(d.ratio * 100) + '%)';
         }))
         .on('click', function (d) {
           data.select(0, d.range, idtypes.toSelectOperation(d3.event));

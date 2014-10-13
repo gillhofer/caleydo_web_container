@@ -1,0 +1,18 @@
+{
+  "name" : "caleydo-vis-histogram",
+  "version": "0.0.1",
+  "dependencies": {
+    "d3": "~3.4.11"
+  },
+  "caleydo" : {
+    "plugins": [
+      {
+        "type": "vis",
+        "id": "caleydo-vis-histogram",
+        "name": "Histogram",
+        "size": [200, 100],
+        "filter": "vector"
+      }
+    ]
+  }
+}
