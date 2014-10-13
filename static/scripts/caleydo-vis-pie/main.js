@@ -2,14 +2,12 @@
  * Created by Samuel Gratzl on 08.10.2014.
  */
 define(['exports', 'd3', '../caleydo/main', '../caleydo/d3util', 'css!./style'], function (exports, d3, C, utils) {
-  var h = 200, w = 200;
 
   function Vis(data, parent, options) {
     this.data = data;
     this.options = C.mixin({
-      tickSize: 2,
-      orient: 'left',
-      r: 2
+      radius: 100,
+      innerRadius: 0
     }, options);
     this.parent = parent;
     this.node = this.build(d3.select(parent));
@@ -23,63 +21,56 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/d3util', 'css!./style'],
   };
 
   Vis.prototype.locateImpl = function (range) {
-    var that = this;
+    var that = this, o = this.options;
     if (range.isAll || range.isNone) {
-      var r = this.scale.range();
-      return C.resolved(that.wrap({ y: r[0], h: r[1] - r[0] }));
+      return C.resolved({ x: o.radius, y: o.radius, radius: o.radius});
     }
     return this.data.data(range).then(function (data) {
-      var ex = d3.extent(data, that.scale);
-      return that.wrap({ y: ex[0], h: ex[1] - ex[0] });
+      var ex = d3.extent(data, function (value) {
+        return that.hist.binOf(value);
+      });
+      //FIXME
+      return that.wrap({ x: o.radius, y: o.radius, radius: o.radius});
     });
   };
 
   Vis.prototype.build = function ($parent) {
-    var o = this.options;
+    var o = this.options, that = this;
     var $svg = $parent.append("svg").attr({
-      width: w,
-      height: h,
-      'class': 'axis'
+      width: o.radius * 2,
+      height: o.radius * 2,
+      'class': 'pie',
+      transform: 'translate(' + o.radius + ',' + o.radius + ')'
     });
-    var $axis = $svg.append('g').attr('class', 'makeover');
-    var $points = $svg.append('g');
-    var s = this.scale = d3.scale.linear().domain(this.data.desc.value.range).range([shift, ((o.orient === 'left' || o.orient === 'right') ? h : w) - shift]).clamp(true);
-    var axis = d3.svg.axis()
-      .tickSize(o.tickSize)
-      .orient(o.orient)
-      .scale(s);
 
-    switch (o.orient) {
-    case 'left':
-      $points.attr('transform', 'translate(' + (w - shift) + ',0)');
-      $axis.attr('transform', 'translate(' + (w - shift) + ',0)');
-      break;
-    case 'right':
-      $points.attr('transform', 'translate(' + shift + ',0)');
-      $axis.attr('transform', 'translate(' + shift + ',0)');
-      break;
-    case 'top':
-      $points.attr('transform', 'translate(0, ' + shift + ')');
-      $axis.attr('transform', 'translate(0,' + shift + ')');
-      break;
-    case 'bottom':
-      $points.attr('transform', 'translate(0, ' + (h - shift) + ')');
-      $axis.attr('transform', 'translate(0,' + (h - shift) + ')');
-      break;
-    }
-    $axis.call(axis);
+    var scale = that.scale = d3.scale.linear().range([0, 2 * Math.PI]);
+    var col = d3.scale.category10();
+    var arc = d3.svg.arc().innerRadius(o.innerRadius).outerRadius(o.radius)
+      .startAngle(function (d) {
+        return scale(d.start);
+      })
+      .endAngle(function (d) {
+        return scale(d.end);
+      });
 
-    var onClick = utils.selectionUtil(this.data, $points, 'circle');
-
-    var cxy = (o.orient === 'left' || o.orient === 'right') ? 'cy' : 'cx';
-    this.data.data().then(function (data) {
-      var $p = $points.selectAll('circle').data(data);
-      $p.enter().append('circle').attr('r', o.r).on('click', onClick);
-      $p.exit().remove();
-      $p.attr(cxy, function (d) {
-        return s(d);
+    this.data.hist().then(function (hist) {
+      that.hist = hist;
+      scale.domain([0, hist.count]);
+      var data = that.data = [], prev = 0;
+      hist.forEach(function (b, i) {
+        data[i] = {
+          start: prev,
+          end: prev + b
+        };
+        prev += b;
+      });
+      var $m = $svg.selectAll('path').data(data);
+      $m.enter().append('path');
+      $m.attr('d', arc).attr('fill', function (d, i) {
+        return col(i);
       });
     });
+
     return $svg.node();
   };
   exports.Pie = Vis;

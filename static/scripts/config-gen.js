@@ -2,8 +2,8 @@
 require.config({
   "baseUrl": "/scripts",
   "paths": {
-    "d3.parcoords": "/bower_components/d3.parcoords/index",
     "d3": "/bower_components/d3/d3",
+    "d3.parcoords": "/bower_components/d3.parcoords/index",
     "jquery": "/bower_components/jquery/jquery",
     "jquery-ui": "/bower_components/jquery-ui/ui/jquery-ui",
     "lineupjs": "/bower_components/lineupjs/dist/LineUpJS",
@@ -100,6 +100,16 @@ require.config({
             150
           ],
           "filter": "table"
+        },
+        {
+          "type": "vis",
+          "id": "caleydo-vis-pie",
+          "name": "Pie",
+          "size": [
+            200,
+            200
+          ],
+          "filter": function (data) { return data.desc.type === 'vector' && (data.desc.value.type === 'categorical'); }
         },
         {
           "type": "vis",
