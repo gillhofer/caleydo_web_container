@@ -160,7 +160,7 @@ export class VectorBase extends idtypes.SelectAble {
     return this.data().then((d) => {
       switch(v.type) {
       case 'categorical':
-          return math.categoricalHist(d, v.categories);
+          return math.categoricalHist(d, v.categories.map((d) => typeof d === 'string' ? d : d.name));
       case 'real':
       case 'int':
         return math.hist(d, bins ? bins : Math.round(Math.sqrt(this.length)), v.range);

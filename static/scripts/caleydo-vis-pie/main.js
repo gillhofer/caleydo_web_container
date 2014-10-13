@@ -1,7 +1,7 @@
 /**
  * Created by Samuel Gratzl on 08.10.2014.
  */
-define(['exports', 'd3', '../caleydo/main', '../caleydo/d3util', 'css!./style'], function (exports, d3, C, utils) {
+define(['exports', 'd3', '../caleydo/main', '../caleydo/d3util', '../caleydo-tooltip/main', 'css!./style'], function (exports, d3, C, utils, tooltip) {
 
   function Vis(data, parent, options) {
     this.data = data;
@@ -39,12 +39,11 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/d3util', 'css!./style'],
     var $svg = $parent.append("svg").attr({
       width: o.radius * 2,
       height: o.radius * 2,
-      'class': 'pie',
-      transform: 'translate(' + o.radius + ',' + o.radius + ')'
+      'class': 'pie'
     });
+    var $base = $svg.append('g').attr('transform', 'translate(' + o.radius + ',' + o.radius + ')');
 
     var scale = that.scale = d3.scale.linear().range([0, 2 * Math.PI]);
-    var col = d3.scale.category10();
     var arc = d3.svg.arc().innerRadius(o.innerRadius).outerRadius(o.radius)
       .startAngle(function (d) {
         return scale(d.start);
@@ -52,22 +51,27 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/d3util', 'css!./style'],
       .endAngle(function (d) {
         return scale(d.end);
       });
+    var cols = d3.scale.category10();
 
     this.data.hist().then(function (hist) {
       that.hist = hist;
       scale.domain([0, hist.count]);
-      var data = that.data = [], prev = 0;
+      var data = that.hist_data = [], prev = 0, cats = that.data.desc.value.categories;
       hist.forEach(function (b, i) {
         data[i] = {
+          name: ( typeof cats[i] === 'string') ? cats[i] : cats[i].name,
           start: prev,
-          end: prev + b
+          end: prev + b,
+          color: ( typeof cats[i].color === 'undefined') ? cols(i) : cats[i].color
         };
         prev += b;
       });
-      var $m = $svg.selectAll('path').data(data);
-      $m.enter().append('path');
-      $m.attr('d', arc).attr('fill', function (d, i) {
-        return col(i);
+      var $m = $base.selectAll('path').data(data);
+      $m.enter().append('path').call(tooltip.bind(function (d) {
+        return d.name;
+      }));
+      $m.attr('d', arc).attr('fill', function (d) {
+        return d.color;
       });
     });
 
