@@ -171,31 +171,41 @@ export function argList(args:IArguments) {
  * @param node
  * @param callback
  */
-export function onDOMNodeRemoved(s: Element[], callback: () => void);
+export function onDOMNodeRemoved(s: Element[], callback: () => void, thisArg?  : any);
 /**
  * utility function to get notified, when the given dom element is removed from its parent
  * @param node
  * @param callback
  */
-export function onDOMNodeRemoved(node: Element, callback: () => void);
+export function onDOMNodeRemoved(node: Element, callback: () => void, thisArg?  : any);
 /**
  * utility function to get notified, when the given dom element is removed from its parent
  * @param node
  * @param callback
  */
-export function onDOMNodeRemoved(node: any, callback: () => void) {
-  var arr : any[];
+export function onDOMNodeRemoved(node: any, callback: () => void, thisArg? : any) {
+  var arr : any[], body = document.getElementsByTagName('body')[0];
   if (!isArray(node)) {
     arr = [node];
   } else {
     arr = <any[]>node;
   }
   arr.forEach((n) => {
-    n.addEventListener('DOMNodeRemoved', (evt) => {
+    function l(evt) {
       //since this event bubbles check if it the right node
-      if (evt.target == n) {
-        callback.call(this, evt);
+      var act = n;
+      while (act) { //check if node or its parent are removed
+        if (evt.target === act) {
+          node = null;
+          n.removeEventListener('DOMNodeRemoved', l);
+          body.removeEventListener('DOMNodeRemoved', l);
+          callback.call(thisArg, n);
+          return;
+        }
+        n = n.parentNode;
       }
-    });
+    }
+    n.addEventListener('DOMNodeRemoved', l);
+    body.addEventListener('DOMNodeRemoved', l);
   });
 }
