@@ -68,6 +68,7 @@ export interface IPlugin {
 }
 
 export interface IVisInstance {
+  node: Element;
   data: datatypes.IDataType;
   locate(...range: ranges.Range[]): C.IPromise<any>;
 }

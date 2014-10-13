@@ -4,13 +4,14 @@
 /// <reference path="../../../tsd.d.ts" />
 
 import d3 = require('d3');
+import plugins = require('../caleydo/plugin');
 import matrix = require('../caleydo/matrix');
 import idtypes = require('../caleydo/idtype')
 import geom = require('../caleydo/geom');
 import ranges = require('../caleydo/range');
 import C = require('../caleydo/main');
 
-export class HeatMap {
+export class HeatMap implements plugins.IVisInstance {
   node:Element;
 
   constructor(public data:matrix.IMatrix, public parent:Element) {

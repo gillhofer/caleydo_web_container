@@ -422,6 +422,25 @@ class ProjectedVector extends vector.VectorBase implements vector.IVector {
       return d.map(this.f, this.this_f);
     });
   }
+
+  sort(compareFn?: (a: any, b: any) => number, thisArg?: any): C.IPromise<vector.IVector> {
+    return this.data().then((d) => {
+      var indices = C.argSort(d, compareFn, thisArg);
+      return this.view(ranges.list(indices));
+    });
+  }
+
+  map<U>(callbackfn: (value: any, index: number) => U, thisArg?: any): C.IPromise<vector.IVector> {
+    //FIXME
+    return null;
+  }
+
+  filter(callbackfn: (value: any, index: number) => boolean, thisArg?: any): C.IPromise<vector.IVector> {
+    return this.data().then((d) => {
+      var indices = C.argFilter(d, callbackfn, thisArg);
+      return this.view(ranges.list(indices));
+    });
+  }
 }
 
 /**
