@@ -31,8 +31,14 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-too
       var ex = d3.extent(data, function (value) {
         return that.hist.binOf(value);
       });
-      //FIXME
-      return C.resolved({ x: o.radius, y: o.radius, radius: o.radius});
+      var h0 = that.hist_data[ex[0]];
+      var h1 = that.hist_data[ex[1]];
+      return C.resolved({
+        x: that.xscale(ex[0]),
+        width: (that.xscale(ex[1]) - that.xscale(ex[0]) + that.xscale.rangeBand()),
+        height: that.yscale(Math.max(h0.v, h1.v)),
+        y: that.yscale(that.yscale.domain()[1] - Math.max(h0.v, h1.v))
+      });
     });
   };
 
@@ -88,6 +94,7 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-too
     var $data = $svg.append('g');
     var $highlight = $svg.append('g').style('pointer-events', 'none').classed('select-selected', true);
 
+    //using range bands with an ordinal scale for uniform distribution
     var xscale = that.xscale = d3.scale.ordinal().rangeBands([0, o.width], 0.1);
     var yscale = that.yscale = d3.scale.linear().range([0, o.height]);
 
