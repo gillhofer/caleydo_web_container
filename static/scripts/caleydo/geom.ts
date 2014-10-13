@@ -2,6 +2,8 @@
  * Created by Samuel Gratzl on 08.10.2014.
  */
 
+import C = require('./main');
+
 export interface IVec2 {
   x: number;
   y: number;
@@ -18,8 +20,15 @@ CORNER['W']  = CORNER[6] = 'w';
 CORNER['NW'] = CORNER[7] = 'nw';
 
 
-
+/**
+ * a simple basic shape
+ */
 export class AShape {
+  /**
+   * shift the shape by the given amount
+   * @param x
+   * @param y
+   */
   shift(x:number, y:number) : AShape;
   shift(xy:IVec2) : AShape;
   shift(xy: number[]) : AShape;
@@ -34,6 +43,10 @@ export class AShape {
     return this;
   }
 
+  /**
+   * center of this shape
+   * @returns {Circle}
+   */
   get center() {
     return this.bs();
   }
@@ -45,6 +58,11 @@ export class AShape {
     throw new Error('not implemented');
   }
 
+  /**
+   * a specific corner of th axis aligned bounding box
+   * @param corner
+   * @returns {IVec2}
+   */
   corner(corner: string) : IVec2 {
     var r = this.aabb();
     switch(corner) {
@@ -80,6 +98,9 @@ export class AShape {
   }
 }
 
+/**
+ * a simple bounding rect
+ */
 export class Rect extends AShape {
   constructor(public x = 0, public y = 0, public w = 0, public h = 0) {
     super();
@@ -158,11 +179,90 @@ export class Circle extends AShape {
   }
 }
 
+export class Polygon extends AShape {
+  constructor(private points : IVec2[] = []) {
+    super();
+  }
+
+  push(x: number, y: number);
+  push(...points: IVec2[]);
+  push() {
+    if (arguments.length == 2 && typeof arguments[0] === 'number') {
+      this.points.push({ x: arguments[0], y : arguments[1]});
+    } else {
+      this.points.push.apply(this.points, <IVec2[]>C.argList(arguments));
+    }
+  }
+
+  toString() {
+    return 'Polygon(' + this.points.join(',')+')';
+  }
+
+  shiftImpl(x, y) {
+    this.points.forEach((p) => {
+      p.x += x;
+      p.y += y;
+    });
+  }
+
+  get length() {
+    return this.points.length;
+  }
+
+  aabb() : Rect {
+    var min_x = Number.POSITIVE_INFINITY, min_y = Number.POSITIVE_INFINITY, max_x = Number.NEGATIVE_INFINITY, max_y = Number.NEGATIVE_INFINITY;
+    this.points.forEach((p) => {
+      if (p.x < min_x) {
+        min_x = p.x;
+      }
+      if (p.y < min_y) {
+        min_y = p.y;
+      }
+      if (p.x > max_x) {
+        max_x = p.x;
+      }
+      if (p.y > max_y) {
+        max_y = p.y;
+      }
+    });
+    return rect(min_x, min_y, max_x - min_x, max_y - min_y);
+  }
+
+  bs() : Circle {
+    var mean_x = 0, mean_y = 0;
+    this.points.forEach((p) => {
+      mean_x += p.x;
+      mean_y += p.y;
+    });
+    mean_x /= this.length;
+    mean_y /= this.length;
+    //TODO better polygon center
+    var radius = 0;
+    this.points.forEach((p) => {
+      var dx = p.x - mean_x;
+      var dy = p.y - mean_y;
+      var d = dx*dx + dy*dy;
+      if (d > radius) {
+        radius = d;
+      }
+    });
+    return circle(mean_x, mean_y, Math.sqrt(radius));
+  }
+}
+
 export function rect(x:number, y:number, w:number, h:number) {
   return new Rect(x, y, w, h);
 }
 export function circle(x:number, y:number, radius:number) {
   return new Circle(x, y, radius);
+}
+export function polygon(...points : IVec2[]);
+export function polygon(points : IVec2[]);
+export function polygon() {
+  if (C.isArray(arguments[0])) {
+    return new Polygon(arguments[0]);
+  }
+  return new Polygon(C.argList(arguments));
 }
 
 export function wrap(obj: any): AShape {
@@ -182,6 +282,9 @@ export function wrap(obj: any): AShape {
     if (obj.hasOwnProperty('width') && obj.hasOwnProperty('height')) {
       return rect(obj.x, obj.y, obj.width, obj.height);
     }
+  }
+  if (C.isArray(obj) && obj.length > 0 && obj[0].hasOwnProperty('x') && obj[0].hasOwnProperty('y')) {
+    return polygon(obj);
   }
   return obj; //can't derive it, yet
 }

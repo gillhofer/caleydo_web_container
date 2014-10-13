@@ -1,7 +1,7 @@
 /**
  * Created by Samuel Gratzl on 08.10.2014.
  */
-define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-tooltip/main'], function (exports, d3, C, idtypes, tooltip) {
+define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo/geom', '../caleydo-tooltip/main'], function (exports, d3, C, idtypes, geom, tooltip) {
 
   function Vis(data, parent, options) {
     this.data = data;
@@ -20,6 +20,19 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-too
     return C.all(C.argList(arguments).map(this.locateImpl, this));
   };
 
+  function toPolygon(start, end, radius) {
+    var r = [
+      { x: radius, y: radius },
+      { x: radius + Math.cos(start) * radius, y: radius + Math.sin(start) * radius },
+      { x: radius + Math.cos(end) * radius, y: radius + Math.sin(end) * radius }
+    ];
+    //approximate by triangle
+    if (end - start > Math.PI) { //more than 180 degree use one more point
+      r.splice(2, 0, { x: radius + Math.cos((end - start) * 0.5) * radius, y: radius + Math.sin((end - start) * 0.5) * radius });
+    }
+    return geom.polygon(r);
+  }
+
   Vis.prototype.locateImpl = function (range) {
     var that = this, o = this.options;
     if (range.isAll || range.isNone) {
@@ -29,8 +42,9 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-too
       var ex = d3.extent(data, function (value) {
         return that.hist.binOf(value);
       });
-      //FIXME
-      return C.resolved({ x: o.radius, y: o.radius, radius: o.radius});
+      var startAngle = that.scale(that.hist_data[ex[0]].start);
+      var endAngle = that.scale(that.hist_data[ex[1]].end);
+      return C.resolved(toPolygon(startAngle, endAngle, o.radius));
     });
   };
 
