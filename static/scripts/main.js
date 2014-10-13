@@ -96,10 +96,10 @@ require(['jquery', 'd3', './caleydo/data', './caleydo/plugin', './caleydo-window
   data.list().then(function (list) {
     var b = d3.select(menu);
     b.append('span').text('Select Dataset: ');
-    var $select = b.append('select').attr('class', 'dataselector')
+    var $select = b.append('select').attr('class', 'dataselector');
 
     //for all inhomogeneous add them as extra columns, too
-    list = d3.entries(list).map(function(e) {
+    list = d3.entries(list).map(function (e) {
       e.group = '_dataSets';
       return e;
     });
@@ -109,12 +109,12 @@ require(['jquery', 'd3', './caleydo/data', './caleydo/plugin', './caleydo-window
           return {
             group: entry.value.desc.name,
             key: col.desc.name,
-            value : col
+            value: col
           };
         }));
       }
     });
-    list.unshift({group : '_dataSets'});
+    list.unshift({group: '_dataSets'});
     var nest = d3.nest().key(function (d) {
       return d.group;
     }).entries(list);
@@ -138,6 +138,7 @@ require(['jquery', 'd3', './caleydo/data', './caleydo/plugin', './caleydo-window
       if (d && d.value) {
         addIt(d.value);
       }
+      n.selectedIndex = 0;
     });
   });
 });
