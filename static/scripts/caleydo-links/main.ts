@@ -150,12 +150,13 @@ export class LinksRenderer {
     }
 
     function addLinks(entry) {
-      if (entry.visses.length <= 1) { //no links between single items
+      var $group = this.$svg.select('g[data-idtype="' + entry.idtype.name + '"]');
+      if (entry.visses.length <= 1) { //no links between single item
+        $group.selectAll('*').remove();
         return;
       }
       //collect all links
       var selected = entry.idtype.selections();
-      var $group = this.$svg.select('g[data-idtype="' + entry.idtype.name + '"]');
       if (selected.isNone) {
         $group.selectAll('*').remove();
         return;
