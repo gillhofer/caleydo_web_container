@@ -2,6 +2,7 @@
  * Created by Samuel Gratzl on 29.08.2014.
  */
 
+import ranges = require('./range');
 /**
  * simple number statistics similar to DoubleStatistics in Caleydo
  * TODO use a standard library for that
@@ -31,9 +32,14 @@ export interface IHistogram extends IIterable<number> {
   bins: number;
   largestFrequency : number;
   count: number;
+
   frequency(bin: number) : number;
+  range(bin: number): ranges.Range;
+
   binOf(value: any) : number;
+
   missing: number;
+  missingRange: ranges.Range;
 }
 
 
@@ -115,21 +121,23 @@ export function computeStats(arr: IIterable<number>) : IStatistics {
   return r;
 }
 
-export function hist(arr: IIterable<number>, bins: number, range: number[]) : IHistogram {
+export function hist(arr: IIterable<number>, indices: ranges.Range1D, bins: number, range: number[]) : IHistogram {
   var r = new Histogram(bins, range);
-  arr.forEach(r.push, r);
+  r.pushAll(arr, indices);
   return r;
 }
 
-export function categoricalHist(arr: IIterable<string>, categories: string[]) : IHistogram {
+export function categoricalHist(arr: IIterable<string>, indices: ranges.Range1D, categories: string[]) : IHistogram {
   var r = new CatHistogram(categories);
-  arr.forEach(r.push, r);
+  r.pushAll(arr, indices);
   return r;
 }
 
 class AHistogram implements IHistogram {
   private bins_ : number[];
   private missing_ : number = 0;
+  private ranges_ : ranges.Range[];
+  private missingRange_  = ranges.none();
 
   constructor(bins: number) {
     this.bins_ = [];
@@ -158,26 +166,46 @@ class AHistogram implements IHistogram {
     return this.bins_[bin];
   }
 
+  range(bin:number) {
+    return this.ranges_[bin];
+  }
+
   get missing() {
     return this.missing_;
   }
 
-  push(x: any) {
-    var bin = this.binOf(x);
-    if (bin < 0) {
-      this.missing_ ++;
-    } else {
-      this.bins_[bin]++;
-    }
+  get missingRange() {
+    return this.missingRange_;
   }
 
-  forEach(callbackfn: (value: number) => void, thisArg?: any) {
+  pushAll(arr: IIterable<any>, indices: ranges.Range1D) {
+    var it = indices.iter();
+    var binindex = [], missingindex = [];
+    for(var i = this.bins-1; i>=0; --i) {
+      binindex.push([]);
+    }
+    arr.forEach((x) => {
+      var index = it.next();
+      var bin = this.binOf(x);
+      if (bin < 0) {
+        this.missing_ ++;
+        missingindex.push(index);
+      } else {
+        this.bins_[bin]++;
+        binindex[bin].push(index);
+      }
+    });
+    this.ranges_ = binindex.map((d) => ranges.list(d.sort()));
+    this.missingRange_ = ranges.list(missingindex.sort());
+  }
+
+  forEach(callbackfn: (value: number, index: number) => void, thisArg?: any) {
     return this.bins_.forEach(callbackfn, thisArg);
   }
 }
 
 class Histogram extends AHistogram {
-  constructor(bins: number, private range: number[]) {
+  constructor(bins: number, private r: number[]) {
     super(bins);
   }
 
@@ -192,7 +220,7 @@ class Histogram extends AHistogram {
     if (isNaN(value)) {
       return -1;
     }
-    var n = (value - this.range[0]) / (this.range[1] - this.range[0]);
+    var n = (value - this.r[0]) / (this.r[1] - this.r[0]);
     var bin = Math.round(n * (this.bins - 1));
     if (bin < 0) {
       bin = 0;

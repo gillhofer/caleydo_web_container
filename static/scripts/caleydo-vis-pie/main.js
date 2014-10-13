@@ -1,7 +1,7 @@
 /**
  * Created by Samuel Gratzl on 08.10.2014.
  */
-define(['exports', 'd3', '../caleydo/main', '../caleydo/d3util', '../caleydo-tooltip/main', 'css!./style'], function (exports, d3, C, utils, tooltip) {
+define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-tooltip/main'], function (exports, d3, C, idtypes, tooltip) {
 
   function Vis(data, parent, options) {
     this.data = data;
@@ -30,18 +30,20 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/d3util', '../caleydo-too
         return that.hist.binOf(value);
       });
       //FIXME
-      return that.wrap({ x: o.radius, y: o.radius, radius: o.radius});
+      return C.resolved({ x: o.radius, y: o.radius, radius: o.radius});
     });
   };
 
   Vis.prototype.build = function ($parent) {
-    var o = this.options, that = this;
+    var o = this.options, that = this, data = this.data;
     var $svg = $parent.append("svg").attr({
       width: o.radius * 2,
       height: o.radius * 2,
       'class': 'pie'
     });
     var $base = $svg.append('g').attr('transform', 'translate(' + o.radius + ',' + o.radius + ')');
+    var $data = $base.append('g');
+    var $highlight = $base.append('g').style('pointer-events', 'none').classed('select-selected', true);
 
     var scale = that.scale = d3.scale.linear().range([0, 2 * Math.PI]);
     var arc = d3.svg.arc().innerRadius(o.innerRadius).outerRadius(o.radius)
@@ -53,25 +55,56 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/d3util', '../caleydo-too
       });
     var cols = d3.scale.category10();
 
+    var l = function (event, type, selected) {
+      var highlights = that.hist_data.map(function (entry) {
+        var s = entry.range.intersect(selected);
+        return {
+          start: entry.start,
+          end: entry.start + s.size()[0]
+        };
+      }).filter(function (entry) {
+        return entry.start < entry.end;
+      });
+      var $m = $highlight.selectAll('path').data(highlights);
+      $m.enter().append('path');
+      $m.exit().remove();
+      $m.attr('d', arc);
+    };
+    data.on('select', l);
+    C.onDOMNodeRemoved($data.node(), function () {
+      data.off('select', l);
+    });
+
     this.data.hist().then(function (hist) {
       that.hist = hist;
       scale.domain([0, hist.count]);
-      var data = that.hist_data = [], prev = 0, cats = that.data.desc.value.categories;
+      var hist_data = that.hist_data = [], prev = 0, cats = that.data.desc.value.categories;
       hist.forEach(function (b, i) {
-        data[i] = {
-          name: ( typeof cats[i] === 'string') ? cats[i] : cats[i].name,
+        hist_data[i] = {
+          name: (typeof cats[i] === 'string') ? cats[i] : cats[i].name,
           start: prev,
           end: prev + b,
-          color: ( typeof cats[i].color === 'undefined') ? cols(i) : cats[i].color
+          color: (cats[i].color === undefined) ? cols(i) : cats[i].color,
+          range: hist.range(i)
         };
         prev += b;
       });
-      var $m = $base.selectAll('path').data(data);
-      $m.enter().append('path').call(tooltip.bind(function (d) {
-        return d.name;
-      }));
+      var $m = $data.selectAll('path').data(hist_data);
+      $m.enter()
+        .append('path')
+        .call(tooltip.bind(function (d) {
+          return d.name;
+        }))
+        .on('click', function (d) {
+          data.select(0, d.range, idtypes.toSelectOperation(d3.event));
+        });
       $m.attr('d', arc).attr('fill', function (d) {
         return d.color;
+      });
+
+
+      data.selections().then(function (selected) {
+        l(null, 'selected', selected);
       });
     });
 

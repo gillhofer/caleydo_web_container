@@ -528,7 +528,7 @@ export class Range {
     }
     var r = new Range();
     this.dims.forEach((d, i) => {
-      r.dims[i] = d.intersect(other.dims[i], size[i]);
+      r.dims[i] = d.intersect(other.dims[i], size ? size[i]: undefined);
     });
     return r;
   }
@@ -668,7 +668,7 @@ export class Range {
       return size;
     }
     return this.dims.map((r, i) => {
-      return r.size(size[i]);
+      return r.size(size? size[i]: undefined);
     });
   }
 

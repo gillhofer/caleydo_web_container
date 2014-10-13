@@ -155,15 +155,19 @@ export class VectorBase extends idtypes.SelectAble {
     return this.data().then((d) => math.computeStats(d));
   }
 
+  get indices() : ranges.Range {
+    return ranges.range(0, this.length);
+  }
+
   hist(bins? : number) : C.IPromise<math.IHistogram> {
     var v = this._root.valuetype;
     return this.data().then((d) => {
       switch(v.type) {
       case 'categorical':
-          return math.categoricalHist(d, v.categories.map((d) => typeof d === 'string' ? d : d.name));
+          return math.categoricalHist(d, this.indices.dim(0), v.categories.map((d) => typeof d === 'string' ? d : d.name));
       case 'real':
       case 'int':
-        return math.hist(d, bins ? bins : Math.round(Math.sqrt(this.length)), v.range);
+        return math.hist(d, this.indices.dim(0), bins ? bins : Math.round(Math.sqrt(this.length)), v.range);
       default:
           return null; //cant create hist for unique objects or other ones
       }
@@ -349,6 +353,10 @@ class VectorView extends VectorBase implements IVector {
 
   get idtypes() {
     return [this.idtype];
+  }
+
+  get indices() {
+    return this.range;
   }
 
   sort(compareFn?: (a: any, b: any) => number, thisArg?: any): C.IPromise<IVector> {
