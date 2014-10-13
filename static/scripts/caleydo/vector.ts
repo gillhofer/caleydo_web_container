@@ -48,6 +48,78 @@ export interface IVector extends datatypes.IDataType {
   stats() : C.IPromise<math.IStatistics>;
 
   hist(bins? : number) : C.IPromise<math.IHistogram>;
+
+  /**
+   * Sorts an array.
+   * @param compareFn The name of the function used to determine the order of the elements. If omitted, the elements are sorted in ascending, ASCII character order.
+   * @param thisArg An object to which the this keyword can refer in the callbackfn function. If thisArg is omitted, undefined is used as the this value.
+   */
+  sort(compareFn?: (a: any, b: any) => number, thisArg?: any): C.IPromise<IVector>;
+
+  /**
+   * Determines whether all the members of an array satisfy the specified test.
+   * @param callbackfn A function that accepts up to three arguments. The every method calls the callbackfn function for each element in array1 until the callbackfn returns false, or until the end of the array.
+   * @param thisArg An object to which the this keyword can refer in the callbackfn function. If thisArg is omitted, undefined is used as the this value.
+   */
+  every(callbackfn: (value: any, index: number) => boolean, thisArg?: any): C.IPromise<boolean>;
+
+  /**
+   * Determines whether the specified callback function returns true for any element of an array.
+   * @param callbackfn A function that accepts up to three arguments. The some method calls the callbackfn function for each element in array1 until the callbackfn returns true, or until the end of the array.
+   * @param thisArg An object to which the this keyword can refer in the callbackfn function. If thisArg is omitted, undefined is used as the this value.
+   */
+  some(callbackfn: (value: any, index: number) => boolean, thisArg?: any): C.IPromise<boolean>;
+
+  /**
+   * Performs the specified action for each element in an array.
+   * @param callbackfn  A function that accepts up to three arguments. forEach calls the callbackfn function one time for each element in the array.
+   * @param thisArg  An object to which the this keyword can refer in the callbackfn function. If thisArg is omitted, undefined is used as the this value.
+   */
+  forEach(callbackfn: (value: any, index: number) => void, thisArg?: any): void;
+
+  /**
+   * Calls a defined callback function on each element of an array, and returns an array that contains the results.
+   * @param callbackfn A function that accepts up to three arguments. The map method calls the callbackfn function one time for each element in the array.
+   * @param thisArg An object to which the this keyword can refer in the callbackfn function. If thisArg is omitted, undefined is used as the this value.
+   */
+  map<U>(callbackfn: (value: any, index: number) => U, thisArg?: any): C.IPromise<IVector>;
+
+  /**
+   * Returns the elements of an array that meet the condition specified in a callback function.
+   * @param callbackfn A function that accepts up to three arguments. The filter method calls the callbackfn function one time for each element in the array.
+   * @param thisArg An object to which the this keyword can refer in the callbackfn function. If thisArg is omitted, undefined is used as the this value.
+   */
+  filter(callbackfn: (value: any, index: number) => boolean, thisArg?: any): C.IPromise<IVector>;
+
+  /**
+   * Calls the specified callback function for all the elements in an array. The return value of the callback function is the accumulated result, and is provided as an argument in the next call to the callback function.
+   * @param callbackfn A function that accepts up to four arguments. The reduce method calls the callbackfn function one time for each element in the array.
+   * @param initialValue If initialValue is specified, it is used as the initial value to start the accumulation. The first call to the callbackfn function provides this value as an argument instead of an array value.
+   * @param thisArg An object to which the this keyword can refer in the callbackfn function. If thisArg is omitted, undefined is used as the this value.
+   */
+  reduce<T>(callbackfn: (previousValue: T, currentValue: T, currentIndex: number) => T, initialValue?: T, thisArg?: any): C.IPromise<T>;
+  /**
+   * Calls the specified callback function for all the elements in an array. The return value of the callback function is the accumulated result, and is provided as an argument in the next call to the callback function.
+   * @param callbackfn A function that accepts up to four arguments. The reduce method calls the callbackfn function one time for each element in the array.
+   * @param initialValue If initialValue is specified, it is used as the initial value to start the accumulation. The first call to the callbackfn function provides this value as an argument instead of an array value.
+   * @param thisArg An object to which the this keyword can refer in the callbackfn function. If thisArg is omitted, undefined is used as the this value.
+   */
+  reduce<T,U>(callbackfn: (previousValue: U, currentValue: T, currentIndex: number) => U, initialValue: U, thisArg?: any): C.IPromise<U>;
+
+  /**
+   * Calls the specified callback function for all the elements in an array, in descending order. The return value of the callback function is the accumulated result, and is provided as an argument in the next call to the callback function.
+   * @param callbackfn A function that accepts up to four arguments. The reduceRight method calls the callbackfn function one time for each element in the array.
+   * @param initialValue If initialValue is specified, it is used as the initial value to start the accumulation. The first call to the callbackfn function provides this value as an argument instead of an array value.
+   * @param thisArg An object to which the this keyword can refer in the callbackfn function. If thisArg is omitted, undefined is used as the this value.
+   */
+  reduceRight<T>(callbackfn: (previousValue: T, currentValue: T, currentIndex: number) => T, initialValue?: T, thisArg?: any): C.IPromise<T>;
+  /**
+   * Calls the specified callback function for all the elements in an array, in descending order. The return value of the callback function is the accumulated result, and is provided as an argument in the next call to the callback function.
+   * @param callbackfn A function that accepts up to four arguments. The reduceRight method calls the callbackfn function one time for each element in the array.
+   * @param initialValue If initialValue is specified, it is used as the initial value to start the accumulation. The first call to the callbackfn function provides this value as an argument instead of an array value.
+   * @param thisArg An object to which the this keyword can refer in the callbackfn function. If thisArg is omitted, undefined is used as the this value.
+   */
+  reduceRight<T,U>(callbackfn: (previousValue: U, currentValue: T, currentIndex: number) => U, initialValue: U, thisArg?: any): C.IPromise<U>;
 }
 
 
@@ -81,6 +153,47 @@ export class VectorBase extends idtypes.SelectAble {
 
   stats() : C.IPromise<math.IStatistics> {
     return this.data().then((d) => math.computeStats(d));
+  }
+
+  hist(bins? : number) : C.IPromise<math.IHistogram> {
+    var v = this._root.valuetype;
+    return this.data().then((d) => {
+      switch(v.type) {
+      case 'categorical':
+          return math.categoricalHist(d, v.categories);
+      case 'real':
+      case 'int':
+        return math.hist(d, bins ? bins : Math.round(Math.sqrt(this.length)), v.range);
+      default:
+          return null; //cant create hist for unique objects or other ones
+      }
+    });
+  }
+
+  every(callbackfn: (value: any, index: number) => boolean, thisArg?: any): C.IPromise<boolean> {
+    return this.data().then((d) => d.every(callbackfn, thisArg));
+  }
+
+  some(callbackfn: (value: any, index: number) => boolean, thisArg?: any): C.IPromise<boolean> {
+    return this.data().then((d) => d.some(callbackfn, thisArg));
+  }
+
+  forEach(callbackfn: (value: any, index: number) => void, thisArg?: any): void {
+    this.data().then((d) => d.forEach(callbackfn, thisArg));
+  }
+
+  reduce<T,U>(callbackfn: (previousValue: U, currentValue: T, currentIndex: number) => U, initialValue: U, thisArg?: any): C.IPromise<U>{
+    function helper() {
+      return callbackfn.apply(thisArg, C.argList(arguments));
+    }
+    return this.data().then((d) => d.reduce(helper, initialValue));
+  }
+
+  reduceRight<T,U>(callbackfn: (previousValue: U, currentValue: T, currentIndex: number) => U, initialValue: U, thisArg?: any): C.IPromise<U> {
+    function helper() {
+      return callbackfn.apply(thisArg, C.argList(arguments));
+    }
+    return this.data().then((d) => d.reduceRight(helper, initialValue));
   }
 }
 
@@ -161,6 +274,25 @@ export class Vector extends VectorBase implements IVector {
   size() {
     return (<any>this.desc).size;
   }
+
+  sort(compareFn?: (a: any, b: any) => number, thisArg?: any): C.IPromise<IVector> {
+    return this.data().then((d) => {
+      var indices = C.argSort(d, compareFn, thisArg);
+      return this.view(ranges.list(indices));
+    });
+  }
+
+  map<U>(callbackfn: (value: any, index: number) => U, thisArg?: any): C.IPromise<IVector> {
+    //FIXME
+    return null;
+  }
+
+  filter(callbackfn: (value: any, index: number) => boolean, thisArg?: any): C.IPromise<IVector> {
+    return this.data().then((d) => {
+      var indices = C.argFilter(d, callbackfn, thisArg);
+      return this.view(ranges.list(indices));
+    });
+  }
 }
 
 /**
@@ -217,6 +349,25 @@ class VectorView extends VectorBase implements IVector {
 
   get idtypes() {
     return [this.idtype];
+  }
+
+  sort(compareFn?: (a: any, b: any) => number, thisArg?: any): C.IPromise<IVector> {
+    return this.data().then((d) => {
+      var indices = C.argSort(d, compareFn, thisArg);
+      return this.view(this.range.preMultiply(ranges.list(indices)));
+    });
+  }
+
+  map<U>(callbackfn: (value: any, index: number) => U, thisArg?: any): C.IPromise<IVector> {
+    //FIXME
+    return null;
+  }
+
+  filter(callbackfn: (value: any, index: number) => boolean, thisArg?: any): C.IPromise<IVector> {
+    return this.data().then((d) => {
+      var indices = C.argFilter(d, callbackfn, thisArg);
+      return this.view(this.range.preMultiply(ranges.list(indices)));
+    });
   }
 }
 
