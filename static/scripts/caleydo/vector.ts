@@ -122,7 +122,6 @@ export interface IVector extends datatypes.IDataType {
   reduceRight<T,U>(callbackfn: (previousValue: U, currentValue: T, currentIndex: number) => U, initialValue: U, thisArg?: any): C.IPromise<U>;
 }
 
-
 /**
  * base class for different Vector implementations, views, transposed,...
  */

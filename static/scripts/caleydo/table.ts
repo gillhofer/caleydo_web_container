@@ -95,6 +95,56 @@ export class TableBase extends idtypes.SelectAble {
   }
 }
 
+export interface ITableLoader {
+  (desc: datatypes.IDataDescription) : C.IPromise<{
+    rowIds : ranges.Range;
+    objs : any[];
+    data : any[][];
+  }>
+}
+
+function toObjects(data: any[][], vecs) {
+  return data.map((row) => {
+    var r : any = {};
+    vecs.forEach((col, i) => {
+      r[col.name] =  row[i];
+    });
+    return r;
+  });
+}
+
+function viaAPILoader() {
+  var _data = undefined;
+  return (desc) => {
+    if (_data) { //in the cache
+      return C.resolved(_data);
+    }
+    return C.getJSON(C.server_url+'/dataset/'+desc.id).then(function (data) {
+      data.rowIds = ranges.list(data.rowIds);
+      _data = data; //store cache
+      //transpose to have column order for better vector access
+      data.objs = toObjects(data.data, desc.columns);
+      data.data = datatypes.transpose(data.data);
+      return data;
+    });
+  }
+}
+
+function viaDataLoader(data: any[], idProperty: string) {
+  var _data = undefined;
+  return (desc) => {
+    if (_data) { //in the cache
+      return C.resolved(_data);
+    }
+    _data = {
+      rowIds : data.map((d) => d[idProperty]),
+      objs : data,
+      data : desc.columns.map((name) => data.map((d) => d[name]))
+    };
+    return C.resolved(_data);
+  };
+}
+
 /**
  * root matrix implementation holding the data
  */
@@ -104,7 +154,7 @@ export class Table extends TableBase implements ITable {
   private _data:any = null;
   private vectors : TableVector[];
 
-  constructor(public desc:datatypes.IDataDescription) {
+  constructor(public desc:datatypes.IDataDescription, private loader : ITableLoader) {
     super(null);
     this._root = this;
     var d = <any>desc;
@@ -118,30 +168,7 @@ export class Table extends TableBase implements ITable {
    * @returns {*}
    */
   load() {
-    var that = this;
-    if (this._data) { //in the cache
-      return C.resolved(this._data);
-    }
-    return C.getJSON(C.server_url+'/dataset/'+this.desc.id).then(function (data) {
-      data.rowIds = ranges.list(data.rowIds);
-      that._data = data; //store cache
-      //transpose to have column order for better vector access
-      that._data.objs = that.toObjects(data.data);
-      that._data.data = datatypes.transpose(data.data);
-      that.fire("loaded", this);
-      return data;
-    });
-  }
-
-  private toObjects(data: any[][]) {
-    var vecs = this.vectors;
-    return data.map((row) => {
-      var r : any = {};
-      vecs.forEach((col, i) => {
-        r[col.desc.name] =  row[i];
-      });
-      return r;
-    });
+    return this.loader(this.desc);
   }
 
   get idtypes() {
@@ -448,5 +475,9 @@ class MultiTableVector extends vector.VectorBase implements vector.IVector {
  * @returns {ITable}
  */
 export function create(desc: datatypes.IDataDescription): ITable {
-  return new Table(desc);
+  return new Table(desc, viaAPILoader());
+}
+
+export function wrapObjects(desc: datatypes.IDataDescription, data: any[], idProperty: string) {
+  return new Table(desc, viaDataLoader(data, idProperty));
 }
