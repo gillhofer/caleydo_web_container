@@ -238,7 +238,7 @@ export function onDOMNodeRemoved(node: any, callback: () => void, thisArg? : any
           callback.call(thisArg, n);
           return;
         }
-        n = n.parentNode;
+        act = act.parentNode;
       }
     }
     n.addEventListener('DOMNodeRemoved', l);
