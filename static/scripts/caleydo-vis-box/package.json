@@ -10,6 +10,7 @@
         "type": "vis",
         "id": "caleydo-vis-box",
         "name": "BoxPlot",
+        "icon" : "icon.png",
         "size": [300, 50],
         "filter": "eval!function (data) { return data.desc.type === 'vector' && (data.desc.value.type === 'real' || data.desc.value.type === 'int'); }"
       }

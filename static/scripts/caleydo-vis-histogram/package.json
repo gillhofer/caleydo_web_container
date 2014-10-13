@@ -10,6 +10,7 @@
         "type": "vis",
         "id": "caleydo-vis-histogram",
         "name": "Histogram",
+        "icon" : "icon.png",
         "size": [200, 100],
         "filter": "vector"
       }

@@ -69,6 +69,7 @@ require.config({
           "type": "vis",
           "id": "caleydo-vis-box",
           "name": "BoxPlot",
+          "icon": "icon.png",
           "size": [
             300,
             50
@@ -87,6 +88,7 @@ require.config({
           "type": "vis",
           "id": "caleydo-vis-histogram",
           "name": "Histogram",
+          "icon": "icon.png",
           "size": [
             200,
             100
@@ -115,6 +117,7 @@ require.config({
           "type": "vis",
           "id": "caleydo-vis-pie",
           "name": "Pie",
+          "icon": "icon.png",
           "size": [
             100,
             100
