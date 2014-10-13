@@ -167,6 +167,42 @@ export function argList(args:IArguments) {
 }
 
 /**
+ * array with indices of 0...n-1
+ * @param n
+ * @returns {any[]}
+ */
+function indexRange(n : number) {
+  //http://stackoverflow.com/questions/3746725/create-a-javascript-array-containing-1-n
+  return Array.apply(null, {length: n}).map(Number.call, Number);
+}
+
+/**
+ * returns the sorted indices of this array, when sorting by the given function
+ * @param arr
+ * @param compareFn
+ * @param thisArg
+ */
+export function argSort<T>(arr: T[], compareFn?: (a: T, b: T) => number, thisArg?: any): number[] {
+  var indices = indexRange(arr.length);
+  return indices.sort((a, b) => {
+    return compareFn.call(thisArg, arr[a], arr[b]);
+  })
+}
+
+/**
+ * returns the indices, which remain when filtering the given array
+ * @param arr
+ * @param callbackfn
+ * @param thisArg
+ */
+export function argFilter<T>(arr: T[], callbackfn: (value: T, index: number) => boolean, thisArg?: any): number[] {
+  var indices = indexRange(arr.length);
+  return indices.filter((value, index) => {
+    return callbackfn.call(thisArg, arr[value], index);
+  })
+}
+
+/**
  * utility function to get notified, when the given dom element is removed from its parent
  * @param node
  * @param callback
