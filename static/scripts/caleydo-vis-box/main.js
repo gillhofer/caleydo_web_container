@@ -19,9 +19,9 @@ define(['exports', 'd3', '../caleydo-tooltip/main', '../caleydo/main', 'css!./st
     return r;
   }
 
-  BoxPlot.prototype.locate = function () {
+  BoxPlot.prototype.locate = function (range) {
     if (arguments.length === 1) {
-      return this.locateImpl(arguments[0]);
+      return this.locateImpl(range);
     }
     return C.all(C.argList(arguments).map(this.locateImpl, this));
   };
