@@ -2,6 +2,8 @@
  * Created by Samuel Gratzl on 05.08.2014.
  */
 /// <reference path="../../../tsd.d.ts" />
+/* global define */
+"use strict"
 
 import d3 = require('d3');
 import plugins = require('../caleydo/plugin');
@@ -43,35 +45,35 @@ export class HeatMap implements plugins.IVisInstance {
     var dims = this.data.dim;
     var width = dims[1], height = dims[0];
     var $svg = $parent.append('svg').attr({
-      width: width * 10 + "px",
-      height: height * 10 + "px"
+      width: width * 10 + 'px',
+      height: height * 10 + 'px'
     });
 
     var colScale = d3.scale.linear().domain([0, width]).range([0, 100]);
     var rowScale = d3.scale.linear().domain([0, height]).range([0, 100]);
-    var c = d3.scale.linear().domain((<any>this.data.desc).value.range).range(["black", "white"]);
+    var c = d3.scale.linear().domain((<any>this.data.desc).value.range).range(['black', 'white']);
     var data = this.data;
     data.data().then((arr) => {
-      var $rows = $svg.selectAll("g").data(arr);
-      $rows.enter().append("g");
+      var $rows = $svg.selectAll('g').data(arr);
+      $rows.enter().append('g');
       $rows.each(function (row, i) {
-        var $cols = d3.select(this).selectAll("rect").data(row);
-        $cols.enter().append("rect").on('click', function (d, j) {
+        var $cols = d3.select(this).selectAll('rect').data(row);
+        $cols.enter().append('rect').on('click', function (d, j) {
           data.select([
             [i],
             [j]
           ], idtypes.toSelectOperation(d3.event));
-        }).append("title").text(C.identity);
+        }).append('title').text(C.identity);
         $cols.attr({
           fill: function (d) {
             return c(d);
           },
           x: function (d, j) {
-            return colScale(j) + "%";
+            return colScale(j) + '%';
           },
-          y: rowScale(i) + "%",
-          width: colScale(1) + "%",
-          height: rowScale(1) + "%"
+          y: rowScale(i) + '%',
+          width: colScale(1) + '%',
+          height: rowScale(1) + '%'
         });
         $cols.exit().remove();
       });

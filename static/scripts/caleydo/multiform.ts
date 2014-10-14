@@ -14,6 +14,7 @@ import events = require('./event');
  */
 export class MultiForm extends events.EventHandler implements plugins.IVisInstance {
   parent:D3.Selection;
+  node: Element;
   /**
    * list of all possibles vis techniques
    */
@@ -27,6 +28,7 @@ export class MultiForm extends events.EventHandler implements plugins.IVisInstan
   constructor(public data:datatypes.IDataType, parent:Element) {
     super();
     this.parent = d3.select(parent).append('div').attr('class', 'multiform');
+    this.node = this.parent.node();
     //find all suitable plugins
     this.visses = plugins.listVis(data);
 

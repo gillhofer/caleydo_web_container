@@ -189,7 +189,8 @@ module.exports = function (grunt) {
       options: {
         jshintrc: '.jshintrc',
         reporter: (JENKINS && 'checkstyle') || require('jshint-stylish'),
-        reporterOutput: JENKINS && 'jshint.xml'
+        reporterOutput: JENKINS && 'jshint.xml',
+        force : true
       },
       all: [
         'Gruntfile.js',
@@ -418,8 +419,15 @@ module.exports = function (grunt) {
         expand: true,
         dot: true,
         cwd: '<%= yeoman.app %>/styles',
-        dest: '.tmp/styles/',
-        src: '{,*/}*.css'
+        dest: '.tmp/styles',
+        src: '**/*.css'
+      },
+      stylesd: {
+        expand: true,
+        dot: true,
+        cwd: '<%= yeoman.app %>/styles',
+        dest: '<%= yeoman.dist %>/styles',
+        src: '**/*.css'
       },
       scripts: {
         files: [
@@ -427,14 +435,14 @@ module.exports = function (grunt) {
             expand: true,
             dot: true,
             cwd: '<%= yeoman.app %>/scripts',
-            dest: '.tmp/scripts/',
-            src: '{,*/}*.js'
+            dest: '<%= yeoman.dist %>/scripts/',
+            src: '**/*.{js,css}'
           },
           {
             expand: true,
             dot: true,
             cwd: '<%= yeoman.app %>',
-            dest: '.tmp',
+            dest: '<%= yeoman.dist %>',
             src: ['bower_components/**']
           }
         ]
@@ -477,7 +485,7 @@ module.exports = function (grunt) {
         livereload: true,
         serverreload: true,
         server: require('path').resolve('./server/index'),
-        bases: [require('path').resolve("./server")]
+        bases: [require('path').resolve('./server')]
       },
       custom: {
         options: {
@@ -487,6 +495,28 @@ module.exports = function (grunt) {
         options: {
           'debug-brk': 5858,
           showStack: true
+        }
+      }
+    },
+    bgShell: {
+      _defaults: {
+        cmd: 'python api.py',
+        bg: true,
+        stdout: function (data) {
+          grunt.log.write('out: ' + data.length + ' ' + data);
+        },
+        fail: true
+      },
+      local: {
+        execOpts: {
+          cwd: '../caleydo-web-server/flask/',
+          maxBuffer: false
+        }
+      },
+      vagrant: {
+        execOpts: {
+          cwd: '../vagrant/flask/',
+          maxBuffer: false
         }
       }
     }
@@ -549,17 +579,31 @@ module.exports = function (grunt) {
     'jsdoc',
     //'concat',
     //'cssmin',
-    //'uglify',
+    'uglify',
     'copy:dist',
-    'bless:dist',
+    'bless:dist'
     //'rev',
     //'usemin',
     //'htmlmin:deploy'
   ]);
 
+  grunt.registerTask('buildd', [
+    'clean:dist',
+    'tsd:refresh',
+    'ts:build',
+    'sass:dist',
+    'useminPrepare',
+    'concurrent:dist',
+    'autoprefixer',
+    'copy:scripts',
+    'copy:stylesd',
+    'jsdoc',
+    'copy:dist',
+    'bless:dist'
+  ]);
+
   grunt.registerTask('default', [
     'jshint',
-    'test',
-    'build'
+    'buildd'
   ]);
 };

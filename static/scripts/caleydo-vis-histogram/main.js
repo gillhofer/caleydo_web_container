@@ -1,6 +1,9 @@
 /**
  * Created by Samuel Gratzl on 13.10.2014.
  */
+/* global define */
+"use strict"
+
 define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-tooltip/main'], function (exports, d3, C, idtypes, tooltip) {
 
   function Vis(data, parent, options) {
@@ -86,7 +89,7 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-too
 
   Vis.prototype.build = function ($parent) {
     var o = this.options, that = this, data = this.data;
-    var $svg = $parent.append("svg").attr({
+    var $svg = $parent.append('svg').attr({
       width: o.width,
       height: o.height,
       'class': 'histogram'

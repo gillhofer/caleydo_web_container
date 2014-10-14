@@ -334,7 +334,7 @@ export class TableVector extends vector.VectorBase implements vector.IVector {
    * TODO: load just needed data and not everything given by the requested range
    * @returns {*}
    */
-  load() {
+  load() : C.IPromise<any[]> {
     var that = this;
     return this.table.load().then(function (data) {
       return data.data[that.index];
@@ -349,7 +349,7 @@ export class TableVector extends vector.VectorBase implements vector.IVector {
    */
   at(i) {
     return this.load().then(function (d) {
-      return d.data[i];
+      return d[i];
     });
   }
 

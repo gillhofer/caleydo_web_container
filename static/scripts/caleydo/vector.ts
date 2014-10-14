@@ -225,7 +225,7 @@ export class Vector extends VectorBase implements IVector {
    * TODO: load just needed data and not everything given by the requested range
    * @returns {*}
    */
-  load() {
+  load() : C.IPromise<any> {
     var that = this;
     if (this._data) { //in the cache
       return C.resolved(this._data);

@@ -7,6 +7,7 @@ import events = require('./event');
 import ranges = require('./range');
 'use strict';
 
+
 var cache = {}, filledUp = false;
 
 export var defaultSelectionType = 'selected';
@@ -16,7 +17,18 @@ export enum SelectOperation {
   SET, ADD, REMOVE
 }
 
+/**
+ * converts the given mouse event to a select operation
+ * @param event the mouse event to examine
+ */
 export function toSelectOperation(event: any);
+/**
+ * converts the given key modifiers to select operation
+ * @param ctryKey
+ * @param altKey
+ * @param shiftKey
+ * @param metaKey
+ */
 export function toSelectOperation(ctryKey: boolean, altKey: boolean, shiftKey: boolean, metaKey: boolean);
 export function toSelectOperation(event: any) {
   var ctryKeyDown, shiftDown, altDown, metaDown;
@@ -39,9 +51,21 @@ export function toSelectOperation(event: any) {
   return SelectOperation.SET;
 }
 
+/**
+ * an id type is a semantic aggregation of ids, like patient, gene, ...
+ */
 export class IDType extends events.EventHandler {
+  /**
+   * the current selections
+   * @type {{}}
+   */
   private sel = {};
 
+  /**
+   *
+   * @param name the name of this idtype
+   * @param names the plural name
+   */
   constructor(public name:string, public names:string) {
     super();
   }
@@ -50,6 +74,11 @@ export class IDType extends events.EventHandler {
     return name;
   }
 
+  /**
+   * return the current selections of the given type
+   * @param type optional the selection type
+   * @returns {ranges.Range}
+   */
   selections(type = defaultSelectionType) {
     if (this.sel.hasOwnProperty(type)) {
       return this.sel[type];
@@ -57,6 +86,10 @@ export class IDType extends events.EventHandler {
     return this.sel[type] = ranges.none();
   }
 
+  /**
+   * select the given range as
+   * @param range
+   */
   select(range:ranges.Range);
   select(range:ranges.Range, op:SelectOperation);
   select(range:number[]);
@@ -292,6 +325,9 @@ export class SelectAble extends events.EventHandler {
     });
   }
 
+  /**
+   * clear the specific selection (type) and dimension
+   */
   clear();
   clear(type : string);
   clear(dim : number);
@@ -332,6 +368,10 @@ export function resolve(id:string):IDType {
   return register(id, new IDType(id, id + 's'));
 }
 
+/**
+ * list all known
+ * @returns {{}|HTTPCache|xm.http.HTTPCache|boolean}
+ */
 export function list() {
   fillUp(); //trigger loading of the meta data
   return this.cache;

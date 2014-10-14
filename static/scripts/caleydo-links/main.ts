@@ -1,6 +1,8 @@
 /**
  * Created by Samuel Gratzl on 05.08.2014.
  */
+/* global define */
+"use strict"
 /// <reference path="../../../tsd.d.ts" />
 
 import d3 = require('d3');
@@ -36,7 +38,7 @@ export class LinksRenderer {
     this.$div = this.$parent.append('div').attr({
       'class': 'layer layer1 links'
     });
-    this.$svg = this.$div.append("svg").attr({
+    this.$svg = this.$div.append('svg').attr({
       width: '100%',
       height: '100%'
     });

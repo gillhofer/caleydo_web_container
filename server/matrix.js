@@ -1,6 +1,7 @@
 /**
  * Created by Samuel Gratzl on 16.07.2014.
  */
+"use strict";
 
 function Matrix(cols, rows, data) {
   this.cols = cols;
