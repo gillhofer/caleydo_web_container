@@ -3,7 +3,7 @@
  */
 /* global define, describe, it, assert, should, expect */
 
-define(['../scripts/caleydo-range', '../scripts/caleydo-iterator'], function (range, Iterator) {
+define(['../../scripts/caleydo/range', '../../scripts/caleydo/iterator'], function (range, Iterator) {
   'use strict';
 
   describe('caleydo-range', function () {
@@ -17,7 +17,7 @@ define(['../scripts/caleydo-range', '../scripts/caleydo-iterator'], function (ra
       expect(range.all().toString()).to.be.equal('');
       expect(range.list(10).toString()).to.be.equal('10');
       expect(range.range(10).toString()).to.be.equal('10:-1');
-      expect(range.list(1,2,3).toString()).to.be.equal('1:4');
+      expect(range.list(1, 2, 3).toString()).to.be.equal('1:4');
 
       //expect(range.from(10, 3).toString()).to.be.equal('10:-1,3:-1');
       //expect(range.from(10, undefined, 3).toString()).to.be.equal('10:-1,,3:-1');
@@ -65,8 +65,8 @@ define(['../scripts/caleydo-range', '../scripts/caleydo-iterator'], function (ra
     });
 
     it('from', function () {
-      expect(range.list(0,1,2,3,4,5).toString()).is.equal('0:6');
-      expect(range.list(0,1,2,3,6,7).toString()).is.equal('(0:4,6:8)');
+      expect(range.list(0, 1, 2, 3, 4, 5).toString()).is.equal('0:6');
+      expect(range.list(0, 1, 2, 3, 6, 7).toString()).is.equal('(0:4,6:8)');
     });
   });
 });

@@ -17,7 +17,7 @@ app.use('/', express.static('static'));
 module.exports = app;
 
 var main = function () {
-  var server = app.listen(3000, function () {
+  var server = app.listen(8080, function () {
     console.log('Listening on port %d', server.address().port);
   });
 };

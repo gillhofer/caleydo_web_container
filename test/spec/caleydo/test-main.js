@@ -3,7 +3,7 @@
  */
 /* global define, describe, it, assert, should, expect */
 
-define(['../scripts/caleydo'], function (C) {
+define(['../../scripts/caleydo/main'], function (C) {
   'use strict';
 
   describe('caleydo', function () {
@@ -12,20 +12,21 @@ define(['../scripts/caleydo'], function (C) {
     });
 
     it('promised', function (done) {
-      expect(C.promised(function() {})).to.respondTo('then');
+      expect(C.promised(function () {
+      })).to.respondTo('then');
 
-      C.promised(function(resolved) {
+      C.promised(function (resolved) {
         resolved('a');
-      }).then(function(param) {
+      }).then(function (param) {
         expect(param).to.be.equal('a');
         done();
       });
-      C.promised(function(resolved, reject) {
+      C.promised(function (resolved, reject) {
         reject('a');
-      }).then(function(param) {
+      }).then(function (param) {
         expect(null).to.be.not.null;
         done();
-      }, function(error) {
+      }, function (error) {
         expect(error).to.be.equal('a');
         done();
       });
@@ -34,29 +35,29 @@ define(['../scripts/caleydo'], function (C) {
     it('resolved', function (done) {
       expect(C.resolved('a')).to.respondTo('then');
 
-      C.resolved('a').then(function(param) {
+      C.resolved('a').then(function (param) {
         expect(param).to.be.equal('a');
         done();
-      },function() {
+      }, function () {
         expect(null).to.be.not.null;
         done();
       });
     });
 
     it('mixin', function () {
-      expect(C.mixin({},{})).to.be.empty;
-      expect(C.mixin({a:3},{})).to.deep.equal({ a: 3});
-      expect(C.mixin({},{a:3})).to.deep.equal({ a: 3});
-      expect(C.mixin({a:4},{a:3})).to.deep.equal({ a: 3});
-      expect(C.mixin({a:4},{b:3})).to.deep.equal({ a: 4, b:3});
+      expect(C.mixin({}, {})).to.be.empty;
+      expect(C.mixin({a: 3}, {})).to.deep.equal({ a: 3});
+      expect(C.mixin({}, {a: 3})).to.deep.equal({ a: 3});
+      expect(C.mixin({a: 4}, {a: 3})).to.deep.equal({ a: 3});
+      expect(C.mixin({a: 4}, {b: 3})).to.deep.equal({ a: 4, b: 3});
     });
 
     it('getJSON', function (done) {
-      C.getJSON('testdata/simple.json').then(function(data) {
+      C.getJSON('testdata/simple.json').then(function (data) {
         expect(data).to.be.not.empty;
-        expect(data).have.property('a',3);
+        expect(data).have.property('a', 3);
         expect(data).have.property('b');
-        expect(data.b).is.eql([1,2,3]);
+        expect(data.b).is.eql([1, 2, 3]);
         done();
       });
     });
@@ -64,26 +65,30 @@ define(['../scripts/caleydo'], function (C) {
     it('isFunction', function () {
       expect(C.isFunction([])).to.be.false;
       expect(C.isFunction(3)).to.be.false;
-      expect(C.isFunction([1,2])).to.be.false;
+      expect(C.isFunction([1, 2])).to.be.false;
       expect(C.isFunction({})).to.be.false;
       expect(C.isFunction({ a: 3})).to.be.false;
-      expect(C.isFunction(function() {})).to.be.true;
+      expect(C.isFunction(function () {
+      })).to.be.true;
       function B() {
 
       }
+
       expect(C.isFunction(new B())).to.be.false;
     });
 
     it('isArray', function () {
       expect(C.isArray([])).to.be.true;
       expect(C.isArray(3)).to.be.false;
-      expect(C.isArray([1,2])).to.be.true;
+      expect(C.isArray([1, 2])).to.be.true;
       expect(C.isArray({})).to.be.false;
       expect(C.isArray({ a: 3})).to.be.false;
-      expect(C.isArray(function() {})).to.be.false;
+      expect(C.isArray(function () {
+      })).to.be.false;
       function B() {
 
       }
+
       expect(C.isArray(new B())).to.be.false;
     });
 
@@ -104,13 +109,15 @@ define(['../scripts/caleydo'], function (C) {
     it('isPlainObject', function () {
       expect(C.isPlainObject([])).to.be.false;
       expect(C.isPlainObject(3)).to.be.false;
-      expect(C.isPlainObject([1,2])).to.be.false;
+      expect(C.isPlainObject([1, 2])).to.be.false;
       expect(C.isPlainObject({})).to.be.true;
       expect(C.isPlainObject({ a: 3})).to.be.true;
-      expect(C.isPlainObject(function() {})).to.be.false;
+      expect(C.isPlainObject(function () {
+      })).to.be.false;
       function B() {
 
       }
+
       expect(C.isPlainObject(new B())).to.be.false;
     });
 
@@ -134,7 +141,7 @@ define(['../scripts/caleydo'], function (C) {
     it('callable', function () {
       var r = {
         a: 3,
-        r : function(b) {
+        r: function (b) {
           return this.a + b;
         }
       };
@@ -147,9 +154,9 @@ define(['../scripts/caleydo'], function (C) {
     });
 
     it('argList', function () {
-      expect(function() {
+      expect(function () {
         return C.argList(arguments);
-      }(1,2,3)).to.be.eql([1,2,3]);
+      }(1, 2, 3)).to.be.eql([1, 2, 3]);
     });
   });
 });
