@@ -67,6 +67,8 @@ define(['../../scripts/caleydo/range', '../../scripts/caleydo/iterator'], functi
     it('from', function () {
       expect(range.list(0, 1, 2, 3, 4, 5).toString()).is.equal('0:6');
       expect(range.list(0, 1, 2, 3, 6, 7).toString()).is.equal('(0:4,6:8)');
+      expect(range.list(0, 1, 2, 3, 6, 7, 100).toString()).is.equal('(0:4,6:8,100)');
+      expect(range.list(0, 1, 2, 3, 6, 7, 100, 103, 106).toString()).is.equal('(0:4,6:8,100,103,106)');
     });
   });
 });
