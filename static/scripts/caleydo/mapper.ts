@@ -56,7 +56,7 @@ function mapImpl(source:idtypes.IDType, target:idtypes.IDType, range:ranges.Rang
 
   //TODO clear old cache entries
 
-  var r = C.getJSON(C.server_url+'/mapper/map',{
+  var r = C.getAPIJSON('/mapper/map',{
     source: source.toString(),
     target: target.toString(),
     range: range.toString()

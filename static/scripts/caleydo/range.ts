@@ -772,27 +772,6 @@ export class Range {
     });
   }
 
-  /**
-   * utility function for a generic version for calling all sub dimensions
-   * @param name
-   * @param args
-   * @returns {*}
-   */
-  private gen(name, args):any {
-    if (args.length === 0) {
-      return this.dims.map(function (d) {
-        return d[name].call(d);
-      });
-    }
-    for (var i = 0; i < args.length; ++i) {
-      if (args[i] !== undefined) {
-        var d = this.dim(i);
-        d[name].call(d, args[i]);
-      }
-    }
-    return this;
-  }
-
   split():Range[] {
     return this.dims.map((dim) => {
       return new Range([dim]);

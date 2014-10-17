@@ -12,15 +12,17 @@ var config = module_.config();
  */
 export var version = '0.0.1-alpha';
 
-export var server_url : string = config.apiUrl;
+export var server_url:string = config.apiUrl;
+export var server_json_suffix:string = config.apiJSONSuffix || '';
 
-/**
- * wraps the given resolver function to be a promise
- * @param resolver
- * @param {function(resolve, reject)} resolver - the promise resolver
- * @returns {Promise} a promise object
- */
-export function promised<T>(f) {
+  /**
+   * wraps the given resolver function to be a promise
+   * @param resolver
+   * @param {function(resolve, reject)} resolver - the promise resolver
+   * @returns {Promise} a promise object
+   */
+    export
+function promised<T>(f) {
   var d = $.Deferred<T>();
   f((r) => {
     d.resolve(r);
@@ -43,8 +45,8 @@ export function resolved(result) {
  * @param deferreds the promises to wait for
  * @type {IPromise<Array<any>>}
  */
-export function all(promises: any[]): IPromise<Array<any>> {
-  return $.when.apply($,promises).then(() => argList(arguments));
+export function all(promises:any[]):IPromise<Array<any>> {
+  return $.when.apply($, promises).then(() => argList(arguments));
 }
 
 export interface IPromise<T> extends JQueryPromise<T> {
@@ -55,6 +57,13 @@ export interface IPromise<T> extends JQueryPromise<T> {
  * @see {@link http://api.jquery.com/jQuery.getJSON/}
  */
 export var getJSON = $.getJSON;
+
+export function getAPIJSON(url, ...args:any[]):IPromise<any> {
+  //convert to full url
+  url = server_url + url + server_json_suffix;
+  args.unshift(url);
+  return getJSON.apply($, args);
+}
 /**
  * integrate b into a and override all duplicates
  * @param {Object} a
@@ -83,7 +92,7 @@ export var isEmptyObject = $.isEmptyObject;
  */
 export var isPlainObject = $.isPlainObject;
 
-export function isUndefined(obj : any) {
+export function isUndefined(obj:any) {
   return typeof obj === 'undefined';
 }
 
@@ -171,7 +180,7 @@ export function argList(args:IArguments) {
  * @param n
  * @returns {any[]}
  */
-function indexRange(n : number) {
+function indexRange(n:number) {
   //http://stackoverflow.com/questions/3746725/create-a-javascript-array-containing-1-n
   return Array.apply(null, {length: n}).map(Number.call, Number);
 }
@@ -182,7 +191,7 @@ function indexRange(n : number) {
  * @param compareFn
  * @param thisArg
  */
-export function argSort<T>(arr: T[], compareFn?: (a: T, b: T) => number, thisArg?: any): number[] {
+export function argSort<T>(arr:T[], compareFn?:(a:T, b:T) => number, thisArg?:any):number[] {
   var indices = indexRange(arr.length);
   return indices.sort((a, b) => {
     return compareFn.call(thisArg, arr[a], arr[b]);
@@ -195,7 +204,7 @@ export function argSort<T>(arr: T[], compareFn?: (a: T, b: T) => number, thisArg
  * @param callbackfn
  * @param thisArg
  */
-export function argFilter<T>(arr: T[], callbackfn: (value: T, index: number) => boolean, thisArg?: any): number[] {
+export function argFilter<T>(arr:T[], callbackfn:(value:T, index:number) => boolean, thisArg?:any):number[] {
   var indices = indexRange(arr.length);
   return indices.filter((value, index) => {
     return callbackfn.call(thisArg, arr[value], index);
@@ -207,20 +216,20 @@ export function argFilter<T>(arr: T[], callbackfn: (value: T, index: number) => 
  * @param node
  * @param callback
  */
-export function onDOMNodeRemoved(s: Element[], callback: () => void, thisArg?  : any);
+export function onDOMNodeRemoved(s:Element[], callback:() => void, thisArg?:any);
 /**
  * utility function to get notified, when the given dom element is removed from its parent
  * @param node
  * @param callback
  */
-export function onDOMNodeRemoved(node: Element, callback: () => void, thisArg?  : any);
+export function onDOMNodeRemoved(node:Element, callback:() => void, thisArg?:any);
 /**
  * utility function to get notified, when the given dom element is removed from its parent
  * @param node
  * @param callback
  */
-export function onDOMNodeRemoved(node: any, callback: () => void, thisArg? : any) {
-  var arr : any[], body = document.getElementsByTagName('body')[0];
+export function onDOMNodeRemoved(node:any, callback:() => void, thisArg?:any) {
+  var arr:any[], body = document.getElementsByTagName('body')[0];
   if (!isArray(node)) {
     arr = [node];
   } else {
@@ -241,6 +250,7 @@ export function onDOMNodeRemoved(node: any, callback: () => void, thisArg? : any
         act = act.parentNode;
       }
     }
+
     n.addEventListener('DOMNodeRemoved', l);
     body.addEventListener('DOMNodeRemoved', l);
   });

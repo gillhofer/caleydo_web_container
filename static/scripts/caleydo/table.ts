@@ -119,7 +119,7 @@ function viaAPILoader() {
     if (_data) { //in the cache
       return C.resolved(_data);
     }
-    return C.getJSON(C.server_url+'/dataset/'+desc.id).then(function (data) {
+    return C.getAPIJSON('/dataset/'+desc.id).then(function (data) {
       data.rowIds = ranges.list(data.rowIds);
       _data = data; //store cache
       //transpose to have column order for better vector access

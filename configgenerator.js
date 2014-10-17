@@ -23,7 +23,8 @@ var requirejs_config = {
   deps: ['./main'],
   config: {
     'caleydo/main': {
-      apiUrl: '/api'
+      apiUrl: '/api',
+      apiJSONSuffix: ''
     },
     //plugin config
     'caleydo/plugin': {

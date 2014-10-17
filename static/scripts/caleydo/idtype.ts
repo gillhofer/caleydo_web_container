@@ -358,7 +358,7 @@ function fillUp() {
     return;
   }
   filledUp = true;
-  C.getJSON(C.server_url+'/idtype/').then(function (c) {
+  C.getAPIJSON('/idtype').then(function (c) {
     fillUpData(c);
     return cache;
   });
