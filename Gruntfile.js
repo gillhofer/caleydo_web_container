@@ -183,7 +183,15 @@ module.exports = function (grunt) {
           }
         ]
       },
-      server: '.tmp'
+      server: '.tmp',
+      deploy: {
+        files: [
+          {
+            dot: true,
+            src: 'deploy/**'
+          }
+        ]
+      }
     },
     jshint: {
       options: {
@@ -387,6 +395,12 @@ module.exports = function (grunt) {
         options: {
           collapseWhitespace: true
         },
+        files: 'deploy'
+      },
+      deploycleanup: {
+        options: {
+          collapseWhitespace: true
+        },
         files: [
           {
             expand: true,
@@ -444,6 +458,27 @@ module.exports = function (grunt) {
             cwd: '<%= yeoman.app %>',
             dest: '<%= yeoman.dist %>',
             src: ['bower_components/**']
+          }
+        ]
+      },
+      deploy: {
+        files: [
+          {
+            expand: true,
+            dot: true,
+            dest: 'deploy',
+            src: [
+              'Procfile',
+              'package.json',
+              'data/**',
+              'server/**'
+            ]
+          },
+          {
+            expand: true,
+            dot: true,
+            dest: 'deploy/static',
+            src: 'dist/**'
           }
         ]
       }
@@ -518,6 +553,19 @@ module.exports = function (grunt) {
           cwd: '../vagrant/flask/',
           maxBuffer: false
         }
+      }
+    },
+    exec: {
+      clone: {
+        cmd: 'git clone git@heroku.com:caleydo-web.git deploy'
+      },
+      addAll: {
+        cmd: function () {
+          return 'git commit -A -m "deploy ' + new Date() + '"';
+        }
+      },
+      push: {
+        cmd: 'git push heroku'
       }
     }
   });
@@ -600,6 +648,15 @@ module.exports = function (grunt) {
     'jsdoc',
     'copy:dist',
     'bless:dist'
+  ]);
+
+  grunt.registerTask('deploy', [
+    'clear:deploy',
+    'exec:clone',
+    'clear:deploycleanup',
+    'copy:deploy',
+    'exec:add',
+    'exec:push'
   ]);
 
   grunt.registerTask('default', [
