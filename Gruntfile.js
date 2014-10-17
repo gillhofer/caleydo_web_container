@@ -566,7 +566,7 @@ module.exports = function (grunt) {
       },
       commit: {
         cmd: function () {
-          return 'cd deploy; git commit --all -m "deploy ' + new Date() + '"';
+          return 'cd deploy; git add *; git commit --all -m "deploy ' + new Date() + '"';
         }
       },
       push: {
