@@ -18,8 +18,9 @@ module.exports = app;
 
 var main = function () {
   //process.env.PORT set by heroku
-  console.log('port: ', process.env.PORT, 8080);
-  var server = app.listen(process.env.PORT | 8080, function () {
+  var port = process.env.PORT || 8080;
+  console.log('port: ', process.env.PORT, 8080, port);
+  var server = app.listen(port, function () {
     console.log('Listening on port %d', server.address().port);
   });
 };
