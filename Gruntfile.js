@@ -184,11 +184,15 @@ module.exports = function (grunt) {
         ]
       },
       server: '.tmp',
-      deploy: {
+      deploy: 'deploy',
+      deploycleanup: {
         files: [
           {
             dot: true,
-            src: 'deploy/**'
+            src: [
+              'deploy/*',
+              '!deploy/.git*'
+            ]
           }
         ]
       }
@@ -651,9 +655,9 @@ module.exports = function (grunt) {
   ]);
 
   grunt.registerTask('deploy', [
-    'clear:deploy',
+    'clean:deploy',
     'exec:clone',
-    'clear:deploycleanup',
+    'clean:deploycleanup',
     'copy:deploy',
     'exec:add',
     'exec:push'
