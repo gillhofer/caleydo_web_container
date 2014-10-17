@@ -54,7 +54,7 @@ exports.load = function (desc, callback) {
       }));
     })
     .on('end', function () {
-      console.log(dataset);
+      //console.log(dataset);
       console.log('Successfully parsed dataset ' + desc.name + ' from ' + (datasetBasePath + desc.path) + '!');
       callback(convertData(dataset));
     });

@@ -17,7 +17,8 @@ app.use('/', express.static('static'));
 module.exports = app;
 
 var main = function () {
-  var server = app.listen(8080, function () {
+  //process.env.PORT set by heroku
+  var server = app.listen(process.env.PORT | 8080, function () {
     console.log('Listening on port %d', server.address().port);
   });
 };
