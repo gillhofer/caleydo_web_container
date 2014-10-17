@@ -18,6 +18,7 @@ module.exports = app;
 
 var main = function () {
   //process.env.PORT set by heroku
+  console.log('port: ', process.env.PORT, 8080);
   var server = app.listen(process.env.PORT | 8080, function () {
     console.log('Listening on port %d', server.address().port);
   });
@@ -25,5 +26,8 @@ var main = function () {
 
 //is is the main module similar to python __main__
 if (require.main === module) {
+  console.log('running as main');
   main();
+} else {
+  console.log('running as slave', require.main, module.parent);
 }

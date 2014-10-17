@@ -450,7 +450,7 @@ module.exports = function (grunt) {
             dot: true,
             cwd: '<%= yeoman.app %>/scripts',
             dest: '<%= yeoman.dist %>/scripts/',
-            src: '**/*.{js,css}'
+            src: '**/*.{js,css,png,jpg,svg,txt}'
           },
           {
             expand: true,
@@ -561,11 +561,11 @@ module.exports = function (grunt) {
       },
       addAll: {
         cmd: function () {
-          return 'git commit -A -m "deploy ' + new Date() + '"';
+          return 'cd deploy; git commit --all -m "deploy ' + new Date() + '"';
         }
       },
       push: {
-        cmd: 'git push heroku'
+        cmd: 'cd deploy; git push'
       }
     }
   });
