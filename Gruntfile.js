@@ -563,7 +563,7 @@ module.exports = function (grunt) {
       clone: {
         cmd: 'git clone git@heroku.com:caleydo-web.git deploy'
       },
-      addAll: {
+      commit: {
         cmd: function () {
           return 'cd deploy; git commit --all -m "deploy ' + new Date() + '"';
         }
@@ -659,7 +659,7 @@ module.exports = function (grunt) {
     'exec:clone',
     'clean:deploycleanup',
     'copy:deploy',
-    'exec:add',
+    'exec:commit',
     'exec:push'
   ]);
 
