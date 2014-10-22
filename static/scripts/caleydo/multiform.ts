@@ -51,6 +51,38 @@ export class MultiForm extends events.EventHandler implements plugins.IVisInstan
     }
   }
 
+  persist() {
+    return {
+      id: this.actDesc ? this.actDesc.id : null,
+      content: this.actVis && C.isFunction(this.actVis.persist) ? this.actVis.persist() : null
+    };
+  }
+
+  restore(persisted: any) {
+    if (persisted.id) {
+      var selected = MultiForm.search(this.visses, (e) => e.id === persisted.id);
+      if (selected) {
+        this.switchToImpl(selected).then((vis) => {
+          if (vis && persisted.content && C.isFunction(vis.restore)) {
+            vis.restore(persisted.content);
+          }
+        });
+      }
+    }
+  }
+
+  private static search<T>(arr: T[], f : (v: T) => boolean) : T {
+    var r : T = undefined;
+    arr.some((v) => {
+      if (f(v)) {
+        r = v;
+        return true;
+      }
+      return false;
+    });
+    return r;
+  }
+
   locate() {
     if (this.actVis && C.isFunction(this.actVis.locate)) {
       return this.actVis.locate.apply(this.actVis, C.argList(arguments));
@@ -88,7 +120,7 @@ export class MultiForm extends events.EventHandler implements plugins.IVisInstan
     this.switchToImpl(this.visses[index]);
   }
 
-  private switchToImpl(vis:plugins.IPluginDesc) {
+  private switchToImpl(vis:plugins.IPluginDesc) : C.IPromise<any> {
     if (vis === this.actDesc) {
       return; //already selected
     }
@@ -108,9 +140,12 @@ export class MultiForm extends events.EventHandler implements plugins.IVisInstan
 
     if (vis) {
       //load the plugin and create the instance
-      vis.load().then((plugin:any) => {
+      return vis.load().then((plugin:any) => {
         this.actVis = plugin.factory(this.data, this.$content.node());
+        return this.actVis;
       });
+    } else {
+      return C.resolved(null);
     }
   }
 }

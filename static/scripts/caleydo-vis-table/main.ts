@@ -8,12 +8,13 @@ import matrix = require('../caleydo/matrix');
 import table = require('../caleydo/table');
 import vector = require('../caleydo/vector');
 import ranges = require('../caleydo/range');
+import plugins = require('../caleydo/plugin');
 import geom = require('../caleydo/geom');
 import datatypes = require('../caleydo/datatype');
 import utils = require('../caleydo/d3util');
 import C = require('../caleydo/main');
 
-export class Table {
+export class Table implements plugins.IVisInstance {
   public node:Element;
 
   constructor(public data:any, public parent:Element) {
@@ -54,6 +55,14 @@ export class Table {
     a = $tbody.select('tr:nth-child(' + (ex[0] + 1) + ')').node();
     b = $tbody.select('tr:nth-child(' + (ex[1] + 1) + ')').node();
     return C.resolved(geom.rect(0, a.offsetTop, w, b.offsetTop + b.clientHeight - a.offsetTop));
+  }
+
+  persist() {
+
+  }
+
+  restore(persisted: any) {
+
   }
 
   private build($parent:D3.Selection, promises:any[]) {

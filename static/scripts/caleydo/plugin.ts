@@ -6,6 +6,7 @@ import require_ = require('require');
 import datatypes = require('./datatype');
 import ranges = require('./range');
 import module_ = require('module');
+import provenance = require('./provenance');
 
 var config = module_.config();
 
@@ -67,7 +68,7 @@ export interface IPlugin {
   factory(): any;
 }
 
-export interface IVisInstance {
+export interface IVisInstance extends provenance.IPersistable {
   node: Element;
   data: datatypes.IDataType;
   locate(...range: ranges.Range[]): C.IPromise<any>;

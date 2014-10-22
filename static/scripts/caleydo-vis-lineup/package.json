@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "dependencies": {
     "d3": "~3.4.11",
-    "lineupjs" : "git@github.com:Caleydo/lineup.js.git#singlesvg"
+    "lineupjs" : "git@github.com:Caleydo/lineup.js.git"
   },
   "caleydo" : {
     "plugins": [

@@ -30,6 +30,10 @@ define(['exports', 'jquery', '../caleydo/event', '../caleydo/main', '../caleydo/
       });
     }
 
+    function destroyDraggable($div) {
+      $div.draggable( "destroy" );
+    }
+
     function makeResizeable($div, window) {
       var convertResize = function (ui) {
         return [
@@ -56,6 +60,10 @@ define(['exports', 'jquery', '../caleydo/event', '../caleydo/main', '../caleydo/
       });
     }
 
+    function destroyResizeable($div) {
+      $div.resizable( "destroy" );
+    }
+
     function makeAnimatedHeader($div, $header) {
       //on mouse enter show the toolbar on top of it
       $div.on({
@@ -77,10 +85,18 @@ define(['exports', 'jquery', '../caleydo/event', '../caleydo/main', '../caleydo/
       $header.addClass('animated').hide();
     }
 
+    function destroyAnimatedHeader($div, $header) {
+      $div.off('mouseenter').off('mouseleave');
+      $header.removeClass('animated').show();
+    }
+
     function makeCloseable($toolbar, window) {
       $('<i class="fa fa-close">').appendTo($toolbar).click(function() {
         window.close();
       }).attr('title','Close');
+    }
+    function destroyCloseable($toolbar) {
+      $toolbar.find('i.fa-close').remove();
     }
 
     function makeZControls($toolbar, $div) {
@@ -90,6 +106,9 @@ define(['exports', 'jquery', '../caleydo/event', '../caleydo/main', '../caleydo/
       $('<i class="fa fa-caret-square-o-down">').prependTo($toolbar).click(function() {
         $div.css('z-index','-=1')
       }).attr('title','Move Down');
+    }
+    function destroyZControls($toolbar) {
+      $toolbar.find('i.fa-caret-square-o-up,i.fa-caret-square-o-down').remove();
     }
 
     function Window(parent, options) {
@@ -173,6 +192,61 @@ define(['exports', 'jquery', '../caleydo/event', '../caleydo/main', '../caleydo/
         }
       };
       return r;
+    };
+
+    Window.prototype.persist = function() {
+      return {
+        title: this.title,
+        size: this.size,
+        pos: this.pos,
+        options: this.options
+      }
+    };
+
+    Window.prototype.restore = function(persisted) {
+      var bak = this.options;
+      this.options = persisted.options;
+
+      if (this.options.draggable !== bak.draggable) {
+        if (this.options.draggable) {
+          makeDraggable(this.$div, this);
+        } else {
+          destroyDraggable(this.$div);
+        }
+      }
+      if (this.options.resizeable !== bak.resizeable) {
+        if (this.options.resizeable) {
+          makeResizeable(this.$div, this);
+        } else {
+          destroyResizeable(this.$div);
+        }
+      }
+      if (this.options.animatedHeader !== bak.animatedHeader) {
+        if (this.options.animatedHeader) {
+          makeAnimatedHeader(this.$div, this.$header);
+        } else {
+          destroyAnimatedHeader(this.$div, this.$header);
+        }
+      }
+      if (this.options.closeable !== bak.closeable) {
+        if (this.options.closeable) {
+          makeCloseable(this.$toolbar, this);
+        } else {
+          destroyCloseable(this.$toolbar);
+        }
+      }
+      if (this.options.zcontrols !== bak.zcontrols) {
+        if (this.options.zcontrols) {
+          makeZControls(this.$toolbar, this.$div);
+        } else {
+          destroyZControls(this.$toolbar);
+        }
+      }
+
+      this.title = persisted.title;
+      this.size = persisted.size;
+      this.pos = persisted.pos;
+
     };
 
     /**

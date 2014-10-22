@@ -41,6 +41,14 @@ export class HeatMap implements plugins.IVisInstance {
     return C.resolved(geom.rect(xw[0],yh[0],xw[1],yh[1]));
   }
 
+  persist() {
+
+  }
+
+  restore(persisted: any) {
+
+  }
+
   private build($parent:D3.Selection) {
     var dims = this.data.dim;
     var width = dims[1], height = dims[0];

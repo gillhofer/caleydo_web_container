@@ -5,6 +5,7 @@
 import C = require('./main');
 import events = require('./event');
 import ranges = require('./range');
+import provenance = require('./provenance');
 'use strict';
 
 
@@ -54,7 +55,7 @@ export function toSelectOperation(event: any) {
 /**
  * an id type is a semantic aggregation of ids, like patient, gene, ...
  */
-export class IDType extends events.EventHandler {
+export class IDType extends events.EventHandler implements provenance.IPersistable {
   /**
    * the current selections
    * @type {{}}
@@ -68,6 +69,22 @@ export class IDType extends events.EventHandler {
    */
   constructor(public name:string, public names:string) {
     super();
+  }
+
+  persist() {
+    var s = {};
+    Object.keys(this.sel).forEach((type) => s[type] = this.sel[type].toString());
+    return {
+      sel: s,
+      name: this.name,
+      names: this.names
+    }
+  }
+
+  restore(persisted: any) {
+    this.name = persisted.name;
+    this.names = persisted.names;
+    Object.keys(persisted.sel).forEach((type) => this.sel[type] = ranges.parse(persisted.sel[type]));
   }
 
   toString() {
