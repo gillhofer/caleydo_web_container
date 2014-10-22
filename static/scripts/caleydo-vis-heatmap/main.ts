@@ -42,11 +42,11 @@ export class HeatMap implements plugins.IVisInstance {
   }
 
   persist() {
-
+    return null;
   }
 
   restore(persisted: any) {
-
+    return null;
   }
 
   private build($parent:D3.Selection) {

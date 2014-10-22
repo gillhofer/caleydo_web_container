@@ -25,6 +25,14 @@ export class Template extends idtypes.SelectAble implements datatypes.IDataType 
   ids(range?:ranges.Range) : C.IPromise<ranges.Range> {
     return C.resolved(ranges.none());
   }
+
+  persist() {
+    return this.desc.id;
+  }
+
+  restore(persisted: any) {
+    return this;
+  }
 }
 
 /**
