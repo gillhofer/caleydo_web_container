@@ -21,6 +21,7 @@ export class MultiForm extends events.EventHandler implements plugins.IVisInstan
   visses:plugins.IPluginDesc[];
 
   private actVis:any;
+  private actVisPromise : C.IPromise<any>;
 
   private actDesc:plugins.IPluginDesc;
   private $content:D3.Selection;
@@ -60,7 +61,7 @@ export class MultiForm extends events.EventHandler implements plugins.IVisInstan
 
   restore(persisted: any) {
     if (persisted.id) {
-      var selected = MultiForm.search(this.visses, (e) => e.id === persisted.id);
+      var selected = C.search(this.visses, (e) => e.id === persisted.id);
       if (selected) {
         this.switchToImpl(selected).then((vis) => {
           if (vis && persisted.content && C.isFunction(vis.restore)) {
@@ -69,25 +70,18 @@ export class MultiForm extends events.EventHandler implements plugins.IVisInstan
         });
       }
     }
-  }
-
-  private static search<T>(arr: T[], f : (v: T) => boolean) : T {
-    var r : T = undefined;
-    arr.some((v) => {
-      if (f(v)) {
-        r = v;
-        return true;
-      }
-      return false;
-    });
-    return r;
+    return null;
   }
 
   locate() {
-    if (this.actVis && C.isFunction(this.actVis.locate)) {
-      return this.actVis.locate.apply(this.actVis, C.argList(arguments));
-    }
-    return C.resolved((arguments.length === 1 ? undefined: new Array(arguments.length)));
+    var p = this.actVisPromise || C.resolved(null);
+    return p.then((vis) => {
+      if (vis && C.isFunction(vis.locate)) {
+        return vis.locate.apply(vis, C.argList(arguments));
+      } else {
+        return C.resolved((arguments.length === 1 ? undefined : new Array(arguments.length)));
+      }
+    });
   }
 
   /**
@@ -122,12 +116,13 @@ export class MultiForm extends events.EventHandler implements plugins.IVisInstan
 
   private switchToImpl(vis:plugins.IPluginDesc) : C.IPromise<any> {
     if (vis === this.actDesc) {
-      return; //already selected
+      return this.actVisPromise; //already selected
     }
     //gracefully destroy
     if (this.actVis && C.isFunction(this.actVis.destroy)) {
       this.actVis.destroy();
       this.actVis = null;
+      this.actVisPromise = null;
     }
     //remove content dom side
     this.$content.selectAll('*').remove();
@@ -137,10 +132,11 @@ export class MultiForm extends events.EventHandler implements plugins.IVisInstan
     this.actDesc = vis;
     this.fire('change', [vis, bak]);
     this.actVis = null;
+    this.actVisPromise = null;
 
     if (vis) {
       //load the plugin and create the instance
-      return vis.load().then((plugin:any) => {
+      return this.actVisPromise = vis.load().then((plugin:any) => {
         this.actVis = plugin.factory(this.data, this.$content.node());
         return this.actVis;
       });

@@ -7,6 +7,7 @@ import C = require('./main');
 import events = require('./event');
 import idtypes = require('./idtype');
 import ranges = require('./range');
+import provenance = require('./provenance');
 
 /**
  * basic description elements
@@ -19,7 +20,7 @@ export interface IDataDescription {
 /**
  * basic data type interface
  */
-export interface IDataType extends idtypes.SelectAble {
+export interface IDataType extends idtypes.SelectAble, provenance.IPersistable {
   desc: IDataDescription;
   /**
    * dimensions of this datatype
@@ -46,6 +47,14 @@ export class DummyDataType extends idtypes.SelectAble implements IDataType {
 
   get idtypes() {
     return [];
+  }
+
+  persist() {
+    return this.desc.id;
+  }
+
+  restore(persisted: any) {
+    return this;
   }
 }
 

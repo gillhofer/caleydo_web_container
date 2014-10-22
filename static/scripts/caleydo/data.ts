@@ -56,8 +56,21 @@ export function list() {
  * @param name
  * @returns {JQueryGenericPromise<datatypes.IDatatType>}
  */
-export function get(name : string) {
-  return this.list().then(function (data) {
-    return data[name];
-  });
+export function get(name : string) : C.IPromise<datatypes.IDataType>;
+export function get(persisted: any) : C.IPromise<datatypes.IDataType>;
+export function get(persisted: any) : C.IPromise<datatypes.IDataType> {
+  if (typeof persisted === 'string' || typeof persisted === 'number') {
+    return this.list().then(function (data) {
+      return data[persisted];
+    });
+  }
+  //resolve parent and then resolve it using restore item
+  if (persisted.root) {
+    return get(persisted.root).then((parent) => {
+      return parent ? parent.restore(persisted) : null;
+    })
+  } else {
+    //can't restore non root and non data id
+    return C.resolved(null);
+  }
 }

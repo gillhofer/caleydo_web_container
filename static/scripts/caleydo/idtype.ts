@@ -85,6 +85,7 @@ export class IDType extends events.EventHandler implements provenance.IPersistab
     this.name = persisted.name;
     this.names = persisted.names;
     Object.keys(persisted.sel).forEach((type) => this.sel[type] = ranges.parse(persisted.sel[type]));
+    return null;
   }
 
   toString() {
@@ -401,4 +402,22 @@ export function register(id:string, idtype:IDType) {
   }
   cache[id] = idtype;
   return idtype;
+}
+
+export function persist() {
+  var r = {};
+  Object.keys(cache).forEach((id) => {
+    r[id] = cache[id].persist();
+  });
+  return r;
+}
+
+export function restore(persisted: any) {
+  Object.keys(persisted).forEach((id) => {
+    resolve(id).restore(persisted[id]);
+  });
+}
+
+export function clearSelection(type = defaultSelectionType) {
+  Object.keys(cache).forEach((id) => cache[id].clear(type));
 }

@@ -9,6 +9,7 @@ import idtypes = require('./idtype');
 import datatypes = require('./datatype');
 import events = require('./event');
 import vector = require('./vector');
+import provenance = require('./provenance');
 
 export interface ITable extends datatypes.IDataType {
   ncol : number;
@@ -92,6 +93,16 @@ export class TableBase extends idtypes.SelectAble {
 
   reduce(f : (row : any[]) => any, this_f? : any, valuetype? : any, idtype? : idtypes.IDType) : vector.IVector {
     return new MultiTableVector(<ITable>(<any>this), f, this_f, valuetype, idtype);
+  }
+
+  restore(persisted: any) : provenance.IPersistable {
+    if (persisted && persisted.f) {
+      return this.reduce(eval(persisted.f), this, persisted.valuetype, persisted.idtype ? idtypes.resolve(persisted.idtype) : undefined);
+    } else if (persisted && persisted.range) { //some view onto it
+      return this.view(ranges.parse(persisted.range));
+    } else {
+      return <provenance.IPersistable>(<any>this);
+    }
   }
 }
 
@@ -237,6 +248,17 @@ export class Table extends TableBase implements ITable {
   size() {
     return (<any>this.desc).size;
   }
+
+  persist() {
+    return this.desc.id;
+  }
+
+  restore(persisted: any) : provenance.IPersistable {
+    if (persisted && persisted.col) {
+      return this.col(persisted.col);
+    }
+    return super.restore(persisted);
+  }
 }
 
 /**
@@ -254,6 +276,21 @@ class TableView extends TableBase implements ITable {
 
   get desc() {
     return this._root.desc;
+  }
+
+  persist() {
+    return {
+      root: this._root.persist(),
+      range: this.range.toString()
+    };
+  }
+
+  restore(persisted: any) {
+    var r : ITable = this;
+    if (persisted && persisted.range) { //some view onto it
+      r = r.view(ranges.parse(persisted.range));
+    }
+    return r;
   }
 
   size() {
@@ -327,6 +364,21 @@ export class TableVector extends vector.VectorBase implements vector.IVector {
 
   get idtypes() {
     return [this.idtype];
+  }
+
+  persist() {
+    return {
+      root: this.table.persist(),
+      col: this.index
+    };
+  }
+
+  restore(persisted: any) {
+    var r : vector.IVector = this;
+    if (persisted && persisted.range) { //some view onto it
+      r = r.view(ranges.parse(persisted.range));
+    }
+    return r;
   }
 
   /**
@@ -414,6 +466,23 @@ class MultiTableVector extends vector.VectorBase implements vector.IVector {
 
   get idtypes() {
     return [this.idtype];
+  }
+
+  persist() {
+    return {
+      root: this.table.persist(),
+      f: this.f.toString(),
+      valuetype: this.valuetype ? this.valuetype : undefined,
+      idtype: this.idtype === this.table.rowtype ? undefined: this.idtype.name
+    }
+  }
+
+  restore(persisted: any) {
+    var r : vector.IVector = this;
+    if (persisted && persisted.range) { //some view onto it
+      r = r.view(ranges.parse(persisted.range));
+    }
+    return r;
   }
 
   size() {

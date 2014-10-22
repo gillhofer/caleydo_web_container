@@ -13,11 +13,13 @@ function autoload(plugins, container) {
   return autoload;
 }
 
-require(['jquery', 'd3', './caleydo/data', './caleydo/plugin', './caleydo-window/main', './caleydo/multiform' ], function ($, d3, data, plugins, window, multiform) {
+require(['jquery', 'd3', './caleydo/main', './caleydo/data', './caleydo/plugin', './caleydo-window/main', './caleydo/multiform', './caleydo/idtype' ], function ($, d3, C, data, plugins, window, multiform, idtypes) {
   'use strict';
   var windows = $('<div>').css('position', 'absolute').appendTo('body')[0];
   var singletons = autoload(plugins, $('body')[0]);
   var menu = $('<div>').css('position', 'fixed').appendTo('body')[0];
+
+  var canvas = [];
   // use app here
 
   /*
@@ -79,7 +81,7 @@ require(['jquery', 'd3', './caleydo/data', './caleydo/plugin', './caleydo-window
     var multi = multiform.create(m, mw.node);
     multiform.addSimpleVisIconChooser(multi, mw.toolbar);
     mw.title = m.desc.name + ' @ ' + multi.act.name;
-    mw.pos = [400, 10];
+    mw.pos = [400, 50];
     mw.contentSize = multi.size;
     multi.on('change', function (event, new_) {
       mw.title = m.desc.name + ' @ ' + new_.name;
@@ -88,16 +90,70 @@ require(['jquery', 'd3', './caleydo/data', './caleydo/plugin', './caleydo-window
     var vis = mw.adapter(multi);
     mw.on('removed', function () {
       removeLink(vis);
+      multi.destroy();
+      canvas.splice(C.indexOf(canvas, function (c) {
+        return c.mw === mw;
+      }), 1);
     });
     mw.on('drag_stop', updateLinks);
     addLink(vis);
+    var entry = {
+      mw: mw,
+      multi: multi
+    };
+    canvas.push(entry);
+    return entry;
   }
 
-  data.list().then(function (list) {
-    var b = d3.select(menu);
-    b.append('span').text('Select Dataset: ');
-    var $select = b.append('select').attr('class', 'dataselector');
+  function persist() {
+    return {
+      canvas: canvas.map(function (e) {
+        return {
+          data : e.multi.data.persist(),
+          multi: e.multi.persist(),
+          mw: e.mw.persist()
+        };
+      }),
+      idtypes: idtypes.persist()
+    };
+  }
 
+  function restore(persisted) {
+    canvas.forEach(function (e) {
+      e.mw.close();
+    });
+    persisted.canvas.forEach(function (e) {
+      data.get(e.data).then(function (m) {
+        var r = addIt(m);
+        r.mw.restore(e.mw);
+        r.multi.restore(e.multi);
+      });
+    });
+    idtypes.restore(persisted.idtypes);
+  }
+
+
+  var b = d3.select(menu);
+  b.append('span').text('Select Dataset: ');
+  var $select = b.append('select').attr('class', 'dataselector');
+
+  b.append('button').text('Clear Selections').on('click', function () {
+    idtypes.clearSelection();
+  });
+  var persisted = [];
+  b.append('button').text('Persist').on('click', function () {
+    persisted.push(persist());
+    $restore.attr('disabled', null);
+  });
+  var $restore = b.append('button').text('Restore').attr('disabled','disabled').on('click', function () {
+    if (persisted.length > 0) {
+      restore(persisted.pop());
+    }
+    $restore.attr('disabled', persisted.length > 0 ? null : 'disable');
+  });
+
+
+  data.list().then(function (list) {
     //for all inhomogeneous add them as extra columns, too
     list = d3.entries(list).map(function (e) {
       e.group = '_dataSets';

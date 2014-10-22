@@ -163,6 +163,36 @@ export function callable(obj:any, f:string) {
 }
 
 /**
+ * search item in array by function
+ * @param arr
+ * @param f
+ * @return {T}
+ */
+export function search<T>(arr: T[], f : (v: T) => boolean) : T {
+  var r : T = undefined;
+  arr.some((v) => {
+    if (f(v)) {
+      r = v;
+      return true;
+    }
+    return false;
+  });
+  return r;
+}
+
+export function indexOf<T>(arr: T[], f : (v: T) => boolean) : number {
+  var r = -1;
+  arr.some((v,i) => {
+    if (f(v)) {
+      r = i;
+      return true;
+    }
+    return false;
+  });
+  return r;
+}
+
+/**
  * converts the given arguments object into an array
  * @param args
  * @returns {*|Array}

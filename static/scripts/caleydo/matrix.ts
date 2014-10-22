@@ -9,6 +9,7 @@ import idtypes = require('./idtype');
 import datatypes = require('./datatype');
 import events = require('./event');
 import vector = require('./vector');
+import provenance = require('./provenance');
 
 export interface IMatrix extends datatypes.IDataType {
   /**
@@ -115,6 +116,18 @@ export class MatrixBase extends idtypes.SelectAble {
 
   reduce(f : (row : any[]) => any, this_f? : any, valuetype? : any, idtype? : idtypes.IDType) : vector.IVector {
     return new ProjectedVector(<IMatrix>(<any>this), f, this_f, valuetype, idtype);
+  }
+
+  restore(persisted: any) : provenance.IPersistable {
+    if (persisted && persisted.f) {
+      return this.reduce(eval(persisted.f), this, persisted.valuetype, persisted.idtype ? idtypes.resolve(persisted.idtype) : undefined);
+    } else if (persisted && persisted.range) { //some view onto it
+      return this.view(ranges.parse(persisted.range));
+    } else if (persisted && persisted.transposed) {
+      return (<IMatrix>(<any>this)).t;
+    } else {
+      return <provenance.IPersistable>(<any>this);
+    }
   }
 }
 
@@ -224,6 +237,10 @@ export class Matrix extends MatrixBase implements IMatrix {
   size() {
     return (<any>this.desc).size;
   }
+
+  persist() {
+    return this.desc.id;
+  }
 }
 
 /**
@@ -241,6 +258,13 @@ class TransposedMatrix extends MatrixBase  implements IMatrix{
 
   get desc() {
     return this._root.desc;
+  }
+
+  persist() {
+    return {
+      root: this._root.persist(),
+      transposed: true
+    };
   }
 
   get valuetype() {
@@ -298,7 +322,7 @@ class TransposedMatrix extends MatrixBase  implements IMatrix{
  * @param t optional its transposed version
  * @constructor
  */
-class MatrixView extends MatrixBase  implements IMatrix{
+class MatrixView extends MatrixBase implements IMatrix{
   constructor(root:IMatrix, private range:ranges.Range, public t? : IMatrix) {
     super(root);
     this.range = range;
@@ -309,6 +333,13 @@ class MatrixView extends MatrixBase  implements IMatrix{
 
   get desc() {
     return this._root.desc;
+  }
+
+  persist() {
+    return {
+      root: this._root.persist(),
+      range: this.range.toString()
+    };
   }
 
   ids(range: ranges.Range = ranges.all()) {
@@ -380,6 +411,23 @@ class ProjectedVector extends vector.VectorBase implements vector.IVector {
       id : m.desc.id+'-p'
     };
     this._root = this;
+  }
+
+  persist() {
+    return {
+      root: this.m.persist(),
+      f: this.f.toString(),
+      valuetype: this.valuetype === this.m.valuetype ? undefined : this.valuetype,
+      idtype: this.idtype === this.m.rowtype ? undefined: this.idtype.name
+    }
+  }
+
+  restore(persisted: any) {
+    var r : vector.IVector = this;
+    if (persisted && persisted.range) { //some view onto it
+      r = r.view(ranges.parse(persisted.range));
+    }
+    return r;
   }
 
   get idtype() {

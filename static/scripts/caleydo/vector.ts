@@ -198,6 +198,14 @@ export class VectorBase extends idtypes.SelectAble {
     }
     return this.data().then((d) => d.reduceRight(helper, initialValue));
   }
+
+  restore(persisted: any) {
+    var r : IVector = <IVector>(<any>this);
+    if (persisted && persisted.range) { //some view onto it
+      r = r.view(ranges.parse(persisted.range));
+    }
+    return r;
+  }
 }
 
 /**
@@ -296,6 +304,10 @@ export class Vector extends VectorBase implements IVector {
       return this.view(ranges.list(indices));
     });
   }
+
+  persist() {
+    return this.desc.id;
+  }
 }
 
 /**
@@ -313,6 +325,13 @@ class VectorView extends VectorBase implements IVector {
 
   get desc() {
     return this._root.desc;
+  }
+
+  persist() {
+    return {
+      root: this._root.persist(),
+      range: this.range.toString()
+    }
   }
 
   size() {

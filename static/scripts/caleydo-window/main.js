@@ -247,6 +247,7 @@ define(['exports', 'jquery', '../caleydo/event', '../caleydo/main', '../caleydo/
       this.size = persisted.size;
       this.pos = persisted.pos;
 
+      return null;
     };
 
     /**
@@ -299,8 +300,8 @@ define(['exports', 'jquery', '../caleydo/event', '../caleydo/main', '../caleydo/
         return [p.left, p.top];
       },
       set: function (val) {
-        this.$div.css('left', val[0]);
-        this.$div.css('top', val[1]);
+        this.$div.css('left', val[0] + 'px');
+        this.$div.css('top', val[1] + 'px');
       },
       enumerable: true,
       configurable: true
