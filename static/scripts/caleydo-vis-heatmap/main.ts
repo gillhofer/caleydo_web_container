@@ -53,8 +53,8 @@ export class HeatMap implements plugins.IVisInstance {
     var dims = this.data.dim;
     var width = dims[1], height = dims[0];
     var $svg = $parent.append('svg').attr({
-      width: width * 10 + 'px',
-      height: height * 10 + 'px'
+      width: width * 10,
+      height: height * 10
     });
 
     var colScale = d3.scale.linear().domain([0, width]).range([0, 100]);

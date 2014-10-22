@@ -131,6 +131,34 @@ export class MatrixBase extends idtypes.SelectAble {
   }
 }
 
+export interface IMatrixLoader {
+  (desc: datatypes.IDataDescription) : C.IPromise<{
+    rowIds : ranges.Range;
+    rows : string[];
+    colIds : ranges.Range;
+    cols : string[];
+    ids: ranges.Range;
+    data : any[][];
+  }>
+}
+
+
+function viaAPILoader() {
+  var _data = undefined;
+  return (desc) => {
+    if (_data) { //in the cache
+      return C.resolved(_data);
+    }
+    return C.getAPIJSON('/dataset/'+desc.id).then(function (data) {
+      data.rowIds = ranges.list(data.rowIds);
+      data.colIds = ranges.list(data.colIds);
+      data.ids = ranges.list(data.rowIds.dim(0), data.colIds.dim(0));
+      _data = data; //store cache
+      return data;
+    });
+  }
+}
+
 /**
  * root matrix implementation holding the data
  */
@@ -139,9 +167,8 @@ export class Matrix extends MatrixBase implements IMatrix {
   valuetype:any;
   rowtype:idtypes.IDType;
   coltype:idtypes.IDType;
-  private _data : any = null;
 
-  constructor(public desc: datatypes.IDataDescription) {
+  constructor(public desc: datatypes.IDataDescription, private loader: IMatrixLoader) {
     super(null);
     this._root = this;
     var d = <any>desc;
@@ -157,18 +184,7 @@ export class Matrix extends MatrixBase implements IMatrix {
    * @returns {*}
    */
   load() : C.IPromise<any> {
-    var that = this;
-    if (this._data) { //in the cache
-      return C.resolved(this._data);
-    }
-    return C.getAPIJSON('/dataset/'+this.desc.id).then(function (data) {
-      data.rowIds = ranges.list(data.rowIds);
-      data.colIds = ranges.list(data.colIds);
-      data.ids = ranges.list(data.rowIds.dim(0), data.colIds.dim(0));
-      that._data = data; //store cache
-      that.fire("loaded", this);
-      return data;
-    });
+    return this.loader(this.desc);
   }
 
   get idtypes() {
@@ -497,5 +513,5 @@ class ProjectedVector extends vector.VectorBase implements vector.IVector {
  * @returns {IMatrix}
  */
 export function create(desc: datatypes.IDataDescription): IMatrix {
-  return new Matrix(desc);
+  return new Matrix(desc, viaAPILoader());
 }

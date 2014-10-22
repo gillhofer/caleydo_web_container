@@ -208,15 +208,52 @@ export class VectorBase extends idtypes.SelectAble {
   }
 }
 
+export interface IVectorLoader {
+  (desc: datatypes.IDataDescription) : C.IPromise<{
+    rowIds : ranges.Range;
+    rows : string[];
+    data : any[];
+  }>
+}
+
+
+function viaAPILoader() {
+  var _data = undefined;
+  return (desc) => {
+    if (_data) { //in the cache
+      return C.resolved(_data);
+    }
+    return C.getAPIJSON('/dataset/'+desc.id).then(function (data) {
+      data.rowIds = ranges.list(data.rowIds);
+      _data = data; //store cache
+      return data;
+    });
+  }
+}
+
+function viaDataLoader(rows: string[], rowIds: number[], data: any[]) {
+  var _data = undefined;
+  return (desc) => {
+    if (_data) { //in the cache
+      return C.resolved(_data);
+    }
+    _data = {
+      rowIds : ranges.list(rowIds),
+      rows: rows,
+      data: data
+    };
+    return C.resolved(_data);
+  };
+}
+
 /**
  * root matrix implementation holding the data
  */
 export class Vector extends VectorBase implements IVector {
   valuetype:any;
   _idtype:idtypes.IDType;
-  private _data:any = null;
 
-  constructor(public desc:datatypes.IDataDescription) {
+  constructor(public desc:datatypes.IDataDescription, private loader : IVectorLoader) {
     super(null);
     this._root = this;
     var d = <any>desc;
@@ -234,16 +271,7 @@ export class Vector extends VectorBase implements IVector {
    * @returns {*}
    */
   load() : C.IPromise<any> {
-    var that = this;
-    if (this._data) { //in the cache
-      return C.resolved(this._data);
-    }
-    return C.getAPIJSON('/dataset/'+this.desc.id).then(function (data) {
-      data.rowIds = ranges.list(data.rowIds);
-      that._data = data; //store cache
-      that.fire("loaded", this);
-      return data;
-    });
+    return this.loader(this.desc);
   }
 
   /**
@@ -403,5 +431,9 @@ class VectorView extends VectorBase implements IVector {
  * @returns {IVector}
  */
 export function create(desc: datatypes.IDataDescription): IVector {
-  return new Vector(desc);
+  return new Vector(desc, viaAPILoader());
+}
+
+export function wrap(desc: datatypes.IDataDescription, rows: string[], rowIds: number[], data: any[]) {
+  return new Vector(desc, viaDataLoader(rows, rowIds, data));
 }

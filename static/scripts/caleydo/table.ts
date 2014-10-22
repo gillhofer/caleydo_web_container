@@ -109,6 +109,7 @@ export class TableBase extends idtypes.SelectAble {
 export interface ITableLoader {
   (desc: datatypes.IDataDescription) : C.IPromise<{
     rowIds : ranges.Range;
+    rows: string[];
     objs : any[];
     data : any[][];
   }>
@@ -141,7 +142,7 @@ function viaAPILoader() {
   }
 }
 
-function viaDataLoader(data: any[], idProperty: string) {
+function viaDataLoader(data: any[], idProperty: string, nameProperty: string) {
   var _data = undefined;
   return (desc) => {
     if (_data) { //in the cache
@@ -149,6 +150,7 @@ function viaDataLoader(data: any[], idProperty: string) {
     }
     _data = {
       rowIds : data.map((d) => d[idProperty]),
+      rows : data.map((d) => d[nameProperty]),
       objs : data,
       data : desc.columns.map((name) => data.map((d) => d[name]))
     };
@@ -161,8 +163,6 @@ function viaDataLoader(data: any[], idProperty: string) {
  */
 export class Table extends TableBase implements ITable {
   rowtype:idtypes.IDType;
-  //data in the format col x row !!!
-  private _data:any = null;
   private vectors : TableVector[];
 
   constructor(public desc:datatypes.IDataDescription, private loader : ITableLoader) {
@@ -547,6 +547,6 @@ export function create(desc: datatypes.IDataDescription): ITable {
   return new Table(desc, viaAPILoader());
 }
 
-export function wrapObjects(desc: datatypes.IDataDescription, data: any[], idProperty: string) {
-  return new Table(desc, viaDataLoader(data, idProperty));
+export function wrapObjects(desc: datatypes.IDataDescription, data: any[], idProperty: string, nameProperty: string) {
+  return new Table(desc, viaDataLoader(data, idProperty, nameProperty));
 }
