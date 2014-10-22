@@ -178,28 +178,69 @@ export class ListIterator<T> extends AIterator<T> implements IIterator<T>{
     return this.arr[this.it.next()];
   }
 
-  /**
-   * converts the remaining of this iterator to a list
-   * @returns {Array}
-   */
   asList() {
     return this.arr.slice();
   }
 }
 
+export class SingleIterator<T> extends AIterator<T> implements IIterator<T>{
+  private delivered = false;
+  constructor(private value: T) {
+    super();
+  }
+
+  hasNext() {
+    return !this.delivered;
+  }
+
+  next() {
+    if (!this.hasNext()) {
+      throw new RangeError("end of iterator");
+    }
+    this.delivered = true;
+    return this.value;
+  }
+
+  asList() {
+    return [this.value];
+  }
+
+  get isIncreasing() {
+    return true;
+  }
+
+  get isDecreasing() {
+    return true;
+  }
+
+  get byOne() {
+    return true;
+  }
+
+  get byMinusOne() {
+    return true;
+  }
+}
+
 export class ConcatIterator<T> extends AIterator<T> implements IIterator<T>{
 
-  private act : number = 0;
+  private act : IIterator<T>;
 
   constructor(private its:IIterator<T>[]) {
     super();
+    this.act = its.shift();
   }
 
   /**
    * whether more items are available
    */
   hasNext() {
-    return this.act < this.its.length && this.its[this.act].hasNext();
+    //based on http://grepcode.com/file/repo1.maven.org/maven2/com.google.guava/guava/r08/com/google/common/collect/Iterators.java#Iterators.concat%28java.util.Iterator%29
+    var currentHasNext = false;
+    while (!(currentHasNext = this.act.hasNext()) && this.its.length > 0) {
+      this.act = this.its.shift();
+    }
+    return currentHasNext;
   }
 
   /**
@@ -209,12 +250,7 @@ export class ConcatIterator<T> extends AIterator<T> implements IIterator<T>{
     if (!this.hasNext()) {
       throw new RangeError("end of iterator");
     }
-    var it = this.its[this.act];
-    if (!it.hasNext()) {
-      this.act++;
-    }
-    it = this.its[this.act];
-    return it.next();
+    return this.act.next();
   }
 
   /**
@@ -336,6 +372,10 @@ export function concat<T>(...its : IIterator<T>[]) {
  */
 export function range(from:number, to:number, step:number) {
   return new Iterator(from, to, step);
+}
+
+export function single(value: number) {
+  return new SingleIterator(value);
 }
 
 /**

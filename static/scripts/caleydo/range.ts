@@ -6,7 +6,32 @@ import C = require('./main');
 import Iterator = require('./iterator');
 'use strict';
 
-export class RangeElem {
+export interface IRangeElem {
+  isAll : boolean;
+  isSingle : boolean;
+  size(size:number):number;
+  clone();
+  invert(index:number, size?:number);
+  iter(size?:number):Iterator.IIterator<number>;
+  toString();
+  from: number;
+  step: number;
+  to: number;
+}
+
+
+
+/**
+ * fix negative indices given the total size
+ * @param v
+ * @param size
+ * @returns {number}
+ */
+function fix(v:number, size:number) {
+  return v < 0 ? (size + 1 - v) : v;
+}
+
+export class RangeElem implements IRangeElem {
   constructor(public from:number, public to = -1, public step = 1) {
     if (step !== 1 && step !== -1) {
       throw new Error("currently just +1 and -1 are valid steps");
@@ -30,15 +55,18 @@ export class RangeElem {
   }
 
   static single(val:number) {
-    return new RangeElem(val, val + 1, 1);
+    return new SingleRangeElem(val);
   }
 
   static range(from:number, to = -1, step = 1) {
+    if ((from + step) === to) {
+      return RangeElem.single(from);
+    }
     return new RangeElem(from, to, step);
   }
 
   size(size:number):number {
-    var t = this.fix(this.to, size), f = this.fix(this.from, size);
+    var t = fix(this.to, size), f = fix(this.from, size);
     if (this.step === 1) {
       return Math.max(t - f, 0);
     } else if (this.step === -1) {
@@ -56,21 +84,11 @@ export class RangeElem {
     return new RangeElem(this.from, this.to, this.step);
   }
 
-  /**
-   * fix negative indices given the total size
-   * @param v
-   * @param size
-   * @returns {number}
-   */
-  private fix(v:number, size:number) {
-    return v < 0 ? (size + 1 - v) : v;
-  }
-
   invert(index:number, size?:number) {
     if (this.isAll) {
       return index;
     }
-    return this.fix(this.from, size) + index * this.step;
+    return fix(this.from, size) + index * this.step;
   }
 
   /**
@@ -78,7 +96,7 @@ export class RangeElem {
    * @param size the underlying size for negative indices
    */
   iter(size?:number):Iterator.IIterator<number> {
-    return Iterator.range(this.fix(this.from, size), this.fix(this.to, size), this.step);
+    return Iterator.range(fix(this.from, size), fix(this.to, size), this.step);
   }
 
   toString() {
@@ -109,17 +127,58 @@ export class RangeElem {
   }
 }
 
+export class SingleRangeElem implements IRangeElem {
+  constructor(public from: number) {
+  }
+
+  get step() {
+    return 1;
+  }
+
+  get to() {
+    return this.from + 1;
+  }
+
+  get isAll() {
+    return false;
+  }
+
+  get isSingle() {
+    return true;
+  }
+
+  size(size:number):number {
+    return 1;
+  }
+
+  clone() {
+    return new SingleRangeElem(this.from);
+  }
+
+  invert(index:number, size?:number) {
+    return fix(this.from, size) + index;
+  }
+
+  iter(size?:number):Iterator.IIterator<number> {
+    return Iterator.single(fix(this.from, size));
+  }
+
+  toString() {
+    return this.from.toString();
+  }
+}
+
 export class Range1D {
-  private arr:RangeElem[];
+  private arr:IRangeElem[];
 
   constructor();
   constructor(base:Range1D);
-  constructor(arr:RangeElem[]);
+  constructor(arr:IRangeElem[]);
   constructor(arg?:any) {
     if (arg instanceof Range1D) {
       this.arr = (<Range1D>arg).arr;
     } else if (Array.isArray(arg)) {
-      this.arr = <RangeElem[]>arg;
+      this.arr = <IRangeElem[]>arg;
     } else {
       this.arr = [];
     }
@@ -148,7 +207,7 @@ export class Range1D {
       return [RangeElem.single(indices[0])];
     }
     //return indices.map(RangeElem.single);
-    var r = new Array<RangeElem>(),
+    var r = new Array<IRangeElem>(),
       deltas = indices.slice(1).map((e, i) => e - indices[i]),
       start = 0, act = 1, i = 0;
     while (act < indices.length) {
@@ -191,7 +250,7 @@ export class Range1D {
 
   push(...items:string[]):number;
 
-  push(...items:RangeElem[]):number;
+  push(...items:IRangeElem[]):number;
 
   push(...items:any[]):number {
     function p(item:any) {
@@ -226,7 +285,7 @@ export class Range1D {
     this.pushList(indices);
   }
 
-  at(index:number):RangeElem {
+  at(index:number):IRangeElem {
     if (index < 0) {
       index += this.length;
     }
@@ -238,6 +297,10 @@ export class Range1D {
 
   size(size:number) {
     return this.arr.map((d) => d.size(size)).reduce((a, b) => a + b, 0);
+  }
+
+  get isIdentityRange() {
+    return this.arr.length === 1 && this.arr[0].from === 0 && this.arr[0].step === 1;
   }
 
   /**
@@ -253,6 +316,9 @@ export class Range1D {
     }
     if (sub.isAll) {
       return this.clone();
+    }
+    if (this.isIdentityRange) { //identity lookup
+      return sub.clone();
     }
     //TODO optimize
     var l = this.iter(size).asList();
@@ -395,14 +461,24 @@ export class Range1D {
     if (r.isNone || this.isNone) {
       return Range1D.none();
     }
-    var arr = this.iter().asList();
     var result = [];
-    r.forEach((d) => {
-      var i = arr.indexOf(d);
-      if (i >= 0) {
-        result.push(i);
-      }
-    });
+    if (this.isIdentityRange) {
+      var end = this.arr[0].to;
+      r.forEach((d) => {
+        if (d >= 0 && d < end) {
+          result.push(d);
+        }
+      });
+    } else {
+      var arr = this.iter().asList();
+      r.forEach((d) => {
+        var i = arr.indexOf(d);
+        if (i >= 0) {
+          result.push(i);
+        }
+      });
+    }
+
     return Range1D.from(result);
   }
 
@@ -439,7 +515,7 @@ export class Range1D {
    */
   iter(size?:number):Iterator.IIterator<number> {
     if (this.isList) {
-      return Iterator.forList(this.arr.map((d) => d.from));
+      return Iterator.forList(this.arr.map((d) => (<any>d).from));
     }
     return Iterator.concat.apply(Iterator, this.arr.map((d) => d.iter(size)));
   }
