@@ -137,6 +137,9 @@ export class MultiForm extends events.EventHandler implements plugins.IVisInstan
     if (vis) {
       //load the plugin and create the instance
       return this.actVisPromise = vis.load().then((plugin:any) => {
+        if (this.actDesc !== vis) { //changed in the meanwhile
+          return null;
+        }
         this.actVis = plugin.factory(this.data, this.$content.node());
         return this.actVis;
       });

@@ -254,7 +254,7 @@ export class Table extends TableBase implements ITable {
   }
 
   restore(persisted: any) : provenance.IPersistable {
-    if (persisted && persisted.col) {
+    if (persisted && typeof persisted.col === 'number') {
       return this.col(persisted.col);
     }
     return super.restore(persisted);
