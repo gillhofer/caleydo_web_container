@@ -18,8 +18,8 @@ module.exports = app;
 
 var main = function () {
   //process.env.PORT set by heroku
-  var port = process.env.PORT || 8080;
-  console.log('port: ', process.env.PORT, 8080, port);
+  var port = process.env.PORT || 9000;
+  console.log('port: ', process.env.PORT, 9000, port);
   var server = app.listen(port, function () {
     console.log('Listening on port %d', server.address().port);
   });
@@ -30,5 +30,5 @@ if (require.main === module) {
   console.log('running as main');
   main();
 } else {
-  console.log('running as slave', require.main, module.parent);
+  console.log('running as slave');
 }
