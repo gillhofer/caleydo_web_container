@@ -3,6 +3,8 @@
  */
 /// <reference path='../../../tsd.d.ts' />
 
+/// <amd-dependency path='css!./style' />
+
 import d3 = require('d3');
 import matrix = require('../caleydo/matrix');
 import table = require('../caleydo/table');
