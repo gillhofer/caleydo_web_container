@@ -43,7 +43,7 @@ export class MultiForm extends events.EventHandler implements plugins.IVisInstan
     //create content
     this.$content = p.append('div').attr('class', 'content');
     //switch to first
-    this.switchToImpl(this.visses[0]);
+    this.switchTo(this.visses[0]);
   }
 
   destroy() {
@@ -63,7 +63,7 @@ export class MultiForm extends events.EventHandler implements plugins.IVisInstan
     if (persisted.id) {
       var selected = C.search(this.visses, (e) => e.id === persisted.id);
       if (selected) {
-        this.switchToImpl(selected).then((vis) => {
+        this.switchTo(selected).then((vis) => {
           if (vis && persisted.content && C.isFunction(vis.restore)) {
             vis.restore(persisted.content);
           }
@@ -107,14 +107,19 @@ export class MultiForm extends events.EventHandler implements plugins.IVisInstan
    * switch to the desired vis technique given by index
    * @param index
    */
-  switchTo(index: number) {
-    if (index < 0 || index >= this.visses.length){
-      throw new RangeError('index '+index+ ' out of range: [0,'+this.visses.length+']');
+  switchTo(index: number)  : C.IPromise<any>;
+  switchTo(vis:plugins.IPluginDesc) : C.IPromise<any>;
+  switchTo(param : any) : C.IPromise<any> {
+    var vis: plugins.IPluginDesc = null;
+    if (typeof param === 'number') {
+      if (param < 0 || param >= this.visses.length){
+        throw new RangeError('index '+param+ ' out of range: [0,'+this.visses.length+']');
+      }
+      vis = this.visses[<number>param];
+    } else {
+      vis = <plugins.IPluginDesc>param;
     }
-    this.switchToImpl(this.visses[index]);
-  }
 
-  private switchToImpl(vis:plugins.IPluginDesc) : C.IPromise<any> {
     if (vis === this.actDesc) {
       return this.actVisPromise; //already selected
     }
@@ -149,49 +154,66 @@ export class MultiForm extends events.EventHandler implements plugins.IVisInstan
   }
 }
 
-export function addSimpleVisChooser(form: MultiForm, toolbar: Element) {
+/**
+ * adds everythign to have an icon for the set of vis plugin descriptions
+ * @param s
+ */
+function createIconFromDesc(s : D3.Selection) {
+  s.attr('title', (d) => d.name)
+    .attr('class', 'fa')
+    .each(function (d) {
+      var t = d3.select(this);
+      if (d.iconcss) { //defined by css
+        t.classed(d.iconcss, true);
+      } else if (d.icon) { //defined by background icon
+        t.classed('fa-fw', true).style('background-image', 'url(' + d.baseUrl + '/' + d.icon + ')').html('&nbsp');
+      } else { //use the first letter
+        t.text(d.name.substr(0, 1).toUpperCase());
+      }
+    });
+}
+
+/**
+ * computes the selectable vis techniques for a given set of multi form objects
+ * @param forms
+ * @return {*}
+ */
+function toAvailableVisses(forms: MultiForm[]) {
+  if (forms.length === 0) {
+    return [];
+  } if (forms.length === 1) {
+    return forms[0].visses;
+  }
+  //intersection of all
+  return forms[0].visses.filter((vis) => forms.every((f) => f.visses.indexOf(vis) >= 0))
+}
+
+export function addIconVisChooser(toolbar: Element, ...forms: MultiForm[]){
+  var $toolbar = d3.select(toolbar);
+  var $s = $toolbar.insert('div','*');
+  var visses = toAvailableVisses(forms);
+
+  $s.selectAll('i').data(visses)
+    .enter()
+    .append('i')
+    .call(createIconFromDesc)
+    .on('click', (d) => {
+      forms.forEach((f) => f.switchTo(d));
+    });
+}
+
+export function addSelectVisChooser(toolbar: Element, ...forms: MultiForm[]){
   var $toolbar = d3.select(toolbar);
   var $s = $toolbar.insert('select','*');
-  $s.selectAll('option').data(form.visses)
+  var visses = toAvailableVisses(forms);
+
+  $s.selectAll('option').data(visses)
     .enter()
     .append('option')
     .attr('value', (d, i) => i)
-    .text((d) => {
-      return d.name;
-    });
+    .text((d) => d.name);
   $s.on('change', function () {
-    form.switchTo(this.selectedIndex);
-  });
-}
-
-export function addSimpleVisIconChooser(form: MultiForm, toolbar: Element) {
-  var $toolbar = d3.select(toolbar);
-  var $s = $toolbar.insert('div','*');
-  //create
-  $s.selectAll('i').data(form.visses)
-    .enter()
-    .append('i')
-    .attr('title', (d) => d.name)
-    .attr('class', 'fa')
-    .each(function(d) {
-      var t = d3.select(this);
-      if (d.iconcss) {
-        t.classed(d.iconcss, true);
-      } else if (d.icon) {
-        t.classed('fa-fw', true).style('background-image', 'url(' + d.baseUrl + '/' + d.icon + ')').html('&nbsp');
-      } else {
-        t.text(d.name.substr(0, 1).toUpperCase());
-      }
-    })
-    .on('click', (d, i) => {
-      form.switchTo(i);
-    });
-  var l = (event: any, act: plugins.IPluginDesc, old: plugins.IPluginDesc) => {
-
-  };
-  form.on('change', l);
-  C.onDOMNodeRemoved(toolbar, () => {
-    form.off('change', l);
+    forms.forEach((f) => f.switchTo(visses[this.selectedIndex]));
   });
 }
 
