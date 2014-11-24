@@ -94,7 +94,7 @@ export class HeatMap implements plugins.IVisInstance {
       }
       var dim0 = selected.dim(0), dim1 = selected.dim(1);
       if (selected.isAll) {
-        $svg.select('rect').classed('select-' + type, true);
+        $svg.selectAll('rect').classed('select-' + type, true);
       } else if (dim0.isAll || dim0.isNone) {
         dim1.forEach((j) => {
           $svg.selectAll('g rect:nth-child(' + (j + 1) + ')').classed('select-' + type, true);

@@ -9,11 +9,11 @@ var program = require('commander');
 
 program
   .version('0.0.1')
-  .option('-m, --main-file', 'specify main file [./main]', './main')
+  .option('-m, --main-file <mainFile>', 'specify main file [./main]', './main')
   .option('--no-bower', 'skips running bower')
-  .option('--api-prefix', 'specify api prefix [/api]', '/api')
-  .option('--api-suffix', 'specify api suffix []', '')
-  .option('-b, --base-url', 'script base url [./scripts]', './scripts')
+  .option('--api-prefix <prefix>', 'specify api prefix [/api]', '/api')
+  .option('--api-suffix <suffix>', 'specify api suffix []', '')
+  .option('-b, --base-url <baseUrl>', 'script base url [./scripts]', './scripts')
   .parse(process.argv);
 
 var plugindir = 'static/scripts';
@@ -292,7 +292,7 @@ function deriveBowerRequireJSConfig() {
 function createConfig() {
   console.log('dump config');
   var r = dumpBower();
-  if (!program.bower) {
+  if (typeof program.bower === 'undefined' || program.bower) {
     r = r.then(runBower);
   }
   r

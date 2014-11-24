@@ -1,0 +1,19 @@
+{
+  "name" : "caleydo-vis-barplot",
+  "version": "0.0.1",
+  "dependencies": {
+    "d3": "~3.4.11"
+  },
+  "caleydo" : {
+    "plugins": [
+      {
+        "type": "vis",
+        "id": "caleydo-vis-barplot",
+        "name": "Bar Plot",
+        "icon" : "icon.png",
+        "size": "eval!function (dim) { return [100, dim[0] * 10]; }",
+        "filter": "eval!function (data) { return data.desc.type === 'vector' && (data.desc.value.type === 'real' || data.desc.value.type === 'int'); }"
+      }
+    ]
+  }
+}

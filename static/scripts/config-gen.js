@@ -1,6 +1,6 @@
 /*global require */
 require.config({
-  "baseUrl": "/scripts",
+  "baseUrl": "./scripts",
   "paths": {
     "d3": "/bower_components/d3/d3",
     "d3.parcoords": "/bower_components/d3.parcoords/index",
@@ -24,7 +24,7 @@ require.config({
       "apiJSONSuffix": ""
     },
     "caleydo/plugin": {
-      "baseUrl": "/scripts",
+      "baseUrl": "./scripts",
       "plugins": [
         {
           "type": "datatype",
@@ -64,6 +64,14 @@ require.config({
             50,
             300
           ],
+          "filter": function (data) { return data.desc.type === 'vector' && (data.desc.value.type === 'real' || data.desc.value.type === 'int'); }
+        },
+        {
+          "type": "vis",
+          "id": "caleydo-vis-barplot",
+          "name": "Bar Plot",
+          "icon": "icon.png",
+          "size": function (dim) { return [100, dim[0] * 10]; },
           "filter": function (data) { return data.desc.type === 'vector' && (data.desc.value.type === 'real' || data.desc.value.type === 'int'); }
         },
         {
@@ -119,7 +127,7 @@ require.config({
           "factory": "createMosaic",
           "icon": "icon_mosaic.png",
           "size": function (dim) { return [20, dim[0] * 10]; },
-          "filter": function(data) { return data.desc.type === 'vector' && data.desc.value.type === 'categorical'; }
+          "filter": function (data) { return data.desc.type === 'vector' && data.desc.value.type === 'categorical'; }
         },
         {
           "type": "vis",
