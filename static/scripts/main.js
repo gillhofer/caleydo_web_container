@@ -142,7 +142,9 @@ require(['jquery', 'd3', './caleydo/main', './caleydo/data', './caleydo/plugin',
   });
   var persisted = [];
   b.append('button').text('Persist').on('click', function () {
-    persisted.push(persist());
+    var r = persist();
+    console.log(JSON.stringify(r, null, ' '));
+    persisted.push(r);
     $restore.attr('disabled', null);
   });
   var $restore = b.append('button').text('Restore').attr('disabled','disabled').on('click', function () {

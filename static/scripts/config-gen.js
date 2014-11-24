@@ -20,7 +20,8 @@ require.config({
   ],
   "config": {
     "caleydo/main": {
-      "apiUrl": "/api"
+      "apiUrl": "/api",
+      "apiJSONSuffix": ""
     },
     "caleydo/plugin": {
       "baseUrl": "/scripts",
@@ -78,6 +79,21 @@ require.config({
         },
         {
           "type": "vis",
+          "id": "caleydo-vis-genome",
+          "name": "Genome",
+          "size": [
+            840,
+            840
+          ],
+          "filter": "genomeDataLink"
+        },
+        {
+          "type": "datatype",
+          "id": "genomeDataLink",
+          "module": "caleydo-vis-genome/genomeDataLink"
+        },
+        {
+          "type": "vis",
           "id": "caleydo-vis-heatmap",
           "name": "HeatMap",
           "icon": "icon.svg",
@@ -94,6 +110,16 @@ require.config({
             100
           ],
           "filter": "vector"
+        },
+        {
+          "type": "vis",
+          "id": "caleydo-vis-mosaic",
+          "folder": "caleydo-vis-histogram",
+          "name": "Mosaic",
+          "factory": "createMosaic",
+          "icon": "icon_mosaic.png",
+          "size": function (dim) { return [20, dim[0] * 10]; },
+          "filter": function(data) { return data.desc.type === 'vector' && data.desc.value.type === 'categorical'; }
         },
         {
           "type": "vis",

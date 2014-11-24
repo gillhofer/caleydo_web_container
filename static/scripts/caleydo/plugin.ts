@@ -103,12 +103,15 @@ function parsePlugins(descs : any[]) {
     //provide some default values
     desc = C.mixin({
       name : desc.id,
-      'module' : desc.id+'/main',
+      folder: desc.id,
       factory: 'create',
       description: '',
-      version: '1.0',
-      baseUrl: config.baseUrl + '/' + desc.id
+      version: '1.0'
     },desc);
+    desc = C.mixin({
+      'module' : desc.folder+'/main',
+      baseUrl: config.baseUrl + '/' + desc.folder
+    }, desc);
     desc.module = '../'+desc.module;
     desc.load = loadHelper(<IPluginDesc>desc);
     return <IPluginDesc>desc;
