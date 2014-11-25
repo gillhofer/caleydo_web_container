@@ -533,17 +533,6 @@ export class Range1D {
     }
     return '(' + this.arr.join(',') + ')';
   }
-
-  static parse(code:string) {
-    var r = new Range1D();
-    code = code.trim();
-    if (code.length >= 2 && code.charAt(0) === '(' && code.charAt(code.length - 1) === ')') {
-      r.push.apply(r, code.substr(1, code.length - 2).split(',').map(RangeElem.parse));
-    } else {
-      r.push(RangeElem.parse(code));
-    }
-    return r;
-  }
 }
 
 export class Range1DGroup extends Range1D {
@@ -573,6 +562,10 @@ export class Range1DGroup extends Range1D {
 
   clone() : Range1DGroup {
     return new Range1DGroup(name, this.color, super.clone());
+  }
+
+  toString() {
+    return '"'+this.name+'""'+this.color+'"'+super.toString();
   }
 }
 
@@ -609,6 +602,10 @@ export class CompositeRange1D extends Range1D {
 
   clone() {
     return new CompositeRange1D(name, this.groups.map((g) => <Range1DGroup>g.clone()));
+  }
+
+  toString() {
+    return '"'+this.name+'"{'+this.groups.join(',')+'}';
   }
 }
 
@@ -862,33 +859,6 @@ export class Range {
       return d.toString();
     }).join(',');
   }
-
-  /**
-   * parse the give code created toString
-   * @param code
-   * @returns {Range}
-   */
-  static parse(code:string) {
-    var act = 0, c:string, next:number;
-    var dims = new Array<Range1D>();
-    code = code.trim();
-    while (act < code.length) {
-      c = code.charAt(act);
-      if (c === '(') {
-        next = code.indexOf(')', act);
-        dims.push(Range1D.parse(code.substring(act, next + 1)));
-        act = next + 1 + 1; //skip ),
-      } else { //regular case
-        next = code.indexOf(',', act);
-        next = next < 0 ? code.length : next;
-        dims.push(Range1D.parse(code.substring(act, next)));
-        act = next + 1; //skip ,
-      }
-    }
-    var r = new Range();
-    r.dims = dims;
-    return r;
-  }
 }
 /**
  * creates a new range including everything
@@ -970,6 +940,112 @@ export function list() {
   return r;
 }
 
+//Range EBNF grammar
+//R   = Dim { ',' Dim }
+//Dim = '' | SR | '(' SR { ',' SR ' } ')'
+//SR  = N [ ':' N [ ':' N ] ]
+//N   = '0'...'9'
+//Str =  '"' literal '"'
+//Name= Str
+//Col = Str
+//GDim= Name Col Dim
+//CDim= Name '{' GDim { ',' GDim } '}'
+
+
+
+/**
+ * parse the give code created toString
+ * @param code
+ * @returns {Range}
+ */
+function parseRange(code:string) {
+  var act = 0, c:string;
+  var dims = new Array<Range1D>(),t;
+  code = code.trim();
+  while (act < code.length) {
+    c = code.charAt(act);
+    switch(c) {
+    case '"' :
+      t = parseNamedRange1D(code, act);
+      act = t.act + 1; //skip ,
+      dims.push(t.dim);
+      break;
+    case ',' :
+      act ++;
+      dims.push(Range1D.all());
+        break;
+    default:
+        t = parseRange1D(code, act);
+        act = t.act + 1; //skip ,
+        dims.push(t.dim);
+        break;
+    }
+  }
+  var r = new Range(dims);
+  return r;
+}
+
+function parseNamedRange1D(code:string, act:number) : { dim : Range1D; act: number} {
+  act += 1; //skip "
+  var end = code.indexOf('"',act);
+  var name = code.slice(act,end);
+  var r;
+  act = end+1;
+  switch(code.charAt(act)) {
+  case '"':
+    end = code.indexOf('"',act+1);
+    r = parseRange1D(code, end+1);
+    return {
+      dim : new Range1DGroup(name, code.slice(act+1, end), r.dim),
+      act : r.act
+    };
+  case '{':
+    var groups = [];
+    while (code.charAt(act) != '}') {
+      r = parseNamedRange1D(code,act+1);
+      groups.push(r.dim);
+      act = r.act;
+    }
+    return {
+      dim : new CompositeRange1D(name, groups),
+      act : r.act+1
+    };
+  default: //ERROR
+    return {
+      dim: Range1D.all(),
+      act : act
+    }
+  }
+}
+
+function parseRange1D(code:string, act:number) {
+  var next,r = new Range1D();
+  switch(code.charAt(act)) {
+  case ',':
+  case '}':
+    next = act;
+    r = Range1D.all();
+      break;
+  case '(':
+    next = code.indexOf(')',act);
+    r.push.apply(r, code.slice(act+1,next).split(',').map(RangeElem.parse));
+    break;
+  default:
+    next = code.indexOf(',',act);
+    if (next < 0) {
+      next = code.indexOf('}', act);
+    }
+    if (next < 0) {
+      next = code.length;
+    }
+    r = new Range1D([RangeElem.parse(code.slice(act,next+1))]);
+      break;
+  }
+  return {
+    act : next,
+    dim : r
+  }
+}
 /**
  * parses the given encoded string created by toString to a range object
  * @param encoded
@@ -979,5 +1055,5 @@ export function parse(...encoded:string[]) {
   if (encoded.length === 0) {
     return all();
   }
-  return Range.parse(encoded.join(','));
+  return parseRange(encoded.join(','));
 }

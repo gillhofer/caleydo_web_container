@@ -52,6 +52,10 @@ define(['../../scripts/caleydo/range', '../../scripts/caleydo/iterator'], functi
       check(r.dim(0), '10:-1');
       expect(r.dim(1).isAll).is.true;
       check(r.dim(2), '3:-1');
+
+
+      r = range.parse('"Hallo""red"10');
+      expect(r.dims).is.length(1);
     });
 
     it('preMultiply', function () {
