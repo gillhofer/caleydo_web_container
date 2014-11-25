@@ -150,6 +150,10 @@ export class VectorBase extends idtypes.SelectAble {
     return new VectorView(this._root, range);
   }
 
+  idView(idRange:ranges.Range = ranges.all()) : C.IPromise<IVector> {
+    return this.ids().then((ids) => this.view(ids.indexOf(idRange)));
+  }
+
   stats() : C.IPromise<math.IStatistics> {
     return this.data().then((d) => math.computeStats(d));
   }

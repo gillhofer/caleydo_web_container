@@ -187,9 +187,10 @@ export class SelectAble extends events.EventHandler {
   private singleSelectionListener = (event:any, type:string, act:ranges.Range, added:ranges.Range, removed:ranges.Range) => {
     this.ids().then((ids:ranges.Range) => {
       //filter to the right ids and convert to indices format
-      act = ids.indexRangeOf(act);
-      added = ids.indexRangeOf(added);
-      removed = ids.indexRangeOf(removed);
+      //given all ids convert the selected ids to the indices in the data type
+      act = ids.indexOf(act);
+      added = ids.indexOf(added);
+      removed = ids.indexOf(removed);
       if (act.isNone && added.isNone && removed.isNone) {
         return;
       }
@@ -241,9 +242,9 @@ export class SelectAble extends events.EventHandler {
 
     this.ids().then((ids: ranges.Range) => {
       //filter to the right ids and convert to indices format
-      act = ids.indexRangeOf(act);
-      added = ids.indexRangeOf(added);
-      removed = ids.indexRangeOf(removed);
+      act = ids.indexOf(act);
+      added = ids.indexOf(added);
+      removed = ids.indexOf(removed);
       if (act.isNone && added.isNone && removed.isNone) {
         return;
       }
@@ -286,7 +287,7 @@ export class SelectAble extends events.EventHandler {
   selections(type = defaultSelectionType) {
     return this.ids().then((ids: ranges.Range) => {
       var r = ranges.join(this.idtypes.map((idtype) => idtype.selections(type)));
-      return ids.indexRangeOf(r);
+      return ids.indexOf(r);
     });
   }
 

@@ -114,6 +114,10 @@ export class MatrixBase extends idtypes.SelectAble {
     return new MatrixView(this._root, range);
   }
 
+  idView(idRange:ranges.Range = ranges.all()) : C.IPromise<IMatrix> {
+    return this.ids().then((ids) => this.view(ids.indexOf(idRange)));
+  }
+
   reduce(f : (row : any[]) => any, this_f? : any, valuetype? : any, idtype? : idtypes.IDType) : vector.IVector {
     return new ProjectedVector(<IMatrix>(<any>this), f, this_f, valuetype, idtype);
   }

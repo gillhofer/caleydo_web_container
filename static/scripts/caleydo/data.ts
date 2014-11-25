@@ -36,7 +36,7 @@ function transformEntry(desc) {
   var plugin = available.filter((p) => p.name === desc.type);
   //no type there create a dummy one
   if (plugin.length === 0) {
-    return new datatypes.DummyDataType(desc);
+    return new datatypes.DataTypeBase(desc);
   }
   //take the first matching one
   return plugin[0].load().then((p) => {

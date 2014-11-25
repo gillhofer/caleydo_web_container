@@ -299,6 +299,10 @@ export class Range1D {
     return this.arr.map((d) => d.size(size)).reduce((a, b) => a + b, 0);
   }
 
+  /**
+   * whether this range is the identity, i.e. the first natural numbers starting with 0
+   * @return {boolean}
+   */
   get isIdentityRange() {
     return this.arr.length === 1 && this.arr[0].from === 0 && this.arr[0].step === 1;
   }
@@ -440,7 +444,16 @@ export class Range1D {
 
   indexOf(...index:number[]):number[];
 
+  indexOf(r:Range1D, size?:number):Range1D;
+
+  /**
+   * returns the index(ices) of the given elements
+   * @return {*}
+   */
   indexOf():any {
+    if (arguments[0] instanceof Range) {
+      return this.indexRangeOf(arguments[0], arguments[1]);
+    }
     var arr:number[];
     var base = this.iter().asList();
     if (arguments.length === 1) {
@@ -457,11 +470,18 @@ export class Range1D {
     return arr.map((index, i) => base.indexOf(index));
   }
 
+  /**
+   * returns the range representing the indices of the given range within the current data
+   * @param r
+   * @param size
+   * @return {Range1D}
+   */
   indexRangeOf(r:Range1D, size?:number) {
     if (r.isNone || this.isNone) {
       return Range1D.none();
     }
     var result = [];
+    //
     if (this.isIdentityRange) {
       var end = this.arr[0].to;
       r.forEach((d) => {
@@ -815,7 +835,12 @@ export class Range {
 
   indexOf(...index:number[]):number[];
 
+  indexOf(r:Range, size?:number[]):Range;
+
   indexOf():any {
+    if (arguments[0] instanceof Range) {
+      return this.indexRangeOf(arguments[0], arguments[1]);
+    }
     var arr:number[];
     if (arguments.length === 1) {
       if (typeof arguments[0] === 'number') {
@@ -915,11 +940,11 @@ export function join() {
   return r;
 }
 
-export function list(...indices:number[]);
-export function list(...indexarrays:number[][]);
-export function list(...dims:Range1D[]);
-export function list(dims:Range1D[]);
-export function list() {
+export function list(...indices:number[]): Range;
+export function list(...indexarrays:number[][]): Range;
+export function list(...dims:Range1D[]): Range;
+export function list(dims:Range1D[]): Range;
+export function list(): Range {
   if (arguments.length === 0) {
     return all();
   }

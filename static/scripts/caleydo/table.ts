@@ -91,6 +91,10 @@ export class TableBase extends idtypes.SelectAble {
     return new TableView(this._root, range);
   }
 
+  idView(idRange:ranges.Range = ranges.all()) : C.IPromise<ITable> {
+    return this.ids().then((ids) => this.view(ids.indexOf(idRange)));
+  }
+
   reduce(f : (row : any[]) => any, this_f? : any, valuetype? : any, idtype? : idtypes.IDType) : vector.IVector {
     return new MultiTableVector(<ITable>(<any>this), f, this_f, valuetype, idtype);
   }

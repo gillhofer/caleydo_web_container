@@ -7,7 +7,8 @@ import C = require('./main');
 import events = require('./event');
 import idtypes = require('./idtype');
 import ranges = require('./range');
-import provenance = require('./provenance');
+import provenance = require('./provenance')
+import d3 = require('d3');
 
 /**
  * basic description elements
@@ -27,12 +28,15 @@ export interface IDataType extends idtypes.SelectAble, provenance.IPersistable {
    * rows, cols, ....
    */
   dim: number[];
+
+
+  idView(idRange?: ranges.Range) : C.IPromise<IDataType>;
 }
 
 /**
  * dummy data type just holding the description
  */
-export class DummyDataType extends idtypes.SelectAble implements IDataType {
+export class DataTypeBase extends idtypes.SelectAble implements IDataType {
   constructor(public desc: IDataDescription) {
     super();
   }
@@ -43,6 +47,10 @@ export class DummyDataType extends idtypes.SelectAble implements IDataType {
 
   ids(range:ranges.Range = ranges.all()) : C.IPromise<ranges.Range> {
     return C.resolved(ranges.none());
+  }
+
+  idView(idRange?: ranges.Range) : C.IPromise<DataTypeBase> {
+    return C.resolved(this);
   }
 
   get idtypes() {
@@ -72,4 +80,39 @@ export function transpose(m: any[][]) {
      m[i].forEach((v,i) => r[i].push(v));
   }
   return r;
+}
+
+/**
+ * converts the given categorical data to a grouped range
+ * @param data
+ * @param categories
+ * @param options
+ * @return {any}
+ */
+export function categorical2paritioning(data: string[], categories: string[], options = {}) {
+  var m = C.mixin({
+    skipEmptyCategories : true,
+    colors: (categories.length < 10 ? d3.scale.category10() : d3.scale.category20()).range().slice(0, categories.length),
+    name: 'Partitioning'
+  }, options);
+  var groups = categories.map((d, i) => {
+    return {
+      name: d,
+      color: m.colors[i],
+      indices: []
+    }
+  });
+  data.forEach((d, j) => {
+    var i = categories.indexOf(d);
+    if (i>=0) {
+      groups[i].indices.push(j);
+    }
+  });
+  if (m.skipEmptyCategories) {
+    groups = groups.filter((g) => g.indices.length > 0);
+  }
+  var granges = groups.map((g) => {
+    return new ranges.Range1DGroup(g.name, g.color, ranges.Range1D.from(g.indices));
+  });
+  return ranges.list(new ranges.CompositeRange1D(m.name, granges));
 }
