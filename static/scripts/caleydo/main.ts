@@ -12,6 +12,8 @@ var config = module_.config();
  */
 export var version = '0.0.1-alpha';
 
+console.log("loading");
+
 export var server_url:string = config.apiUrl;
 export var server_json_suffix:string = config.apiJSONSuffix || '';
 

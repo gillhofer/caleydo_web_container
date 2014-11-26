@@ -589,6 +589,14 @@ export class Range1DGroup extends Range1D {
   }
 }
 
+export function asUngrouped( range : Range1D) {
+  return new Range1DGroup('unnamed', 'gray', range);
+}
+
+export function composite(name: string, groups: Range1DGroup[]) {
+  return new CompositeRange1D(name, groups);
+}
+
 export class CompositeRange1D extends Range1D {
   constructor(public name:string, public groups:Range1DGroup[]) {
     super();
@@ -949,7 +957,9 @@ export function list(): Range {
     return all();
   }
   var r = new Range();
-  if (C.isArray(arguments[0])) { //array mode
+  if (C.isArray(arguments[0]) && arguments[0][0] instanceof Range1D) {
+    r.dims = arguments[0];
+  } else if (C.isArray(arguments[0])) { //array mode
     C.argList(arguments).forEach((arr:any, i) => {
       if (arr instanceof Range1D) {
         r.dims[i] = arr;

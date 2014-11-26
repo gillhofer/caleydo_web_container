@@ -114,5 +114,5 @@ export function categorical2paritioning(data: string[], categories: string[], op
   var granges = groups.map((g) => {
     return new ranges.Range1DGroup(g.name, g.color, ranges.Range1D.from(g.indices));
   });
-  return ranges.list(new ranges.CompositeRange1D(m.name, granges));
+  return ranges.composite(m.name, granges);
 }

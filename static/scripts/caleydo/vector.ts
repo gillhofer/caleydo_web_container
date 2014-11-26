@@ -120,6 +120,12 @@ export interface IVector extends datatypes.IDataType {
    * @param thisArg An object to which the this keyword can refer in the callbackfn function. If thisArg is omitted, undefined is used as the this value.
    */
   reduceRight<T,U>(callbackfn: (previousValue: U, currentValue: T, currentIndex: number) => U, initialValue: U, thisArg?: any): C.IPromise<U>;
+
+
+  /**
+   * return the range of this vector as a grouped range, depending on the type this might be a single group or multiple ones
+   */
+  groups(): C.IPromise<ranges.CompositeRange1D>;
 }
 
 /**
@@ -162,6 +168,26 @@ export class VectorBase extends idtypes.SelectAble {
     return ranges.range(0, this.length);
   }
 
+  /**
+   * return the range of this vector as a grouped range, depending on the type this might be a single group or multiple ones
+   */
+  groups(): C.IPromise<ranges.CompositeRange1D> {
+    var v = this._root.valuetype;
+    if (v.type === 'categorical') {
+      return this.data().then((d) => {
+        var options: any = {
+          name: this._root.desc.id
+        }
+        if (v.categories[0].color) {
+          options.colors = v.categories.map((d) => d.color)
+        }
+        return datatypes.categorical2paritioning(d, v.categories.map((d) => typeof d === 'string' ? d : d.name), options);
+      });
+    } else {
+      return C.resolved(ranges.composite(this._root.desc.id, [ ranges.asUngrouped(this.indices.dim(0))]));
+    }
+  }
+
   hist(bins? : number) : C.IPromise<math.IHistogram> {
     var v = this._root.valuetype;
     return this.data().then((d) => {
@@ -189,7 +215,7 @@ export class VectorBase extends idtypes.SelectAble {
     this.data().then((d) => d.forEach(callbackfn, thisArg));
   }
 
-  reduce<T,U>(callbackfn: (previousValue: U, currentValue: T, currentIndex: number) => U, initialValue: U, thisArg?: any): C.IPromise<U>{
+  reduce<T,U>(callbackfn: (previousValue: U, currentValue: T, currentIndex: number) => U, initialValue: U, thisArg?: any): C.IPromise<U> {
     function helper() {
       return callbackfn.apply(thisArg, C.argList(arguments));
     }

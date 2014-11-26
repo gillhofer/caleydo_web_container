@@ -158,15 +158,9 @@ export class MultiForm extends events.EventHandler implements plugins.IVisInstan
 
 class GridElem implements provenance.IPersistable {
   private actVis : any;
-  private actVisPromise : C.IPromise<any> = null;
-  data : datatypes.IDataType = null;
   $content : D3.Selection;
 
-  constructor(public range: ranges.Range, private promise: C.IPromise<datatypes.IDataType>) {
-    promise.then((data) => {
-      this.data = data;
-      this.promise = null;
-    });
+  constructor(public range: ranges.Range, public data: datatypes.IDataType) {
   }
 
   destroy() {
@@ -209,9 +203,10 @@ class GridElem implements provenance.IPersistable {
   }
 
   switchDestroy() {
+    //remove content dom side
+    this.$content.selectAll('*').remove();
     if (this.actVis && C.isFunction(this.actVis.destroy)) {
       this.actVis.destroy();
-      this.actVisPromise = null;
     }
     this.actVis = null;
   }
@@ -241,7 +236,7 @@ export class MultiFormGrid extends events.EventHandler implements plugins.IVisIn
   private dims : ranges.Range1DGroup[][];
   private grid : GridElem[];
 
-  constructor(public data:datatypes.IDataType, public range: ranges.Range, parent:Element) {
+  constructor(public data:datatypes.IDataType, public range: ranges.Range, parent:Element, viewFactory : (data:datatypes.IDataType, range : ranges.Range) => datatypes.IDataType) {
     super();
     this.parent = d3.select(parent).append('div').attr('class', 'multiformgrid');
     this.node = this.parent.node();
@@ -255,14 +250,14 @@ export class MultiFormGrid extends events.EventHandler implements plugins.IVisIn
       } else if (dim instanceof ranges.Range1DGroup) {
         return [ <ranges.Range1DGroup>dim ];
       } else {
-        return [ new ranges.Range1DGroup('unnamed','gray', dim) ];
+        return [ ranges.asUngrouped(dim) ];
       }
     });
     var grid = this.grid = [];
     function product(level: number, range : ranges.Range1D[]) {
       if (level === dims.length) {
         var r = ranges.list(range.slice()); //work on a copy for safety reason
-        grid.push(new GridElem(r, data.idView(r)));
+        grid.push(new GridElem(r, viewFactory(data, r)));
       } else {
         dims[level].forEach((group) => {
           range.push(group);
@@ -284,7 +279,7 @@ export class MultiFormGrid extends events.EventHandler implements plugins.IVisIn
     this.$content = p;
     //create groups for all grid elems
     //TODO how to layout as a grid
-    this.grid.forEach((elem) => elem.$content = this.$content.append('div').attr('class', 'content'));
+    this.grid.forEach((elem) => elem.$content = p.append('div').attr('class', 'content'));
     //switch to first
     this.switchTo(this.visses[0]);
   }
@@ -384,9 +379,6 @@ export class MultiFormGrid extends events.EventHandler implements plugins.IVisIn
       return this.actVisPromise; //already selected
     }
 
-    //remove content dom side
-    this.$content.selectAll('*').remove();
-
     //gracefully destroy
     this.grid.forEach((elem) => elem.switchDestroy());
 
@@ -398,14 +390,14 @@ export class MultiFormGrid extends events.EventHandler implements plugins.IVisIn
 
     if (vis) {
       //load the plugin and create the instance
-      return this.actVisPromise = C.all(this.grid.map((elem) => {
-        return vis.load().then((plugin:any) => {
-          if (this.actDesc !== vis) { //changed in the meanwhile
-            return null;
-          }
+      return this.actVisPromise = vis.load().then((plugin:any) => {
+        if (this.actDesc !== vis) { //changed in the meanwhile
+          return null;
+        }
+        return this.grid.map((elem) => {
           return elem.build(plugin);
-        })
-      }));
+        });
+      });
     } else {
       return C.resolved([]);
     }
@@ -479,6 +471,6 @@ export function create(data:datatypes.IDataType, parent:Element) {
   return new MultiForm(data, parent);
 }
 
-export function createGrid(data:datatypes.IDataType, range: ranges.Range, parent:Element) {
-  return new MultiFormGrid(data, range, parent);
+export function createGrid(data:datatypes.IDataType, range: ranges.Range, parent:Element, viewFactory : (data:datatypes.IDataType, range : ranges.Range) => datatypes.IDataType) {
+  return new MultiFormGrid(data, range, parent, viewFactory);
 }

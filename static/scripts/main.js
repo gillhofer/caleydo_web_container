@@ -13,7 +13,7 @@ function autoload(plugins, container) {
   return autoload;
 }
 
-require(['jquery', 'd3', './caleydo/main', './caleydo/data', './caleydo/plugin', './caleydo-window/main', './caleydo/multiform', './caleydo/idtype' ], function ($, d3, C, data, plugins, window, multiform, idtypes) {
+require(['jquery', 'd3', './caleydo/main', './caleydo/data', './caleydo/plugin', './caleydo-window/main', './caleydo/multiform', './caleydo/idtype', './caleydo/range' ], function ($, d3, C, data, plugins, window, multiform, idtypes, ranges) {
   'use strict';
   var windows = $('<div>').css('position', 'absolute').appendTo('body')[0];
   var singletons = autoload(plugins, $('body')[0]);
@@ -78,31 +78,42 @@ require(['jquery', 'd3', './caleydo/main', './caleydo/data', './caleydo/plugin',
       animatedHeader: true,
       zcontrols: true
     });
-    var multi = multiform.create(m, mw.node);
-    multiform.addIconVisChooser(mw.toolbar, multi);
-    mw.title = m.desc.name + ' @ ' + multi.act.name;
-    mw.pos = [400, 50];
-    mw.contentSize = multi.size;
-    multi.on('change', function (event, new_) {
-      mw.title = m.desc.name + ' @ ' + new_.name;
+    var multiP;
+    if (m.desc.type === 'vector' && m.valuetype.type === 'categorical') {
+      multiP = m.groups().then(function (g) {
+        return multiform.createGrid(m, ranges.list(g), mw.node, function (data, range) {
+          return data.view(range);
+        });
+      });
+    } else {
+      multiP = C.resolved(multiform.create(m, mw.node));
+    }
+    multiP.then(function (multi) {
+      multiform.addIconVisChooser(mw.toolbar, multi);
+      mw.title = m.desc.name + ' @ ' + multi.act.name;
+      mw.pos = [400, 50];
       mw.contentSize = multi.size;
+      multi.on('change', function (event, new_) {
+        mw.title = m.desc.name + ' @ ' + new_.name;
+        mw.contentSize = multi.size;
+      });
+      var vis = mw.adapter(multi);
+      mw.on('removed', function () {
+        removeLink(vis);
+        multi.destroy();
+        canvas.splice(C.indexOf(canvas, function (c) {
+          return c.mw === mw;
+        }), 1);
+      });
+      mw.on('drag_stop', updateLinks);
+      addLink(vis);
+      var entry = {
+        mw: mw,
+        multi: multi
+      };
+      canvas.push(entry);
+      return entry;
     });
-    var vis = mw.adapter(multi);
-    mw.on('removed', function () {
-      removeLink(vis);
-      multi.destroy();
-      canvas.splice(C.indexOf(canvas, function (c) {
-        return c.mw === mw;
-      }), 1);
-    });
-    mw.on('drag_stop', updateLinks);
-    addLink(vis);
-    var entry = {
-      mw: mw,
-      multi: multi
-    };
-    canvas.push(entry);
-    return entry;
   }
 
   function persist() {
@@ -147,7 +158,7 @@ require(['jquery', 'd3', './caleydo/main', './caleydo/data', './caleydo/plugin',
     persisted.push(r);
     $restore.attr('disabled', null);
   });
-  var $restore = b.append('button').text('Restore').attr('disabled','disabled').on('click', function () {
+  var $restore = b.append('button').text('Restore').attr('disabled', 'disabled').on('click', function () {
     if (persisted.length > 0) {
       restore(persisted.pop());
     }
