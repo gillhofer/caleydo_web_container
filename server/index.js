@@ -25,7 +25,7 @@ app.use(/\/(.*)/, function (req, res) { //serve and check all files at two diffe
       return;
     }
   }
-  res.statusCode(403).send('Not found: ' + name);
+  res.status(403).send('Not found: ' + name);
 });
 
 module.exports = app;
