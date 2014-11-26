@@ -89,7 +89,7 @@ require(['jquery', 'd3', './caleydo/main', './caleydo/data', './caleydo/plugin',
       multiP = C.resolved(multiform.create(m, mw.node));
     }
     multiP.then(function (multi) {
-      multiform.addIconVisChooser(mw.toolbar, multi);
+      multiform.addIconVisChooser(mw.toolbar.node, multi);
       mw.title = m.desc.name + ' @ ' + multi.act.name;
       mw.pos = [400, 50];
       mw.contentSize = multi.size;

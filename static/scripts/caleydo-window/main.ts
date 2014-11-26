@@ -45,8 +45,8 @@ function makeResizeable($div, window) {
     ];
   };
   $div.resizable({
-    minHeight: window.options.minHeight,
-    minWidth: window.options.minWidth,
+    //minHeight: window.options.minHeight,
+    //minWidth: window.options.minWidth,
     start: function (event, ui) {
       window.fire('resize_start', convertResize(ui));
     },
@@ -68,20 +68,18 @@ function makeAnimatedHeader($div, $header) {
   $div.on({
     mouseenter: function () {
       //move up and slide down at the same time = sliding from bottom to top
-      $header.stop().animate({
-        top: -$header.height(),
-        height: 'show'
+      $header.animate({
+        opacity: 1
       });
     },
     mouseleave: function () {
-      $header.stop().animate({
-        top: '0',
-        height: 'hide'
+      $header.animate({
+        opacity: 0
       });
     }
   });
   //hide header by default
-  $header.addClass('animated').hide();
+  $header.css('opacity', 0);
 }
 
 function destroyAnimatedHeader($div, $header) {
@@ -89,44 +87,20 @@ function destroyAnimatedHeader($div, $header) {
   $header.removeClass('animated').show();
 }
 
-function makeCloseable($toolbar, window) {
-  $('<i class="fa fa-close">').appendTo($toolbar).click(function () {
-    window.close();
-  }).attr('title', 'Close');
-}
-function destroyCloseable($toolbar) {
-  $toolbar.find('i.fa-close').remove();
-}
-
-function makeZControls($toolbar, $div) {
-  $('<i class="fa fa-caret-square-o-up">').prependTo($toolbar).click(function () {
-    $div.css('z-index', '+=1')
-  }).attr('title', 'Move Up');
-  $('<i class="fa fa-caret-square-o-down">').prependTo($toolbar).click(function () {
-    $div.css('z-index', '-=1')
-  }).attr('title', 'Move Down');
-}
-function destroyZControls($toolbar) {
-  $toolbar.find('i.fa-caret-square-o-up,i.fa-caret-square-o-down').remove();
-}
 
 export class Window extends events.EventHandler {
   private options : any;
   private $parent : JQuery;
   private $div : JQuery;
   private $header: JQuery;
-  private $toolbar: JQuery;
+  toolbar: ToolBar;
+  private $content : JQuery;
 
   constructor(parent, options) {
     super();
     this.options = C.mixin({
       resizeable: true,
-      draggable: true,
-      closeable: false,
-      zcontrols: false,
-      animatedHeader: false,
-      minHeight: 145,
-      minWidth: 100
+      draggable: true
     }, options);
 
     this.$parent = $(parent);
@@ -135,8 +109,6 @@ export class Window extends events.EventHandler {
       .css({
         left: 0,
         top: 0,
-        width: 100,
-        height: 100,
         'z-index': 0
       });
     //title
@@ -144,25 +116,20 @@ export class Window extends events.EventHandler {
       .addClass('ui-widget-header');
     (<any>$('<h3>').appendTo(this.$header))
       .disableSelection(); //no selection of header for dragging
-    this.$toolbar = $('<div class="toolbar">').appendTo(this.$header);
+    this.toolbar = new ToolBar(this.$header[0]);
     //content
-    this.$div.append('<div class="content"/>');
+    this.$content = $('<div class="content"/>').appendTo(this.$div);
 
     if (this.options.draggable) {
       makeDraggable(this.$div, this);
     }
     if (this.options.resizeable) {
-      makeResizeable(this.$div, this);
+      makeResizeable(this.$content, this);
     }
     if (this.options.animatedHeader) {
       makeAnimatedHeader(this.$div, this.$header);
     }
-    if (this.options.closeable) {
-      makeCloseable(this.$toolbar, this);
-    }
-    if (this.options.zcontrols) {
-      makeZControls(this.$toolbar, this.$div);
-    }
+    this.toolbar.bindTo(this);
   }
 
   /**
@@ -171,6 +138,22 @@ export class Window extends events.EventHandler {
   close() {
     this.$div.remove();
     this.fire('removed', this);
+  }
+
+  incZLevel() {
+    return this.changeZLevel(+1);
+  }
+
+  decZLevel() {
+    return this.changeZLevel(+1);
+  }
+
+  changeZLevel(delta : number) {
+    if (delta < 0) {
+      this.$div.css('z-index', '-='+(-delta));
+    } else {
+      this.$div.css('z-index', '+='+delta);
+    }
   }
 
   /**
@@ -223,9 +206,9 @@ export class Window extends events.EventHandler {
     }
     if (this.options.resizeable !== bak.resizeable) {
       if (this.options.resizeable) {
-        makeResizeable(this.$div, this);
+        makeResizeable(this.$content, this);
       } else {
-        destroyResizeable(this.$div);
+        destroyResizeable(this.$content);
       }
     }
     if (this.options.animatedHeader !== bak.animatedHeader) {
@@ -233,20 +216,6 @@ export class Window extends events.EventHandler {
         makeAnimatedHeader(this.$div, this.$header);
       } else {
         destroyAnimatedHeader(this.$div, this.$header);
-      }
-    }
-    if (this.options.closeable !== bak.closeable) {
-      if (this.options.closeable) {
-        makeCloseable(this.$toolbar, this);
-      } else {
-        destroyCloseable(this.$toolbar);
-      }
-    }
-    if (this.options.zcontrols !== bak.zcontrols) {
-      if (this.options.zcontrols) {
-        makeZControls(this.$toolbar, this.$div);
-      } else {
-        destroyZControls(this.$toolbar);
       }
     }
 
@@ -272,12 +241,12 @@ export class Window extends events.EventHandler {
    * property for the size of the window
    */
   get size() : number[] {
-    return [this.$div.width(), this.$div.height()];
+    return [this.$content.width(), this.$content.height()];
   }
 
   set size(val: number[]) {
-    this.$div.css('width', val[0]);
-    this.$div.css('height', val[1]); //for header
+    this.$content.css('width', val[0]);
+    this.$content.css('height', val[1]);
   }
 
   /**
@@ -309,14 +278,45 @@ export class Window extends events.EventHandler {
    * getter of the content node
    */
   get node() {
-    return this.$div.find('div.content')[0];
+    return this.$content[0];
+  }
+}
+
+export class ToolBar {
+  window : Window;
+  private $node : JQuery;
+
+  constructor(parent: Element) {
+    this.$node = $('<div class="toolbar" />').appendTo(parent);
+
   }
 
-  /**
-   * getter of the content node
-   */
-  get toolbar() {
-    return this.$header.find('div.toolbar')[0];
+  bindTo(window : Window) {
+    this.window = window;
+    this.$node.empty();
+    this.rebuild();
+  }
+
+  rebuild() {
+    this.addButton('fa-caret-square-o-up', 'Move Up', (window) => {
+        window.incZLevel();
+    });
+    this.addButton('fa-caret-square-o-down', 'Move Down', (window) => {
+      window.decZLevel();
+    });
+    this.addButton('fa-close','Close', (window) => {
+      window.close();
+    });
+  }
+
+  addButton(icon : string, title: string, callback : (window: Window) => void) {
+    $('<i class="fa '+icon+'">').appendTo(this.$node).click(() => {
+      callback.call(this, this.window)
+    }).attr('title', title);
+  }
+
+  get node() {
+    return this.$node[0];
   }
 }
 
