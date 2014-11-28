@@ -88,9 +88,8 @@ class Command {
     //1. load the cmd
     return toCmd(p.id, p.content).then((cmd) => {
       //convert to cmd object
-      var r = new Command(cmd, null, start);
       //persist -> needed to avoid loops
-      container[start] = r;
+      container[start] = new Command(cmd, null, start);
       //restore neighbors
       return C.all([Command.restore(p.prev, container, toCmd), Command.restore(p.next, container, toCmd)]);
     }).then((neighbors) => {

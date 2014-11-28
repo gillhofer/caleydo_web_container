@@ -287,3 +287,29 @@ export function onDOMNodeRemoved(node:any, callback:() => void, thisArg?:any) {
     body.addEventListener('DOMNodeRemoved', l);
   });
 }
+
+/**
+ * unique id container
+ * @type {{}}
+ */
+var idCounter = {};
+/**
+ * returns a unique id for the given domain
+ * @param domain
+ * @return {number}
+ */
+export function uniqueId(domain : string = '_default') {
+  if (!idCounter.hasOwnProperty(domain)) {
+    idCounter[domain] = 0;
+  }
+  return idCounter[domain]++;
+}
+
+/**
+ * returns a string, which is a unique id for the given domain
+ * @param domain
+ * @return {string}
+ */
+export function uniqueIdString(domain : string = '_default') {
+  return domain + Object.toString.apply(uniqueId(domain));
+}
