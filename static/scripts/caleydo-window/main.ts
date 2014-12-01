@@ -64,10 +64,9 @@ function destroyResizeable($div) {
 }
 
 function makeAnimatedHeader($div, $header) {
-  //on mouse enter show the toolbar on top of it
   $div.on({
     mouseenter: function () {
-      //move up and slide down at the same time = sliding from bottom to top
+      //change just the opacity
       $header.animate({
         opacity: 1
       });
@@ -84,7 +83,7 @@ function makeAnimatedHeader($div, $header) {
 
 function destroyAnimatedHeader($div, $header) {
   $div.off('mouseenter').off('mouseleave');
-  $header.removeClass('animated').show();
+  $header.css('opacity', null);
 }
 
 
@@ -111,6 +110,10 @@ export class Window extends events.EventHandler {
         top: 0,
         'z-index': 0
       });
+    this.$div.on({
+      mouseenter: () => this.fire('mouseenter', this),
+      mouseleave: () => this.fire('mouseleave', this)
+    });
     //title
     this.$header = $('<div>').appendTo(this.$div)
       .addClass('ui-widget-header');
@@ -282,9 +285,14 @@ export class Window extends events.EventHandler {
   }
 }
 
+export interface ToolbarBuilder {
+  (window: Window, node: Element) : void;
+}
+
 export class ToolBar {
   window : Window;
   private $node : JQuery;
+  builder : ToolbarBuilder[] = [];
 
   constructor(parent: Element) {
     this.$node = $('<div class="toolbar" />').appendTo(parent);
@@ -294,10 +302,13 @@ export class ToolBar {
   bindTo(window : Window) {
     this.window = window;
     this.$node.empty();
-    this.rebuild();
+    if (window) {
+      this.rebuild();
+    }
   }
 
   rebuild() {
+    this.builder.forEach((b) => b.call(this, this.window, this.$node[0]));
     this.addButton('fa-caret-square-o-up', 'Move Up', (window) => {
         window.incZLevel();
     });
@@ -317,6 +328,23 @@ export class ToolBar {
 
   get node() {
     return this.$node[0];
+  }
+}
+
+export class StaticToolBar extends ToolBar {
+  private windows : Window[];
+  constructor(parent: Element) {
+    super(parent);
+  }
+
+  push(window : Window) {
+    window.on('mouseenter', (w) => {
+      this.bindTo(w);
+    }).on('mouseleave', (w) => {
+      this.bindTo(null);
+    }).on('removed', (w) => {
+      this.windows.splice(this.windows.indexOf(w),1);
+    })
   }
 }
 

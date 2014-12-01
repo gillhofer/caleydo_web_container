@@ -13,20 +13,41 @@ import geom = require('../caleydo/geom');
 import ranges = require('../caleydo/range');
 import C = require('../caleydo/main');
 
-export class HeatMap implements plugins.IVisInstance {
-  node:Element;
+export class HeatMap extends plugins.AVisInstance {
+  private $node:D3.Selection;
+  private colorer : D3.Scale.LinearScale;
 
-  constructor(public data:matrix.IMatrix, public parent:Element) {
-    this.node = this.build(d3.select(parent));
+  constructor(public data:matrix.IMatrix, public parent:Element, private options: any) {
+    super();
+    this.options = C.mixin({
+      initialScale: 10,
+      color: ['black', 'white'],
+      domain: (<any>this.data.desc).value.range
+    }, options);
+    this.colorer = d3.scale.linear().domain(this.options.domain).range(this.options.range);
+    this.$node = this.build(d3.select(parent));
   }
 
-  locate(...range:ranges.Range[]) {
-    if (range.length === 1) {
-      return this.locateImpl(range[0]);
+  get node() {
+    return this.$node.node();
+  }
+
+  option(name: string, val? : any) {
+    if (arguments.length === 1) {
+      return this.options[name];
+    } else {
+      this.fire('option.'+name, val);
+      this.options[name] = val;
+      switch(name) {
+        case 'color':
+        case 'domain':
+          this.recolor();
+          break;
+      }
     }
-    return C.all(range.map(this.locateImpl, this));
   }
-  private locateImpl(range: ranges.Range) {
+
+  locateImpl(range: ranges.Range) {
     var dims = this.data.dim;
     var width = dims[1], height = dims[0];
     function l(r, max) {
@@ -41,71 +62,87 @@ export class HeatMap implements plugins.IVisInstance {
     return C.resolved(geom.rect(xw[0],yh[0],xw[1],yh[1]));
   }
 
-  persist() {
-    return null;
+  transform(scale: number[], rotate: number = 0) {
+    var dims = this.data.dim;
+    var width = dims[1], height = dims[0];
+    this.$node.attr({
+      width: width * scale[0],
+      height: height * scale[1]
+    });
+    if (rotate === 90 || rotate === 270) {
+      this.$node.attr({
+        height: width * scale[0],
+        width: height * scale[1]
+      });
+    }
+    this.$node.select('g').attr('transform','rotate('+rotate+')scale('+scale[0]+','+scale[1]+')');
+    this.fire('transform',{
+      scale: scale,
+      rotate: rotate
+    });
+    return true;
   }
 
-  restore(persisted: any) {
-    return null;
+  private recolor() {
+    var c = this.colorer;
+    c.domain(this.options.domain).range(this.options.range);
+    this.$node.selectAll('rect').attr('fill', (d) => c(d));
   }
 
   private build($parent:D3.Selection) {
     var dims = this.data.dim;
     var width = dims[1], height = dims[0];
     var $svg = $parent.append('svg').attr({
-      width: width * 10,
-      height: height * 10
+      width: width * this.options.scale,
+      height: height * this.options.scale
     });
+    var $g = $svg.append('g');
 
-    var colScale = d3.scale.linear().domain([0, width]).range([0, 100]);
-    var rowScale = d3.scale.linear().domain([0, height]).range([0, 100]);
-    var c = d3.scale.linear().domain((<any>this.data.desc).value.range).range(['black', 'white']);
+    var c = this.colorer;
     var data = this.data;
+
     data.data().then((arr) => {
-      var $rows = $svg.selectAll('g').data(arr);
+      var $rows = $g.selectAll('g').data(arr);
       $rows.enter().append('g');
       $rows.each(function (row, i) {
         var $cols = d3.select(this).selectAll('rect').data(row);
-        $cols.enter().append('rect').on('click', function (d, j) {
+        $cols.enter().append('rect').on('click', (d, j) => {
           data.select([
             [i],
             [j]
           ], idtypes.toSelectOperation(d3.event));
+        }).attr({
+          width: 1,
+          height: 1
         }).append('title').text(C.identity);
         $cols.attr({
-          fill: function (d) {
-            return c(d);
-          },
-          x: function (d, j) {
-            return colScale(j) + '%';
-          },
-          y: rowScale(i) + '%',
-          width: colScale(1) + '%',
-          height: rowScale(1) + '%'
+          fill: (d) => c(d),
+          x: (d, j) => j,
+          y: i
         });
         $cols.exit().remove();
       });
       $rows.exit().remove();
     });
     var l = function (event, type, selected) {
-      $svg.selectAll('rect').classed('select-' + type, false);
+      $g.selectAll('rect').classed('select-' + type, false);
       if (selected.isNone) {
         return;
       }
       var dim0 = selected.dim(0), dim1 = selected.dim(1);
       if (selected.isAll) {
-        $svg.selectAll('rect').classed('select-' + type, true);
+        $g.selectAll('rect').classed('select-' + type, true);
       } else if (dim0.isAll || dim0.isNone) {
         dim1.forEach((j) => {
-          $svg.selectAll('g rect:nth-child(' + (j + 1) + ')').classed('select-' + type, true);
+          $g.selectAll('g rect:nth-child(' + (j + 1) + ')').classed('select-' + type, true);
         });
       } else if (dim1.isAll || dim1.isNone) {
         dim0.forEach((i) => {
-          $svg.selectAll('g:nth-child(' + (i + 1) + ') rect').classed('select-' + type, true);
+          $g.selectAll('g:nth-child(' + (i + 1) + ') rect').classed('select-' + type, true);
         });
       } else {
         dim0.forEach((i) => {
-          var row = $svg.select('g:nth-child(' + (i + 1) + ')');
+          var row = $g.select('g:nth-child(' + (i + 1) + ')');
           dim1.forEach((j) => {
             row.select('rect:nth-child(' + (j + 1) + ')').classed('select-' + type, true);
           });
@@ -113,17 +150,17 @@ export class HeatMap implements plugins.IVisInstance {
       }
     };
     data.on('select', l);
-    C.onDOMNodeRemoved($svg.node(), function () {
+    C.onDOMNodeRemoved($g.node(), function () {
       data.off('select', l);
     });
     data.selections().then(function (selected) {
       l(null, 'selected', selected);
     });
 
-    return $svg.node();
+    return $svg;
   }
 }
 
-export function create(data:matrix.IMatrix, parent:Element) {
-  return new HeatMap(data, parent);
+export function create(data:matrix.IMatrix, parent:Element, options) {
+  return new HeatMap(data, parent, options);
 }

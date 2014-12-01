@@ -6,6 +6,7 @@
 
 define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo/geom', 'css!./style'], function (exports, d3, C, idtypes, geom) {
   function BarPlotVis(data, parent, options) {
+    this.id = C.uniqueString('vis');
     this.data = data;
     this.options = C.mixin({
       width: 100,

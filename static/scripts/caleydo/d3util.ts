@@ -11,7 +11,7 @@ import d3 = require('d3');
  * utility function to handle selections
  * @param data
  * @param $data
- * @param selector
+ * @param selector what type of object are the data bound ot
  * @returns {function(any, any): undefined} the click handler
  */
 export function selectionUtil(data: datatype.IDataType, $data : D3.Selection, selector : string) {
@@ -35,5 +35,3 @@ export function selectionUtil(data: datatype.IDataType, $data : D3.Selection, se
     data.select(0, [i], idtypes.toSelectOperation(d3.event));
   }
 }
-
-

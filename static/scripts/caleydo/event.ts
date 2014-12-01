@@ -5,10 +5,14 @@
 import $ = require('jquery');
 'use strict';
 
+export interface IEventHandler {
+  on(events, handler);
+  off(events, handler);
+}
 /**
  * EventHandler base class, in the backend JQuery is used
  */
-export class EventHandler {
+export class EventHandler implements IEventHandler {
   private $obj = $({});
 
   /**
@@ -36,7 +40,7 @@ export class EventHandler {
    * @param event
    * @param extraArguments
    */
-  fire(event, extraArguments) {
+  fire(event, ...extraArguments: any[]) {
     this.$obj.trigger(event, extraArguments);
     return this;
   }

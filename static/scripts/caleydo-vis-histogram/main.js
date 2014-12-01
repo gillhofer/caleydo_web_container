@@ -4,9 +4,7 @@
 /* global define */
 "use strict"
 
-define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-tooltip/main'], function (exports, d3, C, idtypes, tooltip) {
-
-
+define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-tooltip/main', '../caleydo/plugin'], function (exports, d3, C, idtypes, tooltip, plugins) {
 
   function createCategoricalHistData(hist, categories) {
     var data = [],
@@ -57,23 +55,18 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-too
   }
 
   function HistogramVis(data, parent, options) {
+    plugins.AVisInstance.call(this);
     this.data = data;
     this.options = C.mixin({
       width: 200,
       height: 100,
       nbins: Math.round(Math.sqrt(data.length)),
       totalHeight: true
-    }, options);
+    }, this.options);
     this.parent = parent;
     this.node = this.build(d3.select(parent));
   }
-
-  HistogramVis.prototype.locate = function (range) {
-    if (arguments.length === 1) {
-      return this.locateImpl(range);
-    }
-    return C.all(C.argList(arguments).map(this.locateImpl, this));
-  };
+  C.extendClass(HistogramVis, plugins.AVisInstance);
 
   HistogramVis.prototype.locateImpl = function (range) {
     var that = this, o = this.options;
@@ -179,6 +172,7 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-too
   };
 
   function MosaicVis(data, parent, options) {
+    plugins.AVisInstance.call(this);
     this.data = data;
     this.options = C.mixin({
       width: 20,
@@ -187,13 +181,7 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-too
     this.parent = parent;
     this.node = this.build(d3.select(parent));
   }
-
-  MosaicVis.prototype.locate = function (range) {
-    if (arguments.length === 1) {
-      return this.locateImpl(range);
-    }
-    return C.all(C.argList(arguments).map(this.locateImpl, this));
-  };
+  C.extendClass(MosaicVis, plugins.AVisInstance);
 
   MosaicVis.prototype.locateImpl = function (range) {
     var that = this, o = this.options;

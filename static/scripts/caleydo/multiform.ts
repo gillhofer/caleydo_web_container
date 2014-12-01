@@ -14,7 +14,7 @@ import provenance = require('./provenance');
 /**
  * a simple multi form class using a select to switch
  */
-export class MultiForm extends events.EventHandler implements plugins.IVisInstance {
+export class MultiForm extends plugins.AVisInstance implements plugins.IVisInstance {
   parent:D3.Selection;
   node: Element;
   /**
@@ -137,7 +137,7 @@ export class MultiForm extends events.EventHandler implements plugins.IVisInstan
     //switch and trigger event
     var bak = this.actDesc;
     this.actDesc = vis;
-    this.fire('change', [vis, bak]);
+    this.fire('change', vis, bak);
     this.actVis = null;
     this.actVisPromise = null;
 
@@ -385,7 +385,7 @@ export class MultiFormGrid extends events.EventHandler implements plugins.IVisIn
     //switch and trigger event
     var bak = this.actDesc;
     this.actDesc = vis;
-    this.fire('change', [vis, bak]);
+    this.fire('change', vis, bak);
     this.actVisPromise = null;
 
     if (vis) {

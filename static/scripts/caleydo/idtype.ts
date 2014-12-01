@@ -194,8 +194,8 @@ export class SelectAble extends events.EventHandler {
       if (act.isNone && added.isNone && removed.isNone) {
         return;
       }
-      this.fire('select', [type, act, added, removed]);
-      this.fire('select-' + type, [act, added, removed]);
+      this.fire('select', type, act, added, removed);
+      this.fire('select-' + type, act, added, removed);
     });
   };
   private selectionCache = [];
@@ -248,8 +248,8 @@ export class SelectAble extends events.EventHandler {
       if (act.isNone && added.isNone && removed.isNone) {
         return;
       }
-      this.fire('select', [type, act, added, removed]);
-      this.fire('select-' + type, [act, added, removed]);
+      this.fire('select', type, act, added, removed);
+      this.fire('select-' + type, act, added, removed);
     });
   }
 

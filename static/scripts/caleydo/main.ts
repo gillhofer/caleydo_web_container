@@ -245,7 +245,7 @@ export function argFilter<T>(arr:T[], callbackfn:(value:T, index:number) => bool
 
 /**
  * utility function to get notified, when the given dom element is removed from its parent
- * @param node
+ * @param s
  * @param callback
  */
 export function onDOMNodeRemoved(s:Element[], callback:() => void, thisArg?:any);
@@ -310,6 +310,13 @@ export function uniqueId(domain : string = '_default') {
  * @param domain
  * @return {string}
  */
-export function uniqueIdString(domain : string = '_default') {
+export function uniqueString(domain : string = '_default') {
   return domain + Object.toString.apply(uniqueId(domain));
+}
+
+export function extendClass(subClass, baseClass) {
+  for (var p in baseClass) if (baseClass.hasOwnProperty(p)) subClass[p] = baseClass[p];
+  function __() { this.constructor = subClass; }
+  __.prototype = baseClass.prototype;
+  subClass.prototype = new __();
 }

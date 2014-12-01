@@ -3,6 +3,7 @@
  */
 define(['exports', 'd3', '../caleydo-tooltip/main', '../caleydo/main', 'css!./style'], function (exports, d3, tooltip, C) {
   function BoxPlot(data, parent) {
+    this.id = C.uniqueString('vis');
     this.data = data;
     this.parent = parent;
     this.node = this.build(d3.select(parent));

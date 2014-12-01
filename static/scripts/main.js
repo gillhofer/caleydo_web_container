@@ -18,6 +18,10 @@ require(['jquery', 'd3', './caleydo/main', './caleydo/data', './caleydo/plugin',
   var windows = $('<div>').css('position', 'absolute').appendTo('body')[0];
   var singletons = autoload(plugins, $('body')[0]);
   var menu = $('<div>').css('position', 'fixed').appendTo('body')[0];
+  var toolbar = new window.StaticToolBar($('body')[0]);
+  toolbar.builder.push(function (multi, node) {
+    multiform.addIconVisChooser(node, multi);
+  })
 
   var canvas = [];
   // use app here
@@ -78,6 +82,7 @@ require(['jquery', 'd3', './caleydo/main', './caleydo/data', './caleydo/plugin',
       animatedHeader: true,
       zcontrols: true
     });
+    toolbar.push(mw);
     var multiP;
     if (m.desc.type === 'vector' && m.valuetype.type === 'categorical') {
       multiP = m.groups().then(function (g) {

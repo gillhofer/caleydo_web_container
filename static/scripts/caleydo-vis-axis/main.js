@@ -5,6 +5,7 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/d3util', 'css!./style'],
   var h = 300, w = 50, shift = 10;
 
   function Axis(data, parent, options) {
+    this.id = C.uniqueString('vis');
     this.data = data;
     this.options = C.mixin({
       tickSize: 2,
@@ -71,6 +72,7 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/d3util', 'css!./style'],
       height: h,
       'class': 'axis'
     });
+    $svg.data(this);
     var $axis = $svg.append('g').attr('class', 'makeover');
     var $points = $svg.append('g');
     var s = this.scale = d3.scale.linear().domain(this.data.desc.value.range).range([shift, ((o.orient === 'left' || o.orient === 'right') ? h : w) - shift]).clamp(true);
