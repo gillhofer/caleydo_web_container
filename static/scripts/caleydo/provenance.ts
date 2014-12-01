@@ -47,7 +47,7 @@ export interface IPersistableCommand {
  */
 class Command {
   public next: Command = null;
-  constructor(private cmd : IPersistableCommand, public prev : Command, private id : string = C.uniqueIdString('cmd')) {
+  constructor(private cmd : IPersistableCommand, public prev : Command, private id : string = C.uniqueString('cmd')) {
     if (prev) {
       prev.next = this;
     }

@@ -7,6 +7,7 @@ import datatypes = require('./datatype');
 import ranges = require('./range');
 import module_ = require('module');
 import provenance = require('./provenance');
+import events = require('./event');
 
 var config = module_.config();
 
@@ -68,10 +69,43 @@ export interface IPlugin {
   factory(): any;
 }
 
-export interface IVisInstance extends provenance.IPersistable {
+export interface IVisInstance extends provenance.IPersistable, events.IEventHandler {
+  id: string;
   node: Element;
   data: datatypes.IDataType;
   locate(...range: ranges.Range[]): C.IPromise<any>;
+
+  transform(scale: number[], rotate: number);
+
+  option(name: string) : any;
+  option(name: string, value: any) : any;
+}
+
+export class AVisInstance extends events.EventHandler {
+  id = C.uniqueString('vis');
+
+  option(name: string, value?: any) {
+    return null;
+  }
+
+  persist() {
+    return null;
+  }
+
+  locate(...range:ranges.Range[]) {
+    if (range.length === 1) {
+      return this.locateImpl(range[0]);
+    }
+    return C.all(range.map(this.locateImpl, this));
+  }
+
+  locateImpl(range: ranges.Range) {
+    return C.resolved(null);
+  }
+
+  restore(persisted: any) {
+    return null;
+  }
 }
 
 /**
