@@ -87,13 +87,14 @@ function destroyAnimatedHeader($div, $header) {
 }
 
 
-export class Window extends events.EventHandler {
+export class Window extends events.EventHandler implements events.IDataBinding {
   private options : any;
   private $parent : JQuery;
   private $div : JQuery;
   private $header: JQuery;
   toolbar: ToolBar;
   private $content : JQuery;
+  private _data = {};
 
   constructor(parent, options) {
     super();
@@ -133,6 +134,15 @@ export class Window extends events.EventHandler {
       makeAnimatedHeader(this.$div, this.$header);
     }
     this.toolbar.bindTo(this);
+  }
+
+  data(name : string, value? : any) {
+    if (arguments.length === 1) {
+      return this._data[name];
+    }
+    var bak = this._data[name];
+    this._data[name] = value;
+    return bak;
   }
 
   /**
@@ -338,11 +348,11 @@ export class StaticToolBar extends ToolBar {
   }
 
   push(window : Window) {
-    window.on('mouseenter', (w) => {
+    window.on('mouseenter', (_, w) => {
       this.bindTo(w);
-    }).on('mouseleave', (w) => {
+    }).on('mouseleave', (_, w) => {
       this.bindTo(null);
-    }).on('removed', (w) => {
+    }).on('removed', (_, w) => {
       this.windows.splice(this.windows.indexOf(w),1);
     })
   }

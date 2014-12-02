@@ -2,42 +2,14 @@
  * Created by Samuel Gratzl on 05.08.2014.
  */
 define(['exports', 'd3', 'd3.parcoords', '../caleydo/main'], function (exports, d3, d3_parcoords, C) {
-  function ParCo(data, parent) {
-    this.data = data;
-    this.parent = parent;
-    this.node = this.build(d3.select(parent));
-
-    this.options = {
-      margin: { top: 24, right: 0, bottom: 12, left: 0 }
-    };
-  }
-
-  ParCo.prototype.locate = function () {
-    if (arguments.length === 1) {
-      return this.locateImpl(arguments[0]);
-    }
-    return C.all(C.argList(arguments).map(this.locateImpl, this));
-  };
-
-  ParCo.prototype.locateImpl = function (range) {
-    var dim0 = this.dims[0],
-      yscale = this.pc.yscale[dim0],
-      x = this.pc.xscale(dim0),
-      offset = this.options.margin.top;
-    if (range.isAll || range.isNone) {
-      var r = yscale.range();
-      return C.resolved({ x: x, w : 6, y: offset + r[0], h: r[1] - r[0] });
-    }
-    return this.data.objects(range).then(function (data) {
-      var ex = d3.extent(data, function (row) { return yscale(row[dim0]); });
-      return { x: x, w: 6, y: offset + ex[0], h: ex[1] - ex[0] };
-    });
-  };
-
-  ParCo.prototype.build = function ($parent) {
-    var $base = $parent.append('div').attr({
-      'class': 'parcoords',
-      style: 'width:360px;height:150px'
+  exports.ParCo = d3utils.defineVis('ParCo', {
+    margin: { top: 24, right: 0, bottom: 12, left: 0 },
+    width: 360,
+    height: 150
+  }, function build($parent) {
+    var $base = $parent.append('div').classed('parcoords', true).style({
+      width: this.options.width + 'px',
+      height: this.options.height + 'px'
     }), data = this.data;
 
     var pc = d3_parcoords(this.options)($base.node()), types = {},
@@ -46,18 +18,18 @@ define(['exports', 'd3', 'd3.parcoords', '../caleydo/main'], function (exports, 
     dims = this.data.cols().map(function (col) {
       var val = col.desc.value, type;
       switch (val.type) {
-      case 'real':
-      case 'int':
-        type = 'number';
-        //pc.scale(col.name, val.range);
-        break;
-      case 'categorical':
-        type = 'string';
-        //pc.scale(col.name, val.categories);
-        break;
-      default:
-        type = 'string';
-        break;
+        case 'real':
+        case 'int':
+          type = 'number';
+          //pc.scale(col.name, val.range);
+          break;
+        case 'categorical':
+          type = 'string';
+          //pc.scale(col.name, val.categories);
+          break;
+        default:
+          type = 'string';
+          break;
       }
       types[col.desc.name] = type;
       return col.desc.name;
@@ -104,12 +76,39 @@ define(['exports', 'd3', 'd3.parcoords', '../caleydo/main'], function (exports, 
       l(null, 'selected', selected);
     });
 
-    return $base.node();
-  };
-  exports.ParCo = ParCo;
+    return $base;
+  }, {
+    transform: function (scale, rotate) {
+      this.$node.style({
+        transform: 'rotate(' + rotate + 'deg)scale(' + scale[0] + ',' + scale[1] + ')',
+        width: this.options.width * scale[0] + 'px',
+        height: this.options.height * scale[1] + 'px'
+      });
+      this.fire('transform', {
+        scale: scale,
+        rotate: rotate
+      });
+      this.options.scale = scale;
+      this.options.rotate = rotate;
+    },
+    locateIt : function (range) {
+      var dim0 = this.dims[0],
+        yscale = this.pc.yscale[dim0],
+        x = this.pc.xscale(dim0),
+        offset = this.options.margin.top;
+      if (range.isAll || range.isNone) {
+        var r = yscale.range();
+        return C.resolved({ x: x, w : 6, y: offset + r[0], h: r[1] - r[0] });
+      }
+      return this.data.objects(range).then(function (data) {
+        var ex = d3.extent(data, function (row) { return yscale(row[dim0]); });
+        return { x: x, w: 6, y: offset + ex[0], h: ex[1] - ex[0] };
+      });
+    }
+  });
 
-  function create(data, parent) {
-    return new ParCo(data, parent);
+  function create(data, parent, options) {
+    return exports.ParCo(data, parent, options);
   }
 
   exports.create = create;

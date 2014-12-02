@@ -11,7 +11,7 @@
         "id": "caleydo-vis-heatmap",
         "name": "HeatMap",
         "icon": "icon.svg",
-        "size": "eval!function (dim) { return [dim[1] * 10, dim[0] * 10]; }",
+        "size": "eval!function (dim) { return [dim[1] * 10, dim[0]] * 10; }",
         "filter": "matrix"
       }
     ]

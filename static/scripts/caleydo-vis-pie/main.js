@@ -1,24 +1,7 @@
 /**
  * Created by Samuel Gratzl on 08.10.2014.
  */
-define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo/geom', '../caleydo-tooltip/main'], function (exports, d3, C, idtypes, geom, tooltip) {
-
-  function Vis(data, parent, options) {
-    this.data = data;
-    this.options = C.mixin({
-      radius: 50,
-      innerRadius: 0
-    }, options);
-    this.parent = parent;
-    this.node = this.build(d3.select(parent));
-  }
-
-  Vis.prototype.locate = function (range) {
-    if (arguments.length === 1) {
-      return this.locateImpl(range);
-    }
-    return C.all(C.argList(arguments).map(this.locateImpl, this));
-  };
+define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo/geom', '../caleydo/d3util', '../caleydo-tooltip/main'], function (exports, d3, C, idtypes, geom, d3utils, tooltip) {
 
   function toPolygon(start, end, radius) {
     var r = [
@@ -33,22 +16,10 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo/geo
     return geom.polygon(r);
   }
 
-  Vis.prototype.locateImpl = function (range) {
-    var that = this, o = this.options;
-    if (range.isAll || range.isNone) {
-      return C.resolved({ x: o.radius, y: o.radius, radius: o.radius});
-    }
-    return this.data.data(range).then(function (data) {
-      var ex = d3.extent(data, function (value) {
-        return that.hist.binOf(value);
-      });
-      var startAngle = that.scale(that.hist_data[ex[0]].start);
-      var endAngle = that.scale(that.hist_data[ex[1]].end);
-      return C.resolved(toPolygon(startAngle, endAngle, o.radius));
-    });
-  };
-
-  Vis.prototype.build = function ($parent) {
+  export.Pie = d3utils.defineVis('Pie', {
+    radius: 50,
+    innerRadius: 0
+  }, function($parent) {
     var o = this.options, that = this, data = this.data;
     var $svg = $parent.append("svg").attr({
       width: o.radius * 2,
@@ -125,12 +96,26 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo/geo
       });
     });
 
-    return $svg.node();
-  };
-  exports.Pie = Vis;
+    return $svg;
+  }, {
+    locateIt : function (range) {
+      var that = this, o = this.options;
+      if (range.isAll || range.isNone) {
+        return C.resolved({ x: o.radius, y: o.radius, radius: o.radius});
+      }
+      return this.data.data(range).then(function (data) {
+        var ex = d3.extent(data, function (value) {
+          return that.hist.binOf(value);
+        });
+        var startAngle = that.scale(that.hist_data[ex[0]].start);
+        var endAngle = that.scale(that.hist_data[ex[1]].end);
+        return C.resolved(toPolygon(startAngle, endAngle, o.radius));
+      });
+    }
+  });
 
   function create(data, parent, options) {
-    return new Vis(data, parent, options);
+    return new export.Pie(data, parent, options);
   }
 
   exports.create = create;

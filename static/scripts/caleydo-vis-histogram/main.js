@@ -4,7 +4,7 @@
 /* global define */
 "use strict"
 
-define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-tooltip/main', '../caleydo/plugin'], function (exports, d3, C, idtypes, tooltip, plugins) {
+define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-tooltip/main', '../caleydo/d3util'], function (exports, d3, C, idtypes, tooltip, d3utils) {
 
   function createCategoricalHistData(hist, categories) {
     var data = [],
@@ -54,49 +54,23 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-too
     return createNumericalHistData(hist, value.range);
   }
 
-  function HistogramVis(data, parent, options) {
-    plugins.AVisInstance.call(this);
-    this.data = data;
-    this.options = C.mixin({
+  exports.Histogram = d3utils.defineVis('HistogramVis', function (data) {
+    return {
       width: 200,
       height: 100,
       nbins: Math.round(Math.sqrt(data.length)),
       totalHeight: true
-    }, this.options);
-    this.parent = parent;
-    this.node = this.build(d3.select(parent));
-  }
-  C.extendClass(HistogramVis, plugins.AVisInstance);
-
-  HistogramVis.prototype.locateImpl = function (range) {
-    var that = this, o = this.options;
-    if (range.isAll || range.isNone) {
-      return C.resolved({ x: 0, y: 0, w: o.width, h: o.height});
-    }
-    return this.data.data(range).then(function (data) {
-      var ex = d3.extent(data, function (value) {
-        return that.hist.binOf(value);
-      });
-      var h0 = that.hist_data[ex[0]];
-      var h1 = that.hist_data[ex[1]];
-      return C.resolved({
-        x: that.xscale(ex[0]),
-        width: (that.xscale(ex[1]) - that.xscale(ex[0]) + that.xscale.rangeBand()),
-        height: that.yscale(Math.max(h0.v, h1.v)),
-        y: that.yscale(that.yscale.domain()[1] - Math.max(h0.v, h1.v))
-      });
-    });
-  };
-
-  HistogramVis.prototype.build = function ($parent) {
+    };
+  }, function ($parent) {
     var o = this.options, that = this, data = this.data;
     var $svg = $parent.append('svg').attr({
       width: o.width,
       height: o.height,
       'class': 'histogram'
     });
-    var $data = $svg.append('g');
-    var $highlight = $svg.append('g').style('pointer-events', 'none').classed('select-selected', true);
+    var $t = $svg.append('g');
+    var $data = $t.append('g');
+    var $highlight = $t.append('g').style('pointer-events', 'none').classed('select-selected', true);
 
     //using range bands with an ordinal scale for uniform distribution
     var xscale = that.xscale = d3.scale.ordinal().rangeBands([0, o.width], 0.1);
@@ -153,14 +127,14 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-too
         x: function (d, i) {
           return xscale(i);
         },
+        fill: function (d) {
+          return d.color;
+        },
         y: function (d) {
           return yscale(yscale.domain()[1] - d.v);
         },
         height: function (d) {
           return yscale(d.v);
-        },
-        fill: function (d) {
-          return d.color;
         }
       });
       data.selections().then(function (selected) {
@@ -168,42 +142,33 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-too
       });
     });
 
-    return $svg.node();
-  };
-
-  function MosaicVis(data, parent, options) {
-    plugins.AVisInstance.call(this);
-    this.data = data;
-    this.options = C.mixin({
-      width: 20,
-      heighti : 10
-    }, options);
-    this.parent = parent;
-    this.node = this.build(d3.select(parent));
-  }
-  C.extendClass(MosaicVis, plugins.AVisInstance);
-
-  MosaicVis.prototype.locateImpl = function (range) {
-    var that = this, o = this.options;
-    if (range.isAll || range.isNone) {
-      return C.resolved({ x: 0, y: 0, w: o.width, h: o.heighti * this.data.length});
-    }
-    return this.data.data(range).then(function (data) {
-      var ex = d3.extent(data, function (value) {
-        return that.hist.binOf(value);
+    return $svg;
+  }, {
+    locateImpl: function (range) {
+      var that = this, o = this.options;
+      if (range.isAll || range.isNone) {
+        return C.resolved({x: 0, y: 0, w: o.width, h: o.height});
+      }
+      return this.data.data(range).then(function (data) {
+        var ex = d3.extent(data, function (value) {
+          return that.hist.binOf(value);
+        });
+        var h0 = that.hist_data[ex[0]];
+        var h1 = that.hist_data[ex[1]];
+        return C.resolved({
+          x: that.xscale(ex[0]),
+          width: (that.xscale(ex[1]) - that.xscale(ex[0]) + that.xscale.rangeBand()),
+          height: that.yscale(Math.max(h0.v, h1.v)),
+          y: that.yscale(that.yscale.domain()[1] - Math.max(h0.v, h1.v))
+        });
       });
-      var h0 = that.hist_data[ex[0]];
-      var h1 = that.hist_data[ex[1]];
-      return C.resolved({
-        x: 0,
-        width: o.width,
-        height: that.yscale(Math.max(h0.v, h1.v)),
-        y: that.yscale(that.yscale.domain()[1] - Math.max(h0.v, h1.v))
-      });
-    });
-  };
+    },
+  });
 
-  MosaicVis.prototype.build = function ($parent) {
+  exports.Mosaic = d3utils.defineVis('MosaicVis', {
+    width: 20,
+    heighti : 10
+  }, function ($parent) {
     var o = this.options, that = this, data = this.data, len = data.length;
     var $svg = $parent.append('svg').attr({
       width: o.width,
@@ -277,15 +242,32 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-too
     });
 
     return $svg.node();
-  };
-
-  exports.Histogram = HistogramVis;
-  exports.Mosaic = MosaicVis;
+  }, {
+    locateIt: function locateIt(range) {
+      var that = this, o = this.options;
+      if (range.isAll || range.isNone) {
+        return C.resolved({x: 0, y: 0, w: o.width, h: o.heighti * this.data.length});
+      }
+      return this.data.data(range).then(function (data) {
+        var ex = d3.extent(data, function (value) {
+          return that.hist.binOf(value);
+        });
+        var h0 = that.hist_data[ex[0]];
+        var h1 = that.hist_data[ex[1]];
+        return C.resolved({
+          x: 0,
+          width: o.width,
+          height: that.yscale(Math.max(h0.v, h1.v)),
+          y: that.yscale(that.yscale.domain()[1] - Math.max(h0.v, h1.v))
+        });
+      });
+    }
+  });
 
   exports.create = function createHistogram(data, parent, options) {
-    return new HistogramVis(data, parent, options);
+    return exports.Histogram(data, parent, options);
   };
   exports.createMosaic = function createMosaic(data, parent, options) {
-    return new MosaicVis(data, parent, options);
-  }
+    return exports.Mosaic(data, parent, options);
+  };
 });

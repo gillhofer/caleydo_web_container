@@ -9,6 +9,11 @@ export interface IEventHandler {
   on(events, handler);
   off(events, handler);
 }
+
+export interface IDataBinding {
+  data(key : string) : any;
+  data(key : string, value: any) : any;
+}
 /**
  * EventHandler base class, in the backend JQuery is used
  */

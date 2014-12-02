@@ -311,7 +311,7 @@ export function uniqueId(domain : string = '_default') {
  * @return {string}
  */
 export function uniqueString(domain : string = '_default') {
-  return domain + Object.toString.apply(uniqueId(domain));
+  return domain + uniqueId(domain);
 }
 
 export function extendClass(subClass, baseClass) {

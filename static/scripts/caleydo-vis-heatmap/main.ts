@@ -24,7 +24,9 @@ export class HeatMap extends plugins.AVisInstance {
       color: ['black', 'white'],
       domain: (<any>this.data.desc).value.range
     }, options);
-    this.colorer = d3.scale.linear().domain(this.options.domain).range(this.options.range);
+    this.options.scale = [this.options.initialScale,this.options.initialScale];
+    this.options.rotate = 0;
+    this.colorer = d3.scale.linear().domain(this.options.domain).range(this.options.color);
     this.$node = this.build(d3.select(parent));
   }
 
@@ -36,7 +38,7 @@ export class HeatMap extends plugins.AVisInstance {
     if (arguments.length === 1) {
       return this.options[name];
     } else {
-      this.fire('option.'+name, val);
+      this.fire('option.'+name, val, this.options[name]);
       this.options[name] = val;
       switch(name) {
         case 'color':
@@ -52,10 +54,10 @@ export class HeatMap extends plugins.AVisInstance {
     var width = dims[1], height = dims[0];
     function l(r, max) {
       if (r.isAll || r.isNone) {
-        return [0, max*10];
+        return [0, max*this.options.scale[1]];
       }
       var ex : any =  d3.extent(r.iter().asList());
-      return [ex[0] * 10, (ex[1] - ex[0] + 1) * 10];
+      return [ex[0] * this.options.scale[1], (ex[1] - ex[0] + 1) * this.options.scale[1]];
     }
     var xw = l(range.dim(1), width);
     var yh = l(range.dim(0), height);
@@ -63,29 +65,23 @@ export class HeatMap extends plugins.AVisInstance {
   }
 
   transform(scale: number[], rotate: number = 0) {
-    var dims = this.data.dim;
-    var width = dims[1], height = dims[0];
     this.$node.attr({
-      width: width * scale[0],
-      height: height * scale[1]
-    });
-    if (rotate === 90 || rotate === 270) {
-      this.$node.attr({
-        height: width * scale[0],
-        width: height * scale[1]
-      });
-    }
-    this.$node.select('g').attr('transform','rotate('+rotate+')scale('+scale[0]+','+scale[1]+')');
+      width: this.options.width * scale[0],
+      height: this.options.height * scale[1]
+    }).style('transform','rotate('+rotate+'deg)');
+    this.$node.select('g').attr('transform','scale('+scale[0]+','+scale[1]+')');
     this.fire('transform',{
       scale: scale,
       rotate: rotate
     });
+    this.options.scale = scale;
+    this.options.rotate = rotate;
     return true;
   }
 
   private recolor() {
     var c = this.colorer;
-    c.domain(this.options.domain).range(this.options.range);
+    c.domain(this.options.domain).range(this.options.color);
     this.$node.selectAll('rect').attr('fill', (d) => c(d));
   }
 
@@ -93,10 +89,10 @@ export class HeatMap extends plugins.AVisInstance {
     var dims = this.data.dim;
     var width = dims[1], height = dims[0];
     var $svg = $parent.append('svg').attr({
-      width: width * this.options.scale,
-      height: height * this.options.scale
+      width: width * this.options.initialScale,
+      height: height * this.options.initialScale
     });
-    var $g = $svg.append('g');
+    var $g = $svg.append('g').attr('transform','scale('+this.options.initialScale+','+this.options.initialScale+')');
 
     var c = this.colorer;
     var data = this.data;

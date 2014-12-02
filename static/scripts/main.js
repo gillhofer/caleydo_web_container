@@ -19,8 +19,8 @@ require(['jquery', 'd3', './caleydo/main', './caleydo/data', './caleydo/plugin',
   var singletons = autoload(plugins, $('body')[0]);
   var menu = $('<div>').css('position', 'fixed').appendTo('body')[0];
   var toolbar = new window.StaticToolBar($('body')[0]);
-  toolbar.builder.push(function (multi, node) {
-    multiform.addIconVisChooser(node, multi);
+  toolbar.builder.push(function (window, node) {
+    multiform.addIconVisChooser(node, window.data('vis'));
   })
 
   var canvas = [];
@@ -95,6 +95,7 @@ require(['jquery', 'd3', './caleydo/main', './caleydo/data', './caleydo/plugin',
     }
     multiP.then(function (multi) {
       multiform.addIconVisChooser(mw.toolbar.node, multi);
+      mw.data('vis', multi);
       mw.title = m.desc.name + ' @ ' + multi.act.name;
       mw.pos = [400, 50];
       mw.contentSize = multi.size;

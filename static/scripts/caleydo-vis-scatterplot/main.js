@@ -114,7 +114,7 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo-tooltip/main', 'css!./st
       $y.exit().remove();
     });
 
-    return $svg.node();
+    return svg;
   };
   exports.ScatterPlot = ScatterPlot;
 
