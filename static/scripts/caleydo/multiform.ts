@@ -54,7 +54,7 @@ export class MultiForm extends plugins.AVisInstance implements plugins.IVisInsta
     }
   }
 
-  persist() {
+  persist() : any {
     return {
       id: this.actDesc ? this.actDesc.id : null,
       content: this.actVis && C.isFunction(this.actVis.persist) ? this.actVis.persist() : null
@@ -83,6 +83,13 @@ export class MultiForm extends plugins.AVisInstance implements plugins.IVisInsta
       } else {
         return C.resolved((arguments.length === 1 ? undefined : new Array(args.length)));
       }
+    });
+  }
+
+  transform(scale: number[], rotate : number) {
+    var p = this.actVisPromise || C.resolved(null);
+    return p.then((vis: plugins.IVisInstance) => {
+      vis.transform(scale, rotate);
     });
   }
 
@@ -157,7 +164,7 @@ export class MultiForm extends plugins.AVisInstance implements plugins.IVisInsta
 }
 
 class GridElem implements provenance.IPersistable {
-  private actVis : any;
+  private actVis : plugins.IVisInstance;
   $content : D3.Selection;
 
   constructor(public range: ranges.Range, public data: datatypes.IDataType) {
@@ -215,11 +222,18 @@ class GridElem implements provenance.IPersistable {
     this.actVis = plugin.factory(this.data, this.$content.node());
     return this.actVis;
   }
+
+
+  transform(scale: number[], rotate : number) {
+    if (this.actVis) {
+      this.actVis.transform(scale, rotate);
+    }
+  }
 }
 /**
  * a simple multi form class using a select to switch
  */
-export class MultiFormGrid extends events.EventHandler implements plugins.IVisInstance {
+export class MultiFormGrid extends plugins.AVisInstance implements plugins.IVisInstance {
   parent:D3.Selection;
   node: Element;
   /**
@@ -290,7 +304,14 @@ export class MultiFormGrid extends events.EventHandler implements plugins.IVisIn
     });
   }
 
-  persist() {
+  transform(scale: number[], rotate : number) {
+    var p = this.actVisPromise || C.resolved(null);
+    return p.then(() => {
+      this.grid.forEach((g) => g.transform(scale, rotate));
+    });
+  }
+
+  persist() : any {
     return {
       id: this.actDesc ? this.actDesc.id : null,
       contents: this.grid.map((elem) => elem.persist())

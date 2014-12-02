@@ -16,20 +16,22 @@ import datatypes = require('../caleydo/datatype');
 import utils = require('../caleydo/d3util');
 import C = require('../caleydo/main');
 
-export class Table implements plugins.IVisInstance {
-  public node:Element;
+export class Table extends plugins.AVisInstance implements plugins.IVisInstance {
+  private $node : D3.Selection;
+  private options : any = {};
 
   constructor(public data:any, public parent:Element) {
+    super();
     var $p = d3.select(parent);
     switch (data.desc.type) { //depending on the type of the data, create a different table
       case 'matrix':
-        this.node = this.build($p, [this.data.cols(), this.data.rows(), this.data.data()]);
+        this.$node = this.build($p, [this.data.cols(), this.data.rows(), this.data.data()]);
         break;
       case 'table':
-        this.node = this.build($p, [this.data.cols().map((v) => v.name), this.data.rows(), this.data.data()]);
+        this.$node = this.build($p, [this.data.cols().map((v) => v.name), this.data.rows(), this.data.data()]);
         break;
       case 'vector':
-        this.node = this.build($p, [
+        this.$node = this.build($p, [
           [this.data.desc.name],
           this.data.names(),
           this.data.data().then((data) => data.map((d) => [d]))
@@ -38,14 +40,11 @@ export class Table implements plugins.IVisInstance {
     }
   }
 
-  locate(...range:ranges.Range[]) {
-    if (range.length === 1) {
-      return this.locateImpl(range[0]);
-    }
-    return C.all(range.map(this.locateImpl, this));
+  get node() {
+    return this.$node.node();
   }
 
-  private locateImpl(range:ranges.Range) {
+  locateImpl(range:ranges.Range) {
     var $tbody = d3.select(this.node).select('tbody');
     var offset = (<HTMLElement>$tbody.node()).offsetTop, w = $tbody.node().clientWidth;
     var a, b;
@@ -67,11 +66,19 @@ export class Table implements plugins.IVisInstance {
     return null;
   }
 
-  private build($parent:D3.Selection, promises:any[]) {
-    var $table = $parent.append('table').attr('class', 'table').style({
-      'font-size': 'smaller',
-      'border-collapse': 'collapse'
+  transform(scale: number[], rotate: number = 0) {
+    this.$node.style('transform','rotate('+rotate+'deg)scale('+scale[0]+','+scale[1]+')');
+    this.fire('transform',{
+      scale: scale,
+      rotate: rotate
     });
+    this.options.scale = scale;
+    this.options.rotate = rotate;
+    return true;
+  }
+
+  private build($parent:D3.Selection, promises:any[]) {
+    var $table = $parent.append('table').attr('class', 'table');
     $table.append('thead').append('tr');
     $table.append('tbody');
     var onClick = utils.selectionUtil(this.data, $table.select('tbody'), 'tr');
@@ -97,7 +104,7 @@ export class Table implements plugins.IVisInstance {
       $rows.exit().remove();
     });
 
-    return $table.node();
+    return $table;
   }
 }
 

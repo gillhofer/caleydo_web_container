@@ -45,16 +45,12 @@ export function defineVis(name: string, defaultOptions : any, build : ($parent: 
     this.data = data;
     this.$parent = d3.select(parent);
     this.options = C.mixin(d3.functor(defaultOptions).call(this,data, options || {}), options);
-    this.$node = build.call(this.$parentm, this.data);
+    this.$node = build.call(this, this.$parent, this.data);
     if (C.isFunction(this.init)) {
       this.init(data);
     }
   }
   C.extendClass(VisTechnique, plugins.AVisInstance);
-  Object.defineProperty(VisTechnique.prototype,'node', {
-    get : () => this.$node.node(),
-    enumerable: true
-  });
   VisTechnique.prototype.toString = () => name;
   VisTechnique.prototype.option = function(name, value) {
     if (arguments.length === 1) {
@@ -96,5 +92,10 @@ export function defineVis(name: string, defaultOptions : any, build : ($parent: 
     return null;
   };
   VisTechnique.prototype = C.mixin(VisTechnique.prototype, functions);
+
+  Object.defineProperty(VisTechnique.prototype,'node', {
+    get : () => this.$node.node(),
+    enumerable: true
+  });
   return VisTechnique;
 }

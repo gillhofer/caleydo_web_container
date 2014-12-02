@@ -393,7 +393,7 @@ export function resolve(id:string):IDType {
  */
 export function list() {
   fillUp(); //trigger loading of the meta data
-  return this.cache;
+  return cache;
 }
 
 export function register(id:string, idtype:IDType) {

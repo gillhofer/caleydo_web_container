@@ -9,6 +9,7 @@ import $ = require('jquery');
 import events = require('../caleydo/event');
 import C = require('../caleydo/main');
 import geom = require('../caleydo/geom');
+import idtypes = require('../caleydo/idtype');
 
 function makeDraggable($div, window) {
   var convertDrag = function (ui) {
@@ -342,7 +343,7 @@ export class ToolBar {
 }
 
 export class StaticToolBar extends ToolBar {
-  private windows : Window[];
+  private windows : Window[] = [];
   constructor(parent: Element) {
     super(parent);
   }
@@ -353,7 +354,10 @@ export class StaticToolBar extends ToolBar {
     }).on('mouseleave', (_, w) => {
       this.bindTo(null);
     }).on('removed', (_, w) => {
-      this.windows.splice(this.windows.indexOf(w),1);
+      if (this.window === w) {
+        this.bindTo(null);
+      }
+      //this.windows.splice(this.windows.indexOf(w),1);
     })
   }
 }

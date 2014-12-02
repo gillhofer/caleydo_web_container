@@ -79,6 +79,8 @@ export interface IVisInstance extends provenance.IPersistable, events.IEventHand
 
   option(name: string) : any;
   option(name: string, value: any) : any;
+
+  destroy();
 }
 
 export class AVisInstance extends events.EventHandler {
@@ -105,6 +107,10 @@ export class AVisInstance extends events.EventHandler {
 
   restore(persisted: any) {
     return null;
+  }
+
+  destroy() {
+
   }
 }
 
