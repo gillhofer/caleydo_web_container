@@ -10,13 +10,13 @@ import matrix = require('../caleydo/matrix');
 import table = require('../caleydo/table');
 import vector = require('../caleydo/vector');
 import ranges = require('../caleydo/range');
-import plugins = require('../caleydo/plugin');
+import vis = require('../caleydo/vis');
 import geom = require('../caleydo/geom');
 import datatypes = require('../caleydo/datatype');
 import utils = require('../caleydo/d3util');
 import C = require('../caleydo/main');
 
-export class Table extends plugins.AVisInstance implements plugins.IVisInstance {
+export class Table extends vis.AVisInstance implements vis.IVisInstance {
   private $node : D3.Selection;
   private options : any = {};
 

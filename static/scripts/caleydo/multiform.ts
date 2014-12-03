@@ -5,7 +5,7 @@
 'use strict';
 import d3 = require('d3');
 import C = require('./main');
-import plugins = require('./plugin');
+import vis = require('./vis');
 import ranges = require('./range');
 import datatypes = require('./datatype');
 import events = require('./event');
@@ -14,18 +14,18 @@ import provenance = require('./provenance');
 /**
  * a simple multi form class using a select to switch
  */
-export class MultiForm extends plugins.AVisInstance implements plugins.IVisInstance {
+export class MultiForm extends vis.AVisInstance implements vis.IVisInstance {
   parent:D3.Selection;
   node: Element;
   /**
    * list of all possibles vis techniques
    */
-  visses:plugins.IPluginDesc[];
+  visses:vis.IVisPluginDesc[];
 
   private actVis:any;
   private actVisPromise : C.IPromise<any>;
 
-  private actDesc:plugins.IPluginDesc;
+  private actDesc:vis.IVisPluginDesc;
   private $content:D3.Selection;
 
   constructor(public data:datatypes.IDataType, parent:Element) {
@@ -33,7 +33,7 @@ export class MultiForm extends plugins.AVisInstance implements plugins.IVisInsta
     this.parent = d3.select(parent).append('div').attr('class', 'multiform');
     this.node = this.parent.node();
     //find all suitable plugins
-    this.visses = plugins.listVis(data);
+    this.visses = vis.list(data);
 
     this.build();
   }
@@ -88,7 +88,7 @@ export class MultiForm extends plugins.AVisInstance implements plugins.IVisInsta
 
   transform(scale: number[], rotate : number) {
     var p = this.actVisPromise || C.resolved(null);
-    return p.then((vis: plugins.IVisInstance) => {
+    return p.then((vis: vis.IVisInstance) => {
       vis.transform(scale, rotate);
     });
   }
@@ -117,16 +117,16 @@ export class MultiForm extends plugins.AVisInstance implements plugins.IVisInsta
    * @param index
    */
   switchTo(index: number)  : C.IPromise<any>;
-  switchTo(vis:plugins.IPluginDesc) : C.IPromise<any>;
+  switchTo(vis:vis.IVisPluginDesc) : C.IPromise<any>;
   switchTo(param : any) : C.IPromise<any> {
-    var vis: plugins.IPluginDesc = null;
+    var vis: vis.IVisPluginDesc = null;
     if (typeof param === 'number') {
       if (param < 0 || param >= this.visses.length){
         throw new RangeError('index '+param+ ' out of range: [0,'+this.visses.length+']');
       }
       vis = this.visses[<number>param];
     } else {
-      vis = <plugins.IPluginDesc>param;
+      vis = <vis.IVisPluginDesc>param;
     }
 
     if (vis === this.actDesc) {
@@ -164,7 +164,7 @@ export class MultiForm extends plugins.AVisInstance implements plugins.IVisInsta
 }
 
 class GridElem implements provenance.IPersistable {
-  private actVis : plugins.IVisInstance;
+  private actVis : vis.IVisInstance;
   $content : D3.Selection;
 
   constructor(public range: ranges.Range, public data: datatypes.IDataType) {
@@ -176,7 +176,7 @@ class GridElem implements provenance.IPersistable {
     }
   }
 
-  size(actDesc: plugins.IPluginDesc) : number[] {
+  size(actDesc: vis.IVisPluginDesc) : number[] {
     var s = [200,200];
     var d : any = actDesc;
     if (d && C.isFunction(d.size) && this.data !== null) {
@@ -233,15 +233,15 @@ class GridElem implements provenance.IPersistable {
 /**
  * a simple multi form class using a select to switch
  */
-export class MultiFormGrid extends plugins.AVisInstance implements plugins.IVisInstance {
+export class MultiFormGrid extends vis.AVisInstance implements vis.IVisInstance {
   parent:D3.Selection;
   node: Element;
   /**
    * list of all possibles vis techniques
    */
-  visses:plugins.IPluginDesc[];
+  visses:vis.IVisPluginDesc[];
 
-  private actDesc:plugins.IPluginDesc;
+  private actDesc:vis.IVisPluginDesc;
 
   private actVisPromise : C.IPromise<any>;
 
@@ -255,7 +255,7 @@ export class MultiFormGrid extends plugins.AVisInstance implements plugins.IVisI
     this.parent = d3.select(parent).append('div').attr('class', 'multiformgrid');
     this.node = this.parent.node();
     //find all suitable plugins
-    this.visses = plugins.listVis(data);
+    this.visses = vis.list(data);
 
     //compute the dimensions and build the grid
     var dims = this.dims = range.dims.map((dim) => {
@@ -384,16 +384,16 @@ export class MultiFormGrid extends plugins.AVisInstance implements plugins.IVisI
    * @param index
    */
   switchTo(index: number)  : C.IPromise<any>;
-  switchTo(vis:plugins.IPluginDesc) : C.IPromise<any>;
+  switchTo(vis:vis.IVisPluginDesc) : C.IPromise<any>;
   switchTo(param : any) : C.IPromise<any> {
-    var vis: plugins.IPluginDesc = null;
+    var vis: vis.IVisPluginDesc = null;
     if (typeof param === 'number') {
       if (param < 0 || param >= this.visses.length){
         throw new RangeError('index '+param+ ' out of range: [0,'+this.visses.length+']');
       }
       vis = this.visses[<number>param];
     } else {
-      vis = <plugins.IPluginDesc>param;
+      vis = <vis.IVisPluginDesc>param;
     }
 
     if (vis === this.actDesc) {

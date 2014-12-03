@@ -6,14 +6,14 @@
 "use strict"
 
 import d3 = require('d3');
-import plugins = require('../caleydo/plugin');
+import vis = require('../caleydo/vis');
 import matrix = require('../caleydo/matrix');
 import idtypes = require('../caleydo/idtype')
 import geom = require('../caleydo/geom');
 import ranges = require('../caleydo/range');
 import C = require('../caleydo/main');
 
-export class HeatMap extends plugins.AVisInstance {
+export class HeatMap extends vis.AVisInstance implements vis.IVisInstance {
   private $node:D3.Selection;
   private colorer : D3.Scale.LinearScale;
 

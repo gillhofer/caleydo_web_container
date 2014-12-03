@@ -4,7 +4,7 @@
 import C = require('./main');
 import idtypes = require('./idtype');
 import datatype = require('./datatype');
-import plugins = require('./plugin');
+import vis = require('./vis');
 import geom = require('./geom');
 import d3 = require('d3');
 'use strict';
@@ -50,7 +50,7 @@ export function defineVis(name: string, defaultOptions : any, build : ($parent: 
       this.init(data);
     }
   }
-  C.extendClass(VisTechnique, plugins.AVisInstance);
+  C.extendClass(VisTechnique, vis.AVisInstance);
   VisTechnique.prototype.toString = () => name;
   VisTechnique.prototype.option = function(name, value) {
     if (arguments.length === 1) {
