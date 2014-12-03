@@ -430,18 +430,9 @@ export class MultiFormGrid extends plugins.AVisInstance implements plugins.IVisI
  * @param s
  */
 function createIconFromDesc(s : D3.Selection) {
-  s.attr('title', (d) => d.name)
-    .attr('class', 'fa')
-    .each(function (d) {
-      var t = d3.select(this);
-      if (d.iconcss) { //defined by css
-        t.classed(d.iconcss, true);
-      } else if (d.icon) { //defined by background icon
-        t.classed('fa-fw', true).style('background-image', 'url(' + d.baseUrl + '/' + d.icon + ')').html('&nbsp');
-      } else { //use the first letter
-        t.text(d.name.substr(0, 1).toUpperCase());
-      }
-    });
+  s.each(function(d) {
+    d.iconify(this);
+  });
 }
 
 /**

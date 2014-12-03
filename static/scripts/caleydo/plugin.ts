@@ -3,11 +3,7 @@
  */
 import C = require('./main');
 import require_ = require('require');
-import datatypes = require('./datatype');
-import ranges = require('./range');
 import module_ = require('module');
-import provenance = require('./provenance');
-import events = require('./event');
 
 var config = module_.config();
 
@@ -67,51 +63,6 @@ export interface IPlugin {
    * link to the referenced method as described in the description
    */
   factory(): any;
-}
-
-export interface IVisInstance extends provenance.IPersistable, events.IEventHandler {
-  id: string;
-  node: Element;
-  data: datatypes.IDataType;
-  locate(...range: ranges.Range[]): C.IPromise<any>;
-
-  transform(scale: number[], rotate: number);
-
-  option(name: string) : any;
-  option(name: string, value: any) : any;
-
-  destroy();
-}
-
-export class AVisInstance extends events.EventHandler {
-  id = C.uniqueString('vis');
-
-  option(name: string, value?: any) {
-    return null;
-  }
-
-  persist() {
-    return null;
-  }
-
-  locate(...range:ranges.Range[]) {
-    if (range.length === 1) {
-      return this.locateImpl(range[0]);
-    }
-    return C.all(range.map(this.locateImpl, this));
-  }
-
-  locateImpl(range: ranges.Range) {
-    return C.resolved(null);
-  }
-
-  restore(persisted: any) {
-    return null;
-  }
-
-  destroy() {
-
-  }
 }
 
 /**
@@ -210,14 +161,4 @@ export function load(plugins: IPluginDesc[]) :C.IPromise<IPlugin[]> {
       }));
     });
   });
-}
-
-/**
- * list a vis plugins and check in addition whether the match the given data type
- * @param data the data type to visualize
- * @returns {IPluginDesc[]}
- */
-export function listVis(data:datatypes.IDataType):IPluginDesc[] {
-  //filter additionally with the filter attribute, which can be a function or the expected data type
-  return list('vis').filter((desc: any) => (!desc.filter || (C.isFunction(desc.filter) && desc.filter(data)) || (typeof desc.filter === 'string' && data.desc.type === desc.filter)));
 }

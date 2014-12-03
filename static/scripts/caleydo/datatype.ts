@@ -116,3 +116,24 @@ export function categorical2paritioning(data: string[], categories: string[], op
   });
   return ranges.composite(m.name, granges);
 }
+
+/**
+ * utility function to create a datatype, designed for JavaScript usage
+ * @param name
+ * @param functions the functions to add
+ * @return {function(IDataDescription): undefined}
+ */
+export function defineDataType(name: string, functions: any) {
+  function DataType(desc: IDataDescription) {
+    DataTypeBase.apply(this, desc);
+    if (C.isFunction(this.init)) {
+      this.init.apply(this, C.argList(arguments));
+    }
+  }
+  C.extendClass(DataType, DataTypeBase);
+  DataType.prototype.toString = () => name;
+  DataType.prototype = C.mixin(DataType.prototype, functions);
+
+  return DataType;
+}
+
