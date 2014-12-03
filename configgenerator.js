@@ -14,9 +14,11 @@ program
   .option('--api-prefix <prefix>', 'specify api prefix [/api]', '/api')
   .option('--api-suffix <suffix>', 'specify api suffix []', '')
   .option('-b, --base-url <baseUrl>', 'script base url [./scripts]', './scripts')
+  .option('-d, --plugin-dirs <pluginDirs>', 'plugin dirs base url [static/scripts,external]', function (val) {
+    return val.split(',').map(String.prototype.trim.call);
+  }, 'static/scripts,external')
   .parse(process.argv);
 
-var plugindir = 'static/scripts';
 var config_file = 'static/scripts/config-gen.js';
 var bower_file = 'bower.json';
 var bower_components_url = '/bower_components';
@@ -152,7 +154,7 @@ function configRequireJSBower(rconfig, dir) {
   }
 }
 
-function addPlugin(dir) {
+function addPlugin(plugindir, dir) {
   var deferred = Q.defer();
   var metadata_file_abs = plugindir + '/' + dir + metadata_file;
   console.log('add plugin ' + metadata_file_abs);
@@ -295,30 +297,41 @@ function createConfig() {
   if (typeof program.bower === 'undefined' || program.bower) {
     r = r.then(runBower);
   }
-  r
+  return r
     .then(deriveBowerRequireJSConfig)
     .then(dumpConfig);
 }
 
-fs.readdir(plugindir, function (err, files) {
-  var i = 0, l = files.length;
+function parseDir(plugindir) {
+  var deferred = Q.defer();
+  fs.readdir(plugindir, function (err, files) {
+    //map pluginDir to promise function and execute them
+    files.map(function (f) {
+      return function () {
+        var d = Q.defer();
+        fs.stat(plugindir + '/' + f, function (err, stats) {
+          if (stats.isDirectory()) {
+            d.resolve(addPlugin(plugindir, f));
+          } else {
+            d.resolve(f);
+          }
+        });
+        return d.promise;
+      };
+    }).reduce(Q.when, Q.resolve(null)).then(function () {
+      //ok directory done
+      deferred.resolve(plugindir);
+    });
+  });
+  return deferred.promise;
+}
 
-  function next() {
-    if (i < l) {
-      var f = files[i++];
-      fs.stat(plugindir + '/' + f, function (err, stats) {
-        if (stats.isDirectory()) {
-          addPlugin(f).then(next);
-        } else {
-          next();
-        }
-      });
-    } else {
-      createConfig();
-    }
-  }
-  next();
-});
+//map pluginDir to promise function and execute them
+program.pluginDirs.map(function (pluginDir) {
+  return function () {
+    return parseDir(pluginDir);
+  };
+}).reduce(Q.when, Q.resolve(null)).then(createConfig);
 
 
 
