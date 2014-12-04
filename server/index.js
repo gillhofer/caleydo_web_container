@@ -15,6 +15,10 @@ app.use('/api/dataset', require('./dataset').Router);
 app.use('/api/idtype', require('./idtypes').Router);
 app.use('/api/mapper', require('./mapper').Router);
 app.use('/scripts', require('./scripts').Router);
+app.use('/', function (req, res) {
+  var app = req.query.app || 'main';
+
+}
 app.use(/\/(.*)/, function (req, res) { //serve and check all files at two different locations
   var name = req.params[0];
   var i, path;
