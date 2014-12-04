@@ -7,7 +7,6 @@ var fs = require('fs');
 var app = express();
 
 var staticDirs = [ process.cwd() + '/static/', process.cwd() + '/test/'];
-var scriptDirs = [ process.cwd() + '/static/scripts', process.cwd() + '/external'];
 
 app.get('/api/about', function (req, res) {
   res.send(require('../package.json'));
@@ -15,18 +14,7 @@ app.get('/api/about', function (req, res) {
 app.use('/api/dataset', require('./dataset').Router);
 app.use('/api/idtype', require('./idtypes').Router);
 app.use('/api/mapper', require('./mapper').Router);
-app.use(/\/scripts\/(.*)/, function (req, res) { //serve and check all files at two different locations
-  var name = req.params[0];
-  var i, path;
-  for (i = 0; i < scriptDirs.length; ++i) {
-    path = scriptDirs[i] + name;
-    if (fs.existsSync(path)) {
-      res.sendFile(path);
-      return;
-    }
-  }
-  res.status(403).send('Not found: ' + name);
-});
+app.use('/scripts', require('./scripts').Router);
 app.use(/\/(.*)/, function (req, res) { //serve and check all files at two different locations
   var name = req.params[0];
   var i, path;

@@ -19,7 +19,8 @@ var loader = C.getAPIJSON('/dataset').then(function (descs) {
     datas.forEach((data) => {
       r[data.desc.id] = data;
     });
-    return r;
+    (<any>datas).byId = r;
+    return datas;
   });
 });
 
@@ -61,7 +62,7 @@ export function get(persisted: any) : C.IPromise<datatypes.IDataType>;
 export function get(persisted: any) : C.IPromise<datatypes.IDataType> {
   if (typeof persisted === 'string' || typeof persisted === 'number') {
     return this.list().then(function (data) {
-      return data[persisted];
+      return data.byId[persisted];
     });
   }
   //resolve parent and then resolve it using restore item

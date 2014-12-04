@@ -69,9 +69,9 @@ function extrapolateFilter(r: any) {
   if (typeof v === 'undefined') {
     r.filter = C.constantTrue;
   } else if (typeof v == 'string') {
-    r.filter = (data) => data.desc.type === v;
+    r.filter = (data) => data && data.desc.type === v;
   } else if (C.isArray(v) && v.length == 2 && typeof v[0] === 'string' && typeof v[1] === 'string') {
-    r.filter = (data) => data.desc.type === v[0] && (data.desc.value && data.desc.value.type === v[1]);
+    r.filter = (data) => data && data.desc.type === v[0] && (data.desc.value && data.desc.value.type === v[1]);
   }
 }
 

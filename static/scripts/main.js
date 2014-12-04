@@ -174,9 +174,12 @@ require(['jquery', 'd3', './caleydo/main', './caleydo/data', './caleydo/plugin',
 
   data.list().then(function (list) {
     //for all inhomogeneous add them as extra columns, too
-    list = d3.entries(list).map(function (e) {
-      e.group = '_dataSets';
-      return e;
+    list = list.map(function (d) {
+      return {
+        key : d.desc.id,
+        value : d,
+        group : '_dataSets'
+      };
     });
     list.forEach(function (entry) {
       if (entry.value.desc.type === 'table') {
