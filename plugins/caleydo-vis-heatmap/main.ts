@@ -1,9 +1,9 @@
 /**
  * Created by Samuel Gratzl on 05.08.2014.
  */
-/// <reference path="../../../tsd.d.ts" />
+/// <reference path="../../tsd.d.ts" />
 /* global define */
-"use strict"
+"use strict";
 
 import d3 = require('d3');
 import vis = require('../caleydo/vis');

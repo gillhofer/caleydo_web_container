@@ -3,7 +3,7 @@
  */
 /* global define */
 "use strict"
-/// <reference path="../../../tsd.d.ts" />
+/// <reference path="../../tsd.d.ts" />
 
 import d3 = require('d3');
 import geom = require('../caleydo/geom');

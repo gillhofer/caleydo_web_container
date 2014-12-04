@@ -1,7 +1,7 @@
 /**
  * Created by Samuel Gratzl on 05.08.2014.
  */
-/// <reference path='../../../tsd.d.ts' />
+/// <reference path='../../tsd.d.ts' />
 
 /// <amd-dependency path='css!./style' />
 

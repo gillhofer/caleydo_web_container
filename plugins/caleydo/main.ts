@@ -1,7 +1,7 @@
 /**
  * Created by Samuel Gratzl on 04.08.2014.
  */
-/// <reference path="../../../tsd.d.ts" />
+/// <reference path="../../tsd.d.ts" />
 import $ = require('jquery');
 import module_ = require('module');
 var config = module_.config();

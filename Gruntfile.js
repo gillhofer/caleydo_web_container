@@ -17,20 +17,20 @@ module.exports = function (grunt) {
     // configurable paths
     yeoman: {
       // configurable paths
-      app: require('./bower.json').appPath || 'static',
+      app: 'plugins',
       dist: 'dist'
     },
     watch: {
       ts: {
-        files: ['<%= yeoman.app %>/scripts/**/*.ts'],
+        files: ['<%= yeoman.app %>/plugins/**/*.ts', '<%= yeoman.app %>/external/**/*.ts', '<%= yeoman.app %>/server/**/*.ts'],
         tasks: ['ts:build']
       },
       sass: {
-        files: ['<%= yeoman.app %>/**/*.scss'],
+        files: ['<%= yeoman.app %>/plugins/**/*.scss', '<%= yeoman.app %>/external/**/*.scss', '<%= yeoman.app %>/server/**/*.scss'],
         tasks: ['sass:dev']
       },
       coffee: {
-        files: ['<%= yeoman.app %>/scripts/**/*.coffee'],
+        files: ['<%= yeoman.app %>/plugins/**/*.coffee', '<%= yeoman.app %>/external/**/*.coffee', '<%= yeoman.app %>/server/**/*.coffee'],
         tasks: ['coffee:dist']
       }
     },
@@ -93,7 +93,8 @@ module.exports = function (grunt) {
       },
       all: [
         'Gruntfile.js',
-        '<%= yeoman.app %>/scripts/**/*.js',
+        'plugins/**/*.js',
+        'external/**/*.js',
         'server/**/*.js'
       ]
     },
@@ -111,7 +112,7 @@ module.exports = function (grunt) {
       // A specific target
       build: {
         // The source TypeScript files, http://gruntjs.com/configuring-tasks#files
-        src: ['<%= yeoman.app %>/scripts/**/*.ts'],
+        src: ['plugins/**/*.ts', 'external/**/*.ts', 'server/**/*.ts'],
         // If specified, generate this file that to can use for reference management
         reference: 'tsd.gen.d.ts',
         // If specified, the generate JavaScript files are placed here. Only works if out is not specified

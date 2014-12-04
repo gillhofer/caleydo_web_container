@@ -2,7 +2,9 @@
   <configuration default="false" name="caleydo-web-server" type="NodeJSRemoteDebug" factoryName="Node.js Remote Debug" singleton="true">
     <node-js-remote-debug />
     <RunnerSettings RunnerId="NodeJS.debug" />
+    <RunnerSettings RunnerId="debuggableProgram" />
     <ConfigurationWrapper RunnerId="NodeJS.debug" />
+    <ConfigurationWrapper RunnerId="debuggableProgram" />
     <method />
   </configuration>
 </component>
