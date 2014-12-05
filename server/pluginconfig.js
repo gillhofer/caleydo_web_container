@@ -265,6 +265,7 @@ PluginConfig.prototype.deriveBowerRequireJSConfig = function (that) {
   console.log('derive bower config');
   var deferred = Q.defer();
   fs.readdir(bower_components, function (err, files) {
+    console.log(err);
     var i = 0, l = files.length;
     function next() {
       if (i < l) {
@@ -287,6 +288,11 @@ PluginConfig.prototype.parseDir = function (plugindir) {
   var deferred = Q.defer();
   var that = this;
   fs.readdir(plugindir, function (err, files) {
+    console.log(err);
+    if (typeof files === 'undefined') {
+      deferred.resolve(that);
+      return;
+    }
     //map pluginDir to promise function and execute them
     files.map(function (f) {
       return function () {
@@ -340,6 +346,11 @@ module.exports.gen = function (config) {
 function findAppsInDir(plugindir, result) {
   var deferred = Q.defer();
   fs.readdir(plugindir, function (err, files) {
+    console.log(plugindir, err);
+    if (files === undefined) {
+      deferred.resolve(result);
+      return;
+    }
     //map pluginDir to promise function and execute them
     files.map(function (f) {
       return function () {
@@ -368,7 +379,7 @@ module.exports.findApps = function (config) {
       return findAppsInDir(pluginDir, result);
     };
   }).reduce(Q.when, Q.resolve([]));
-}
+};
 
 
 if (require.main === module) {
@@ -385,7 +396,7 @@ if (require.main === module) {
 
   var c = new PluginConfig(program);
   var r = c.parseDirs(program.pluginDirs).then(PluginConfig.prototype.dumpBower);
-  if (typeof program.bower === 'undefined' || program.bower) {
+  if (program.bower === undefined || program.bower) {
     r = r.then(PluginConfig.prototype.runBower);
   }
   r.then(PluginConfig.prototype.deriveBowerRequireJSConfig)

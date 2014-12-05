@@ -36,7 +36,7 @@ app.get(contextPath, function (req, res, next) {
   });
 });
 //generate the config on the fly
-app.get(contextPath + 'config-gen.js', function (req, res, next) {
+app.get(contextPath + 'config-gen.js', function (req, res) {
   console.log(JSON.stringify(req.query));
   var app = req.query.app || './main';
   require('./pluginconfig').gen({
@@ -45,7 +45,6 @@ app.get(contextPath + 'config-gen.js', function (req, res, next) {
     configPrefix: '../'
   }).then(function (config) {
     res.send(config);
-    next();
   });
 });
 //deliver bower
