@@ -52,7 +52,7 @@ app.get(contextPath + 'config-gen.js', function (req, res, next) {
 app.use(contextPath + 'bower_components', express.static(process.cwd() + '/bower_components/'));
 
 //deliver any other file as part of a plugin
-app.use(/\/(.*)/, function (req, res) { //serve and check all files at two different locations
+app.use(/\/(.*)/, function (req, res, next) { //serve and check all files at two different locations
   var name = req.params[0];
   console.log('requesting ' + name);
   var i, path;
@@ -63,7 +63,8 @@ app.use(/\/(.*)/, function (req, res) { //serve and check all files at two diffe
       return;
     }
   }
-  res.send(404);
+  res.status(404);
+  next(new Error('Not Found: ' + name));
 });
 
 module.exports = app;
