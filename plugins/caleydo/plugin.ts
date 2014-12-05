@@ -110,7 +110,7 @@ function parsePlugins(descs : any[]) {
 }
 
 //map to descriptions
-var plugins = parsePlugins(config.plugins);
+var plugins = parsePlugins(config.plugins || []);
 
 /**
  * returns a list of matching plugin descs

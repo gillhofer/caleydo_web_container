@@ -7,11 +7,11 @@ var Q = require('q');
 
 var bower_file = 'bower.json';
 var bower_components_url = '/bower_components';
-var bower_components = 'static/bower_components';
+var bower_components = 'bower_components';
 var metadata_file = '/package.json';
 
 function PluginConfig(config) {
-  this.config_file = 'static/scripts/config-gen.js';
+  this.config_file = 'plugins/config-gen.js';
   this.bower_dependencies = {
     requirejs: '~2.1.8',
     'require-css': '~0.1.5'
@@ -28,17 +28,15 @@ function PluginConfig(config) {
       }
     },
     deps: [config.mainFile],
-    config: {
-      'caleydo/main': {
-        apiUrl: config.apiPrefix,
-        apiJSONSuffix: config.apiSuffix
-      },
-      //plugin config
-      'caleydo/plugin': {
-        baseUrl: config.baseUrl,
-        plugins: this.caleydo_plugins
-      }
-    }
+    config: { }
+  };
+  this.requirejs_config.config[config.configPrefix + 'caleydo/main'] = {
+    apiUrl: config.apiPrefix,
+    apiJSONSuffix: config.apiSuffix
+  };
+  this.requirejs_config.config[config.configPrefix + 'caleydo/plugin'] = {
+    baseUrl: config.baseUrl,
+    plugins: this.caleydo_plugins
   };
 }
 
@@ -319,15 +317,18 @@ PluginConfig.prototype.parseDirs = function (pluginDirs) {
   }).reduce(Q.when, Q.resolve(that));
 };
 
+var defaultConfig = {
+  mainFile: './demo-app/main',
+  apiPrefix: '/api',
+  apiSuffix: '',
+  baseUrl: '',
+  configPrefix : '../',
+  pluginDirs: ['plugins', 'external']
+};
+
 module.exports.gen = function (config) {
-  var c = {
-    mainFile: './main',
-    apiPrefix: '/api',
-    apiSuffix: '',
-    baseUrl: './scripts',
-    pluginDirs: ['static/scripts', 'external']
-  };
-  extend(c, config);
+  var c = {};
+  extend(c, defaultConfig, config || {});
   var plugins = new PluginConfig(c);
   return plugins.parseDirs(c.pluginDirs)
     .then(PluginConfig.prototype.deriveBowerRequireJSConfig)
@@ -336,16 +337,50 @@ module.exports.gen = function (config) {
     });
 };
 
+function findAppsInDir(plugindir, result) {
+  var deferred = Q.defer();
+  fs.readdir(plugindir, function (err, files) {
+    //map pluginDir to promise function and execute them
+    files.map(function (f) {
+      return function () {
+        var d = Q.defer();
+        fs.stat(plugindir + '/' + f + '/index.html', function (err, stats) {
+          if (stats && stats.isFile()) {
+            result.push(f);
+          }
+          d.resolve(null);
+        });
+        return d.promise;
+      };
+    }).reduce(Q.when, Q.resolve(null)).then(function () {
+      //ok directory done
+      deferred.resolve(result);
+    });
+  });
+  return deferred.promise;
+}
+
+module.exports.findApps = function (config) {
+  var c = {};
+  extend(c, defaultConfig, config || {});
+  return c.pluginDirs.map(function (pluginDir) {
+    return function (result) {
+      return findAppsInDir(pluginDir, result);
+    };
+  }).reduce(Q.when, Q.resolve([]));
+}
+
+
 if (require.main === module) {
   var program = require('commander').version('0.0.1')
-    .option('-m, --main-file <mainFile>', 'specify main file [./main]', './main')
+    .option('-m, --main-file <mainFile>', 'specify main file [./main]', defaultConfig.mainFile)
     .option('--no-bower', 'skips running bower')
-    .option('--api-prefix <prefix>', 'specify api prefix [/api]', '/api')
-    .option('--api-suffix <suffix>', 'specify api suffix []', '')
-    .option('-b, --base-url <baseUrl>', 'script base url [./scripts]', './scripts')
+    .option('--api-prefix <prefix>', 'specify api prefix [/api]', defaultConfig.apiPrefix)
+    .option('--api-suffix <suffix>', 'specify api suffix []', defaultConfig.apiSuffix)
+    .option('-b, --base-url <baseUrl>', 'script base url [./scripts]', defaultConfig.baseUrl)
     .option('-d, --plugin-dirs <pluginDirs>', 'plugin dirs base url [static/scripts,external]', function (val) {
       return val.split(',').map(String.prototype.trim.call);
-    }, ['static/scripts', 'external'])
+    }, defaultConfig.pluginDirs)
     .parse(process.argv);
 
   var c = new PluginConfig(program);

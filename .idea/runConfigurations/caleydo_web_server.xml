@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="caleydo-web-server" type="NodeJSRemoteDebug" factoryName="Node.js Remote Debug" singleton="true">
-    <node-js-remote-debug />
+    <node-js-remote-debug host="127.0.0.1/plugins/demo-app" />
     <RunnerSettings RunnerId="NodeJS.debug" />
     <RunnerSettings RunnerId="debuggableProgram" />
     <ConfigurationWrapper RunnerId="NodeJS.debug" />
