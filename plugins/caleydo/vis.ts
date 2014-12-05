@@ -88,9 +88,9 @@ function extrapolateIconify(r: any) {
       node.classList.add('fa');
       node.classList.add('fa-fw');
       node.style['background-image'] = 'url(' + this.baseUrl + '/' + this.icon + ')';
-      node.style.content = '&nbsp';
+      node.innerHTML = '&nbsp';
     } else {
-      node.style.content = this.name.substr(0, 1).toUpperCase();
+      node.innerText = this.name.substr(0, 1).toUpperCase();
     }
   };
 }
