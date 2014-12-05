@@ -75,3 +75,7 @@ export function get(persisted: any) : C.IPromise<datatypes.IDataType> {
     return C.resolved(null);
   }
 }
+
+export function create(desc: any) : C.IPromise<datatypes.IDataType> {
+  return transformEntry(desc);
+}

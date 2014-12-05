@@ -125,7 +125,7 @@ export function categorical2paritioning(data: string[], categories: string[], op
  */
 export function defineDataType(name: string, functions: any) {
   function DataType(desc: IDataDescription) {
-    DataTypeBase.apply(this, desc);
+    DataTypeBase.call(this, desc);
     if (C.isFunction(this.init)) {
       this.init.apply(this, C.argList(arguments));
     }
