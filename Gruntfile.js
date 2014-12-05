@@ -22,15 +22,15 @@ module.exports = function (grunt) {
     },
     watch: {
       ts: {
-        files: ['<%= yeoman.app %>/plugins/**/*.ts', '<%= yeoman.app %>/external/**/*.ts', '<%= yeoman.app %>/server/**/*.ts'],
+        files: ['{plugins,external,server}/**/*.ts'],
         tasks: ['ts:build']
       },
       sass: {
-        files: ['<%= yeoman.app %>/plugins/**/*.scss', '<%= yeoman.app %>/external/**/*.scss', '<%= yeoman.app %>/server/**/*.scss'],
+        files: ['{plugins,external,server}/**/*.scss'],
         tasks: ['sass:dev']
       },
       coffee: {
-        files: ['<%= yeoman.app %>/plugins/**/*.coffee', '<%= yeoman.app %>/external/**/*.coffee', '<%= yeoman.app %>/server/**/*.coffee'],
+        files: ['{plugins,external,server}/**/*.coffee'],
         tasks: ['coffee:dist']
       }
     },
@@ -38,9 +38,8 @@ module.exports = function (grunt) {
       dist: {                            // target
         files: [{
           expand: true,
-          cwd: '<%= yeoman.app %>/',
-          src: '**/*.scss',
-          dest: '<%= yeoman.app %>/',
+          src: ['{plugins,external,server}/**/*.scss'],
+          dest: '',
           ext: '.css'
         }]
       },
@@ -50,9 +49,8 @@ module.exports = function (grunt) {
         },
         files: [{
           expand: true,
-          cwd: '<%= yeoman.app %>/',
-          src: '**/*.scss',
-          dest: '<%= yeoman.app %>/',
+          src: ['{plugins,external,server}/**/*.scss'],
+          dest: '',
           ext: '.css'
         }]
       }
@@ -93,9 +91,7 @@ module.exports = function (grunt) {
       },
       all: [
         'Gruntfile.js',
-        'plugins/**/*.js',
-        'external/**/*.js',
-        'server/**/*.js'
+        '{plugins,external,server}/**/*.js'
       ]
     },
     mocha: {
@@ -112,7 +108,7 @@ module.exports = function (grunt) {
       // A specific target
       build: {
         // The source TypeScript files, http://gruntjs.com/configuring-tasks#files
-        src: ['plugins/**/*.ts', 'external/**/*.ts', 'server/**/*.ts'],
+        src: ['{plugins,external,server}/**/*.ts'],
         // If specified, generate this file that to can use for reference management
         reference: 'tsd.gen.d.ts',
         // If specified, the generate JavaScript files are placed here. Only works if out is not specified
@@ -151,49 +147,17 @@ module.exports = function (grunt) {
     },
     // Put files not handled in other tasks here
     copy: {
-      dist: {
+      plugins: {
         files: [
           {
             expand: true,
             dot: true,
-            cwd: '<%= yeoman.app %>',
             dest: '<%= yeoman.dist %>',
-            src: [
-              '*.{ico,png,txt,htm,html}',
-              '.htaccess',
-              'images/**/*.{webp,gif}',
-              'fonts/**/*'
-            ]
-          }
-        ]
-      },
-      styles: {
-        expand: true,
-        dot: true,
-        cwd: '<%= yeoman.app %>/styles',
-        dest: '.tmp/styles',
-        src: '**/*.css'
-      },
-      stylesd: {
-        expand: true,
-        dot: true,
-        cwd: '<%= yeoman.app %>/styles',
-        dest: '<%= yeoman.dist %>/styles',
-        src: '**/*.css'
-      },
-      scripts: {
-        files: [
-          {
-            expand: true,
-            dot: true,
-            cwd: '<%= yeoman.app %>/scripts',
-            dest: '<%= yeoman.dist %>/scripts/',
-            src: '**/*.{js,css,png,jpg,svg,txt,htm,html,xhtml}'
+            src: '{plugins,external,server}/**/*.{htaccess,webp,gif,js,css,png,jpg,svg,txt,htm,html,xhtml,ico}'
           },
           {
             expand: true,
             dot: true,
-            cwd: '<%= yeoman.app %>',
             dest: '<%= yeoman.dist %>',
             src: ['bower_components/**']
           }
@@ -208,15 +172,14 @@ module.exports = function (grunt) {
             src: [
               'Procfile',
               'package.json',
-              'data/**',
-              'server/**'
+              'data/**'
             ]
           },
           {
             expand: true,
             dot: true,
-            dest: 'deploy/static/',
-            cwd: '<%= yeoman.dist %>',
+            dest: 'deploy',
+            cwd : '<%= yeoman.dist %>',
             src: '**'
           }
         ]
@@ -224,7 +187,7 @@ module.exports = function (grunt) {
     },
     jsdoc: {
       dist: {
-        src: ['<%= yeoman.app %>/scripts/**/*.ts', '<%= yeoman.app %>/scripts/**/*.js'],
+        src: ['{plugins,external,server}/**/*.js'],
         options: {
           destination: 'doc'
         }
@@ -311,9 +274,8 @@ module.exports = function (grunt) {
     'tsd:refresh',
     'ts:build',
     'sass:dist',
-    'copy:scripts',
-    'jsdoc',
-    'copy:dist'
+    'copy:plugins',
+    'jsdoc'
   ]);
 
   grunt.registerTask('buildd', [
@@ -321,10 +283,8 @@ module.exports = function (grunt) {
     'tsd:refresh',
     'ts:build',
     'sass:dist',
-    'copy:scripts',
-    'copy:stylesd',
-    'jsdoc',
-    'copy:dist'
+    'copy:plugins',
+    'jsdoc'
   ]);
 
   grunt.registerTask('deploy', [
