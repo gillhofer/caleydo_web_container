@@ -10,7 +10,7 @@ import events = require('./event');
 
 export interface IVisMetaData {
   size : {
-    (data:datatypes.IDataType) : number[];
+    (dim: number[]) : number[];
     scale: string; //'free' | 'aspect' | 'width-only' | 'height-only'
     isDimensionDependent : boolean;
   }

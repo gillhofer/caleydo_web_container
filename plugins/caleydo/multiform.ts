@@ -43,7 +43,7 @@ export class MultiForm extends vis.AVisInstance implements vis.IVisInstance {
     var that = this;
     var m : any = {};
     m.size = (data: datatypes.IDataType) => {
-      return that.actDesc ? that.actDesc.size(data) : [100, 100];
+      return that.actDesc ? that.actDesc.size(data.dim) : [100, 100];
     };
     Object.defineProperty(m.size, 'scale' , {
       get: function() {
@@ -219,14 +219,7 @@ class GridElem implements provenance.IPersistable {
   }
 
   size(actDesc: vis.IVisPluginDesc) : number[] {
-    var s = [200,200];
-    var d : any = actDesc;
-    if (d && C.isFunction(d.size) && this.data !== null) {
-      s = d.size(this.data.dim);
-    } else if (d && C.isArray(d.size)) {
-      s = d.size;
-    }
-    return s;
+    return actDesc.size(this.data.dim);
   }
 
   persist() {
@@ -339,7 +332,7 @@ export class MultiFormGrid extends vis.AVisInstance implements vis.IVisInstance 
     var that = this;
     var m : any = {};
     m.size = (data: datatypes.IDataType) => {
-      return that.actDesc ? that.actDesc.size(data) : [100, 100];
+      return that.size;
     };
     Object.defineProperty(m.size, 'scale', {
       get: function() {
