@@ -42,8 +42,11 @@ export class MultiForm extends vis.AVisInstance implements vis.IVisInstance {
 
     var that = this;
     var m : any = {};
-    m.size = (data: datatypes.IDataType) => {
-      return that.actDesc ? that.actDesc.size(data.dim) : [100, 100];
+    m.size = (dim: number[]) => {
+      return that.actDesc ? that.actDesc.size(dim) : [100, 100];
+    };
+    m.size.scaled = (dim: number[], transform: vis.ITransform) => {
+      return that.actDesc ? that.actDesc.size.scaled(dim, transform) : [100, 100];
     };
     Object.defineProperty(m.size, 'scale' , {
       get: function() {
@@ -122,7 +125,13 @@ export class MultiForm extends vis.AVisInstance implements vis.IVisInstance {
       if (arguments.length === 0) {
         return this.actVis.transform();
       } else {
-        return this.actVis.transform(scale, rotate);
+        var t = (event, new_, old) => {
+          this.fire('transform', new_, old);
+        };
+        this.actVis.on('transform', t);
+        var r = this.actVis.transform(scale, rotate);
+        this.actVis.off('transform', t);
+        return r;
       }
     }
     return {
@@ -171,7 +180,7 @@ export class MultiForm extends vis.AVisInstance implements vis.IVisInstance {
       return this.actVisPromise; //already selected
     }
     //gracefully destroy
-    if (this.actVis && C.isFunction(this.actVis.destroy)) {
+    if (this.actVis) {
       this.actVis.destroy();
       this.actVis = null;
       this.actVisPromise = null;
@@ -193,6 +202,7 @@ export class MultiForm extends vis.AVisInstance implements vis.IVisInstance {
           return null;
         }
         this.actVis = plugin.factory(this.data, this.$content.node());
+        this.fire('changed', vis, bak);
         return this.actVis;
       });
     } else {
@@ -331,8 +341,12 @@ export class MultiFormGrid extends vis.AVisInstance implements vis.IVisInstance 
 
     var that = this;
     var m : any = {};
-    m.size = (data: datatypes.IDataType) => {
+    m.size = () => {
       return that.size;
+    };
+    m.size.scaled = (dim: number[], transform: vis.ITransform) => {
+      var r =that.size;
+      return [ r[0] * transform.scale[0], r[1] * transform.scale[1]];
     };
     Object.defineProperty(m.size, 'scale', {
       get: function() {
@@ -381,6 +395,10 @@ export class MultiFormGrid extends vis.AVisInstance implements vis.IVisInstance 
       var bak = this.grid[0].transform();
       if (arguments.length > 0) {
         this.grid.forEach((g) => g.transform(scale, rotate));
+        this.fire('transform', {
+          scale: scale,
+          rotate: rotate
+        }, bak);
       }
       return bak;
     }

@@ -12,21 +12,29 @@
         "name": "Axis",
         "icon": "icon.svg",
         "size" : {
-          "size" : [{ "k" : 0, "c" : 50 }, { "k" : 0, "c" : 300 }],
-          "scale" : "y",
+          "size" : [50, 300],
+          "scale" : "height-only",
           "minSize" : [50, 50]
         },
         "filter": "eval!function (data) { return data.desc.type === 'vector' && (data.desc.value.type === 'real' || data.desc.value.type === 'int'); }",
-        "options" : {
-          "tickSize" : {
-            "type" : "int",
-            "range" : [1,null],
-            "default" : 2
+        "options": {
+          "tickSize": {
+            "type": "int",
+            "range": [
+              1,
+              null
+            ],
+            "default": 2
           },
-          "orient" : {
-           "type" : "categorical",
-            "categories" : ["left","right","top","bottom"],
-            "default" : "left"
+          "orient": {
+            "type": "categorical",
+            "categories": [
+              "left",
+              "right",
+              "top",
+              "bottom"
+            ],
+            "default": "left"
           }
         }
       }

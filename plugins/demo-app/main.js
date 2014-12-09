@@ -80,7 +80,8 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
     var mw = window.createVisWindow(windows, {
       closeable: true,
       animatedHeader: true,
-      zcontrols: true
+      zcontrols: true,
+      zoomAble: true
     });
     toolbar.push(mw);
     var multiP;

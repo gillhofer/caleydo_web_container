@@ -42,6 +42,7 @@ export function defineVis(name: string, defaultOptions : any, build : ($parent: 
 export function defineVis(name: string, defaultOptions : (data: datatype.IDataType, options: any) => any, build : ($parent: D3.Selection, data?: datatype.IDataType) => D3.Selection, functions?: any);
 export function defineVis(name: string, defaultOptions : any, build : ($parent: D3.Selection, data?: datatype.IDataType) => D3.Selection, functions?: any) {
   function VisTechnique(data: datatype.IDataType, parent: Element, options: any) {
+    vis.AVisInstance.call(this, data, parent, options);
     this.data = data;
     this.$parent = d3.select(parent);
     this.options = C.mixin(d3.functor(defaultOptions).call(this,data, options || {}), options);

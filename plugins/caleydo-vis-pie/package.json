@@ -11,7 +11,10 @@
         "id": "caleydo-vis-pie",
         "name": "Pie",
         "icon" : "icon.png",
-        "size": [100, 100],
+        "size": {
+          "size" : [100, 100],
+          "scale": "aspect"
+        },
         "filter": "eval!function (data) { return data.desc.type === 'vector' && (data.desc.value.type === 'categorical'); }"
       }
     ]

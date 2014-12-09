@@ -265,9 +265,9 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-too
   });
 
   exports.create = function createHistogram(data, parent, options) {
-    return exports.Histogram(data, parent, options);
+    return new exports.Histogram(data, parent, options);
   };
   exports.createMosaic = function createMosaic(data, parent, options) {
-    return exports.Mosaic(data, parent, options);
+    return new exports.Mosaic(data, parent, options);
   };
 });

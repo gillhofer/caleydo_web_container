@@ -12,7 +12,7 @@
         "name": "Histogram",
         "icon" : "icon.png",
         "size": [200, 100],
-        "filter": "vector"
+        "filter": "eval!function (data) { return data.desc.type === 'vector' && ['categorical','real','int'].indexOf(data.desc.value.type) >= 0; }"
       },
       {
         "type": "vis",
@@ -22,7 +22,7 @@
         "factory" : "createMosaic",
         "icon" : "icon_mosaic.png",
         "size": "eval!function (dim) { return [20, dim[0] * 10]; }",
-        "filter": "eval!function (data) { return data.desc.type === 'vector' && data.desc.value.type === 'categorical'; }"
+        "filter": ["vector", "categorical"]
       }
     ]
   }

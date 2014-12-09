@@ -373,9 +373,47 @@ export class VisWindow extends UIWindow {
 
     if (options.zoomAble) {
       $(this.node).on('mousewheel', (event) => {
-
+        var m = (<any>event).originalEvent.wheelDelta;
+        this.zoom(m > 0);
+        return false;
       });
     }
+  }
+
+  zoomIn() {
+    return this.zoom(true);
+  }
+  zoomOut() {
+    return this.zoom(false);
+  }
+  zoom (zoomIn: boolean) {
+    if (!this.vis_) {
+      return false;
+    }
+    var old = this.vis_.transform();
+    var delta = zoomIn ? +0.2 : -0.2;
+    var s = old.scale.slice();
+    switch(this.visMeta_.size.scale) {
+    case 'width-only':
+      s[0] += delta;
+      break;
+    case 'height-only':
+      s[1] += delta;
+      break;
+    case 'free':
+    case 'aspect':
+    default:
+      s[0] += delta;
+      s[1] += delta;
+      break;
+    }
+    if (s[0] <= 0) {
+      s[0] = 0.001;
+    }
+    if (s[1] <= 0) {
+      s[1] = 0.001;
+    }
+    this.vis_.transform(s, old.rotate);
   }
 
   get vis() {
@@ -405,10 +443,13 @@ export class VisWindow extends UIWindow {
 
     this.title = v.data.desc.name;
     //TODO compute size
-    this.contentSize = meta.size(v.data);
+    this.contentSize = meta.size(v.data.dim);
 
-    v.on('change', () => {
-      this.contentSize = meta.size(v.data);
+    v.on('changed', () => {
+      this.contentSize = meta.size.scaled(v.data.dim, v.transform());
+    });
+    v.on('transform', () => {
+      this.contentSize = meta.size.scaled(v.data.dim, v.transform());
     });
     this.on('removed', () => {
       v.destroy();

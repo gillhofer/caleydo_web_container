@@ -8,11 +8,18 @@ import ranges = require('./range');
 import provenance = require('./provenance');
 import events = require('./event');
 
+
+export interface ITransform {
+  scale: number[];
+  rotate: number;
+}
+
 export interface IVisMetaData {
   size : {
     (dim: number[]) : number[];
     scale: string; //'free' | 'aspect' | 'width-only' | 'height-only'
     isDimensionDependent : boolean;
+    scaled(dim: number[], tranform: ITransform);
   }
 }
 
@@ -27,8 +34,8 @@ export interface IVisInstance extends provenance.IPersistable, events.IEventHand
   data: datatypes.IDataType;
   locate(...range: ranges.Range[]): C.IPromise<any>;
 
-  transform(): {scale: number[]; rotate: number};
-  transform(scale: number[], rotate: number) : {scale: number[]; rotate: number};
+  transform(): ITransform;
+  transform(scale: number[], rotate: number) : ITransform;
 
   option(name: string) : any;
   option(name: string, value: any) : any;
@@ -117,6 +124,11 @@ function extrapolateSize(r : any) {
     } else {
       return false;
     }
+    var t = r.size;
+    r.size.scaled = (dim: number[], transform: ITransform) => {
+      var rr = t(dim);
+        return [transform.scale[0] * rr[0], transform.scale[1] * rr[1]];
+    };
     return true;
   }
   if (toFunction(r.size)) {
@@ -128,6 +140,9 @@ function extrapolateSize(r : any) {
     }
     if (typeof s.scale === 'string') {
       r.size.scale = s.scale;
+    }
+    if (C.isFunction(s.scaled)) {
+      r.size.scaled = s.scaled;
     }
   }
 }
