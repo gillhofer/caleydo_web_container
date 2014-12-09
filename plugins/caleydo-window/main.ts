@@ -10,6 +10,8 @@ import events = require('../caleydo/event');
 import C = require('../caleydo/main');
 import geom = require('../caleydo/geom');
 import idtypes = require('../caleydo/idtype');
+import vis = require('../caleydo/vis');
+import datatypes = require('../caleydo/datatype');
 
 function makeDraggable($div, window) {
   var convertDrag = function (ui) {
@@ -88,7 +90,7 @@ function destroyAnimatedHeader($div, $header) {
 }
 
 
-export class Window extends events.EventHandler implements events.IDataBinding {
+export class UIWindow extends events.EventHandler implements events.IDataBinding {
   private options : any;
   private $parent : JQuery;
   private $div : JQuery;
@@ -134,6 +136,7 @@ export class Window extends events.EventHandler implements events.IDataBinding {
     if (this.options.animatedHeader) {
       makeAnimatedHeader(this.$div, this.$header);
     }
+
     this.toolbar.bindTo(this);
   }
 
@@ -297,20 +300,19 @@ export class Window extends events.EventHandler implements events.IDataBinding {
 }
 
 export interface ToolbarBuilder {
-  (window: Window, node: Element) : void;
+  (window: UIWindow, node: Element) : void;
 }
 
 export class ToolBar {
-  window : Window;
+  window : UIWindow;
   private $node : JQuery;
   builder : ToolbarBuilder[] = [];
 
   constructor(parent: Element) {
     this.$node = $('<div class="toolbar" />').appendTo(parent);
-
   }
 
-  bindTo(window : Window) {
+  bindTo(window : UIWindow) {
     this.window = window;
     this.$node.empty();
     if (window) {
@@ -331,9 +333,9 @@ export class ToolBar {
     });
   }
 
-  addButton(icon : string, title: string, callback : (window: Window) => void) {
+  addButton(icon : string, title: string, callback : (window: UIWindow) => void) {
     $('<i class="fa '+icon+'">').appendTo(this.$node).click(() => {
-      callback.call(this, this.window)
+      callback.call(this, this.window);
     }).attr('title', title);
   }
 
@@ -343,12 +345,12 @@ export class ToolBar {
 }
 
 export class StaticToolBar extends ToolBar {
-  private windows : Window[] = [];
+  private windows : UIWindow[] = [];
   constructor(parent: Element) {
     super(parent);
   }
 
-  push(window : Window) {
+  push(window : UIWindow) {
     window.on('mouseenter', (_, w) => {
       this.bindTo(w);
     }).on('mouseleave', (_, w) => {
@@ -362,6 +364,64 @@ export class StaticToolBar extends ToolBar {
   }
 }
 
+export class VisWindow extends UIWindow {
+  private vis_: vis.IVisInstance;
+  private visMeta_ : vis.IVisMetaData;
+
+  constructor(parent, options) {
+    super(parent, options);
+
+    if (options.zoomAble) {
+      $(this.node).on('mousewheel', (event) => {
+
+      });
+    }
+  }
+
+  get vis() {
+    return this.vis_;
+  }
+
+  get visMeta() {
+    return this.visMeta_;
+  }
+
+  attachVis(vis : vis.IVisInstance, visMeta : vis.IVisMetaData);
+  attachVis(factory: (node: Element) => { vis: vis.IVisInstance; meta: vis.IVisMetaData });
+  attachVis(vis_or_factory: any) {
+    var v, meta;
+    if (C.isFunction(vis_or_factory)) {
+      var r = vis_or_factory(this.node);
+      v = r.vis;
+      meta = r.meta;
+    } else {
+      v = arguments[0];
+      meta = arguments[1];
+    }
+    this.vis_ = v;
+    this.visMeta_ = meta;
+    this.data('vis', this.vis_);
+    this.data('visMeta', this.visMeta_);
+
+    this.title = v.data.desc.name;
+    //TODO compute size
+    this.contentSize = meta.size(v.data);
+
+    v.on('change', () => {
+      this.contentSize = meta.size(v.data);
+    });
+    this.on('removed', () => {
+      v.destroy();
+    });
+    //var vis = mw.adapter(multi);
+    return this.vis_;
+  }
+}
+
 export function create(parent, options) {
-  return new Window(parent, options);
+  return new UIWindow(parent, options);
+}
+
+export function createVisWindow(parent, options) {
+  return new VisWindow(parent, options);
 }

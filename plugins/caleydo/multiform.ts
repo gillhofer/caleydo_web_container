@@ -11,6 +11,7 @@ import datatypes = require('./datatype');
 import events = require('./event');
 import provenance = require('./provenance');
 
+
 /**
  * a simple multi form class using a select to switch
  */
@@ -22,11 +23,13 @@ export class MultiForm extends vis.AVisInstance implements vis.IVisInstance {
    */
   visses:vis.IVisPluginDesc[];
 
-  private actVis:any;
+  private actVis:vis.IVisInstance;
   private actVisPromise : C.IPromise<any>;
 
   private actDesc:vis.IVisPluginDesc;
   private $content:D3.Selection;
+
+  private metaData_ : vis.IVisMetaData;
 
   constructor(public data:datatypes.IDataType, parent:Element) {
     super();
@@ -36,7 +39,35 @@ export class MultiForm extends vis.AVisInstance implements vis.IVisInstance {
     this.visses = vis.list(data);
 
     this.build();
+
+    var that = this;
+    var m : any = {};
+    m.size = (data: datatypes.IDataType) => {
+      return that.actDesc ? that.actDesc.size(data) : [100, 100];
+    };
+    Object.defineProperty(m.size, 'scale' , {
+      get: function() {
+        return that.actDesc ? that.actDesc.size.scale : 'free';
+      },
+      enumerable: true
+    });
+    Object.defineProperty(m.size, 'isDimensionDependent',  {
+      get: function() {
+        return that.actDesc ? that.actDesc.size.isDimensionDependent : false;
+      },
+      enumerable: true
+    });
+    this.metaData_ = m;
   }
+
+  /**
+   * converts this multiform to a vis metadata
+   * @return {vis.IVisMetaData}
+   */
+  get asMetaData() {
+    return this.metaData_;
+  }
+
 
   private build() {
     var p = this.parent;
@@ -86,11 +117,18 @@ export class MultiForm extends vis.AVisInstance implements vis.IVisInstance {
     });
   }
 
-  transform(scale: number[], rotate : number) {
-    var p = this.actVisPromise || C.resolved(null);
-    return p.then((vis: vis.IVisInstance) => {
-      vis.transform(scale, rotate);
-    });
+  transform(scale?: number[], rotate? : number) {
+    if (this.actVis) {
+      if (arguments.length === 0) {
+        return this.actVis.transform();
+      } else {
+        return this.actVis.transform(scale, rotate);
+      }
+    }
+    return {
+      scale: [1,1],
+      rotate: 0
+    };
   }
 
   /**
@@ -170,6 +208,10 @@ class GridElem implements provenance.IPersistable {
   constructor(public range: ranges.Range, public data: datatypes.IDataType) {
   }
 
+  get hasOne() {
+    return this.actVis != null;
+  }
+
   destroy() {
     if (this.actVis && C.isFunction(this.actVis.destroy)) {
       this.actVis.destroy();
@@ -224,10 +266,18 @@ class GridElem implements provenance.IPersistable {
   }
 
 
-  transform(scale: number[], rotate : number) {
+  transform(scale?: number[], rotate? : number) {
     if (this.actVis) {
-      this.actVis.transform(scale, rotate);
+      if (arguments.length > 0) {
+        return this.actVis.transform(scale, rotate);
+      } else {
+        return this.actVis.transform();
+      }
     }
+    return {
+      scale: [1,1],
+      rotate: 0
+    };
   }
 }
 /**
@@ -249,6 +299,8 @@ export class MultiFormGrid extends vis.AVisInstance implements vis.IVisInstance 
 
   private dims : ranges.Range1DGroup[][];
   private grid : GridElem[];
+
+  private metaData_ : vis.IVisMetaData;
 
   constructor(public data:datatypes.IDataType, public range: ranges.Range, parent:Element, viewFactory : (data:datatypes.IDataType, range : ranges.Range) => datatypes.IDataType) {
     super();
@@ -283,6 +335,33 @@ export class MultiFormGrid extends vis.AVisInstance implements vis.IVisInstance 
     product(0, []);
 
     this.build();
+
+    var that = this;
+    var m : any = {};
+    m.size = (data: datatypes.IDataType) => {
+      return that.actDesc ? that.actDesc.size(data) : [100, 100];
+    };
+    Object.defineProperty(m.size, 'scale', {
+      get: function() {
+        return that.actDesc ? that.actDesc.size.scale : 'free';
+      },
+      enumerable: true
+    });
+    Object.defineProperty(m.size, 'isDimensionDependent', {
+      get: function() {
+        return that.actDesc ? that.actDesc.size.isDimensionDependent : false;
+      },
+      enumerable: true
+    });
+    this.metaData_ = m;
+  }
+
+  /**
+   * converts this multiform to a vis metadata
+   * @return {vis.IVisMetaData}
+   */
+  get asMetaData() {
+    return this.metaData_;
   }
 
   private build() {
@@ -304,11 +383,18 @@ export class MultiFormGrid extends vis.AVisInstance implements vis.IVisInstance 
     });
   }
 
-  transform(scale: number[], rotate : number) {
-    var p = this.actVisPromise || C.resolved(null);
-    return p.then(() => {
-      this.grid.forEach((g) => g.transform(scale, rotate));
-    });
+  transform(scale?: number[], rotate? : number) {
+    if (this.grid[0].hasOne) {
+      var bak = this.grid[0].transform();
+      if (arguments.length > 0) {
+        this.grid.forEach((g) => g.transform(scale, rotate));
+      }
+      return bak;
+    }
+    return {
+      scale: [1,1],
+      rotate: 0
+    };
   }
 
   persist() : any {

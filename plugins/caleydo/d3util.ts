@@ -38,9 +38,9 @@ export function selectionUtil(data: datatype.IDataType, $data : D3.Selection, se
   }
 }
 
-export function defineVis(name: string, defaultOptions : any, build : ($parent: D3.Selection, data: datatype.IDataType) => D3.Selection, functions?: any);
-export function defineVis(name: string, defaultOptions : (data: datatype.IDataType, options: any) => any, build : ($parent: D3.Selection, data: datatype.IDataType) => D3.Selection, functions?: any);
-export function defineVis(name: string, defaultOptions : any, build : ($parent: D3.Selection, data: datatype.IDataType) => D3.Selection, functions?: any) {
+export function defineVis(name: string, defaultOptions : any, build : ($parent: D3.Selection, data?: datatype.IDataType) => D3.Selection, functions?: any);
+export function defineVis(name: string, defaultOptions : (data: datatype.IDataType, options: any) => any, build : ($parent: D3.Selection, data?: datatype.IDataType) => D3.Selection, functions?: any);
+export function defineVis(name: string, defaultOptions : any, build : ($parent: D3.Selection, data?: datatype.IDataType) => D3.Selection, functions?: any) {
   function VisTechnique(data: datatype.IDataType, parent: Element, options: any) {
     this.data = data;
     this.$parent = d3.select(parent);
@@ -66,17 +66,27 @@ export function defineVis(name: string, defaultOptions : any, build : ($parent: 
   VisTechnique.prototype.updatedOption = function(name, value) {
   };
   VisTechnique.prototype.transform = function(scale, rotate) {
+    var bak = {
+      scale: this.options.scale || [1,1],
+      rotate: this.options.rotate || 0
+    };
+    if (arguments.length === 0) {
+      return bak;
+    }
     this.$node.attr({
       width: this.options.width * scale[0],
       height: this.options.height * scale[1]
     }).style('transform','rotate('+rotate+'deg)');
     this.$node.select('g').attr('transform','scale('+scale[0]+','+scale[1]+')');
-    this.fire('transform',{
+
+    var new_ = {
       scale: scale,
       rotate: rotate
-    });
+    };
+    this.fire('transform',new_, bak);
     this.options.scale = scale;
     this.options.rotate = rotate;
+    return new_;
   };
   VisTechnique.prototype.locateImpl = function(range) {
     var r = this.locateIt(range);

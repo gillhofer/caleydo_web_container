@@ -66,15 +66,23 @@ export class Table extends vis.AVisInstance implements vis.IVisInstance {
     return null;
   }
 
-  transform(scale: number[], rotate: number = 0) {
+  transform(scale?: number[], rotate: number = 0) {
+    var bak = {
+      scale: this.options.scale || [1,1],
+      rotate: this.options.rotate || 0
+    };
+    if (arguments.length === 0) {
+      return bak;
+    }
     this.$node.style('transform','rotate('+rotate+'deg)scale('+scale[0]+','+scale[1]+')');
-    this.fire('transform',{
+    var new_ = {
       scale: scale,
       rotate: rotate
-    });
+    };
+    this.fire('transform',new_, bak);
     this.options.scale = scale;
     this.options.rotate = rotate;
-    return true;
+    return new_;
   }
 
   private build($parent:D3.Selection, promises:any[]) {

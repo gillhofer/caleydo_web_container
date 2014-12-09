@@ -16,7 +16,7 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo/geo
     return geom.polygon(r);
   }
 
-  export.Pie = d3utils.defineVis('Pie', {
+  exports.Pie = d3utils.defineVis('Pie', {
     radius: 50,
     innerRadius: 0
   }, function($parent) {
@@ -115,7 +115,7 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo/geo
   });
 
   function create(data, parent, options) {
-    return new export.Pie(data, parent, options);
+    return new exports.Pie(data, parent, options);
   }
 
   exports.create = create;

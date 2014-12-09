@@ -8,15 +8,17 @@ import ranges = require('./range');
 import provenance = require('./provenance');
 import events = require('./event');
 
-export interface IVisPluginDesc extends plugins.IPluginDesc {
-  filter(data: datatypes.IDataType) : boolean;
-  iconify(node: HTMLElement);
-
+export interface IVisMetaData {
   size : {
     (data:datatypes.IDataType) : number[];
     scale: string; //'free' | 'aspect' | 'width-only' | 'height-only'
     isDimensionDependent : boolean;
   }
+}
+
+export interface IVisPluginDesc extends plugins.IPluginDesc, IVisMetaData {
+  filter(data: datatypes.IDataType) : boolean;
+  iconify(node: HTMLElement);
 }
 
 export interface IVisInstance extends provenance.IPersistable, events.IEventHandler {
@@ -25,7 +27,8 @@ export interface IVisInstance extends provenance.IPersistable, events.IEventHand
   data: datatypes.IDataType;
   locate(...range: ranges.Range[]): C.IPromise<any>;
 
-  transform(scale: number[], rotate: number);
+  transform(): {scale: number[]; rotate: number};
+  transform(scale: number[], rotate: number) : {scale: number[]; rotate: number};
 
   option(name: string) : any;
   option(name: string, value: any) : any;

@@ -4,44 +4,14 @@
 /* global define */
 "use strict"
 
-define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo/geom', 'css!./style'], function (exports, d3, C, idtypes, geom) {
-  function BarPlotVis(data, parent, options) {
-    this.id = C.uniqueString('vis');
-    this.data = data;
-    this.options = C.mixin({
-      width: 100,
-      heighti : 10,
-      cssClass: '',
-      min: 0,
-      max: NaN
-    }, options);
-    this.parent = parent;
-    this.node = this.build(d3.select(parent));
-  }
-
-  BarPlotVis.prototype.locate = function (range) {
-    if (arguments.length === 1) {
-      return this.locateImpl(range);
-    }
-    return C.all(C.argList(arguments).map(this.locateImpl, this));
-  };
-
-  BarPlotVis.prototype.locateImpl = function (range) {
-    var o = this.options, that = this;
-    var ex_i =  d3.extent(range.dim(0).iter().asList());
-
-    return this.data.data(range).then(function (data) {
-      var ex_v = d3.extent(data);
-      return geom.rect(
-        that.xscale(ex_v[0]) / 100.0 * o.width,
-        ex_i[0] * o.heighti,
-        that.xscale(ex_v[1]) / 100.0 * o.width,
-        (ex_i[1] + 1) * o.heighti
-      );
-    });
-  };
-
-  BarPlotVis.prototype.build = function ($parent) {
+define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo/geom', '../caleydo/d3util', 'css!./style'], function (exports, d3, C, idtypes, geom, d3utils) {
+  exports.BarPlot = d3utils.defineVis('BarPLot', {
+    width: 100,
+    heighti : 10,
+    cssClass: '',
+    min: 0,
+    max: NaN
+  }, function ($parent) {
     var o = this.options, that = this, data = this.data, len = data.length;
     var $svg = $parent.append('svg').attr({
       width: o.width,
@@ -108,12 +78,25 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo/geo
       });
     });
 
-    return $svg.node();
-  };
+    return $svg;
+  }, {
+    locateIt: function (range) {
+      var o = this.options, that = this;
+      var ex_i =  d3.extent(range.dim(0).iter().asList());
 
-  exports.BarPlot = BarPlotVis;
+      return this.data.data(range).then(function (data) {
+        var ex_v = d3.extent(data);
+        return geom.rect(
+          that.xscale(ex_v[0]) / 100.0 * o.width,
+          ex_i[0] * o.heighti,
+          that.xscale(ex_v[1]) / 100.0 * o.width,
+          (ex_i[1] + 1) * o.heighti
+        );
+      });
+    }
+  });
 
   exports.create = function createBarPlot(data, parent, options) {
-    return new BarPlotVis(data, parent, options);
+    return exports.BarPlot(data, parent, options);
   };
 });

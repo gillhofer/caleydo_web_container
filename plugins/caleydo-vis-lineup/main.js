@@ -47,13 +47,22 @@ define(['exports', 'd3', '../caleydo/main', 'lineupjs', '../caleydo/d3util', 'cs
     return $div;
   }, {
     transform: function (scale, rotate) {
+      var bak = {
+        scale: this.options.scale || [1, 1],
+        rotate: this.options.rotate || 0
+      };
+      if (arguments.length === 0) {
+        return bak;
+      }
       this.$node.style('transform', 'rotate(' + rotate + 'deg)scale(' + scale[0] + ',' + scale[1] + ')');
-      this.fire('transform', {
+      var new_ = {
         scale: scale,
         rotate: rotate
-      });
+      };
+      this.fire('transform', new_, bak);
       this.options.scale = scale;
       this.options.rotate = rotate;
+      return new_;
     }
   });
 

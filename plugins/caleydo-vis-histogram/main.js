@@ -162,7 +162,7 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-too
           y: that.yscale(that.yscale.domain()[1] - Math.max(h0.v, h1.v))
         });
       });
-    },
+    }
   });
 
   exports.Mosaic = d3utils.defineVis('MosaicVis', {

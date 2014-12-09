@@ -1,13 +1,7 @@
 /**
  * Created by Marc Streit on 06.08.2014.
  */
-define(['exports', 'd3', '../caleydo-tooltip/main', '../caleydo/main', 'css!./style'], function (exports, d3, tooltip, C) {
-  function BoxPlot(data, parent) {
-    this.id = C.uniqueString('vis');
-    this.data = data;
-    this.parent = parent;
-    this.node = this.build(d3.select(parent));
-  }
+define(['exports', 'd3', '../caleydo-tooltip/main', '../caleydo/main', '../caleydo/d3util', 'css!./style'], function (exports, d3, tooltip, C, d3utils) {
 
   function createText(stats) {
     var r = '<table><tbody>';
@@ -20,26 +14,7 @@ define(['exports', 'd3', '../caleydo-tooltip/main', '../caleydo/main', 'css!./st
     return r;
   }
 
-  BoxPlot.prototype.locate = function (range) {
-    if (arguments.length === 1) {
-      return this.locateImpl(range);
-    }
-    return C.all(C.argList(arguments).map(this.locateImpl, this));
-  };
-
-  BoxPlot.prototype.locateImpl = function (range) {
-    var that = this;
-    if (range.isAll || range.isNone) {
-      var r = this.scale.range();
-      return { x: r[0], w: r[1] - r[0], y: 0, h : 50 };
-    }
-    return this.data.data(range).then(function (data) {
-      var ex = d3.extent(data, that.scale);
-      return { x: ex[0], w: ex[1] - ex[0], y: 0, h : 50 };
-    });
-  };
-
-  BoxPlot.prototype.build = function ($parent) {
+  exports.BoxPlot = d3utils.defineVis('BoxPlot', {}, function ($parent) {
     var h = 50, w = 300;
     var $svg = $parent.append("svg").attr({
       width: w,
@@ -74,12 +49,23 @@ define(['exports', 'd3', '../caleydo-tooltip/main', '../caleydo/main', 'css!./st
       });
     });
 
-    return $svg.node();
-  };
-  exports.BoxPlot = BoxPlot;
+    return $svg;
+  }, {
+    locateIt : function (range) {
+      var that = this;
+      if (range.isAll || range.isNone) {
+        var r = this.scale.range();
+        return { x: r[0], w: r[1] - r[0], y: 0, h : 50 };
+      }
+      return this.data.data(range).then(function (data) {
+        var ex = d3.extent(data, that.scale);
+        return { x: ex[0], w: ex[1] - ex[0], y: 0, h : 50 };
+      });
+    }
+  });
 
   function create(data, parent) {
-    return new BoxPlot(data, parent);
+    return new exports.BoxPlot(data, parent);
   }
 
   exports.create = create;

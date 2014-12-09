@@ -77,7 +77,7 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
   }
 
   function addIt(m) {
-    var mw = window.create(windows, {
+    var mw = window.createVisWindow(windows, {
       closeable: true,
       animatedHeader: true,
       zcontrols: true
@@ -95,18 +95,11 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
     }
     multiP.then(function (multi) {
       multiform.addIconVisChooser(mw.toolbar.node, multi);
-      mw.data('vis', multi);
-      mw.title = m.desc.name + ' @ ' + multi.act.name;
+      mw.attachVis(multi, multi.asMetaData);
       mw.pos = [400, 50];
-      mw.contentSize = multi.size;
-      multi.on('change', function (event, new_) {
-        mw.title = m.desc.name + ' @ ' + new_.name;
-        mw.contentSize = multi.size;
-      });
       var vis = mw.adapter(multi);
       mw.on('removed', function () {
         removeLink(vis);
-        multi.destroy();
         canvas.splice(C.indexOf(canvas, function (c) {
           return c.mw === mw;
         }), 1);
