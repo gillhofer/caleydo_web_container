@@ -373,38 +373,45 @@ export class VisWindow extends UIWindow {
 
     if (options.zoomAble) {
       $(this.node).on('mousewheel', (event) => {
+        var ctrlKey = event.ctrlKey;
+        var shiftKey = event.shiftKey;
+        var altKey = event.altKey;
         var m = (<any>event).originalEvent.wheelDelta;
-        this.zoom(m > 0);
-        return false;
+        this.zoom(m * (ctrlKey || shiftKey ? 1: 0), m * (ctrlKey || altKey ? 1 : 0));
+        return !(ctrlKey || shiftKey || altKey);
       });
     }
   }
 
   zoomIn() {
-    return this.zoom(true);
+    return this.zoom(1,1);
   }
   zoomOut() {
-    return this.zoom(false);
+    return this.zoom(-1,-1);
   }
-  zoom (zoomIn: boolean) {
+  zoom (zoomX: number, zoomY : number) {
     if (!this.vis_) {
       return false;
     }
+    function toDelta(x) {
+      return x > 0 ? 0.2 : (x < 0 ? -0.2 : 0);
+    }
     var old = this.vis_.transform();
-    var delta = zoomIn ? +0.2 : -0.2;
+    var deltaX = toDelta(zoomX);
+    var deltaY = toDelta(zoomY);
     var s = old.scale.slice();
     switch(this.visMeta_.size.scale) {
     case 'width-only':
-      s[0] += delta;
+      s[0] += deltaX;
       break;
     case 'height-only':
-      s[1] += delta;
+      s[1] += deltaY;
       break;
     case 'free':
     case 'aspect':
     default:
-      s[0] += delta;
-      s[1] += delta;
+      s[0] += deltaX;
+      s[1] += deltaY;
       break;
     }
     if (s[0] <= 0) {
