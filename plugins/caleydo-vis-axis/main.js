@@ -17,8 +17,9 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/d3util', 'css!./style'],
       'class': 'axis'
     });
     $svg.data(this);
-    var $axis = $svg.append('g').attr('class', 'makeover');
-    var $points = $svg.append('g');
+    var $root = $svg.append('g');
+    var $axis = $root.append('g').attr('class', 'makeover');
+    var $points = $root.append('g');
     var s = this.scale = d3.scale.linear().domain(this.data.desc.value.range).range([o.shift, ((o.orient === 'left' || o.orient === 'right') ? o.height : o.width) - o.shift]).clamp(true);
     var axis = d3.svg.axis()
       .tickSize(o.tickSize)
