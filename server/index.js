@@ -6,7 +6,7 @@ var fs = require('fs');
 // application
 var app = express();
 
-var staticDirs = [ process.cwd() + '/plugins/', process.cwd() + '/external/', process.cwd() + '/test/'];
+var staticDirs = [ process.cwd() + '/plugins/', process.cwd() + '/external/', process.cwd() + '/static/', process.cwd() + '/test/'];
 
 var contextPath = '/';
 
