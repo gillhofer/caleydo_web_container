@@ -15,7 +15,7 @@ import datatypes = require('../caleydo/datatype');
 
 function makeDraggable($div, window) {
   var convertDrag = function (ui) {
-    return [{position: ui.position, offset: ui.offset}];
+    return {position: ui.position, offset: ui.offset};
   };
   $div.draggable({
     scroll: true, //auto scroll viewport
@@ -36,18 +36,16 @@ function destroyDraggable($div) {
   $div.draggable("destroy");
 }
 
-function makeResizeable($div, window) {
+function makeResizeable($div, window, options = {}) {
   var convertResize = function (ui) {
-    return [
-      {
+    return {
         originalPosition: ui.originalPosition,
         originalSize: ui.originalSize,
         position: ui.position,
         size: ui.size
-      }
-    ];
+      };
   };
-  $div.resizable({
+  $div.resizable($.extend({
     //minHeight: window.options.minHeight,
     //minWidth: window.options.minWidth,
     start: function (event, ui) {
@@ -58,8 +56,11 @@ function makeResizeable($div, window) {
     },
     resize: function (event, ui) {
       window.fire('resize', convertResize(ui));
-    }
-  });
+    },
+    autoHide: true,
+    delay: 150,
+    distance: 10
+  }, options));
 }
 
 function destroyResizeable($div) {
@@ -70,14 +71,10 @@ function makeAnimatedHeader($div, $header) {
   $div.on({
     mouseenter: function () {
       //change just the opacity
-      $header.animate({
-        opacity: 1
-      });
+      $header.css('opacity', 1);
     },
     mouseleave: function () {
-      $header.animate({
-        opacity: 0
-      });
+      $header.css('opacity', 0);
     }
   });
   //hide header by default
@@ -91,7 +88,7 @@ function destroyAnimatedHeader($div, $header) {
 
 
 export class UIWindow extends events.EventHandler implements events.IDataBinding {
-  private options : any;
+  options : any;
   private $parent : JQuery;
   private $div : JQuery;
   private $header: JQuery;
@@ -389,9 +386,10 @@ export class VisWindow extends UIWindow {
   zoomOut() {
     return this.zoom(-1,-1);
   }
+
   zoom (zoomX: number, zoomY : number) {
     if (!this.vis_) {
-      return false;
+      return null;
     }
     function toDelta(x) {
       return x > 0 ? 0.2 : (x < 0 ? -0.2 : 0);
@@ -399,20 +397,22 @@ export class VisWindow extends UIWindow {
     var old = this.vis_.transform();
     var deltaX = toDelta(zoomX);
     var deltaY = toDelta(zoomY);
-    var s = old.scale.slice();
+    return this.zoomSet(old.scale[0] + deltaX, old.scale[1] + deltaY);
+  }
+
+  zoomSet(zoomX : number, zoomY : number) {
+    if (!this.vis_) {
+      return null;
+    }
+    var old = this.vis_.transform();
+    var s = [zoomX, zoomY];;
     switch(this.visMeta_.size.scale) {
-    case 'width-only':
-      s[0] += deltaX;
-      break;
-    case 'height-only':
-      s[1] += deltaY;
-      break;
-    case 'free':
-    case 'aspect':
-    default:
-      s[0] += deltaX;
-      s[1] += deltaY;
-      break;
+      case 'width-only':
+        s[1] = old.scale[1];
+        break;
+      case 'height-only':
+        s[0] = old.scale[0];
+        break;
     }
     if (s[0] <= 0) {
       s[0] = 0.001;
@@ -420,7 +420,15 @@ export class VisWindow extends UIWindow {
     if (s[1] <= 0) {
       s[1] = 0.001;
     }
-    this.vis_.transform(s, old.rotate);
+    return this.vis_.transform(s, old.rotate);
+  }
+
+  zoomTo(w : number, h : number) {
+    if (!this.vis_) {
+      return null;
+    }
+    var ori = this.visMeta.size(this.vis_.data.dim);
+    return this.zoomSet(w / ori[0], h/ori[1]);
   }
 
   get vis() {
@@ -449,11 +457,45 @@ export class VisWindow extends UIWindow {
     this.data('visMeta', this.visMeta_);
 
     this.title = v.data.desc.name;
+    var that = this;
+    function updateResizeAble() {
+      if (that.options.resizeable) {
+        var $content : any= $(that.node);
+        var oldAspectRatio = $content.resizable('option', 'aspectRatio');
+        var oldHandles = $content.resizable('option', 'handles');
+        var newAspectRatio = false;
+        var newHandles = 'e,s,se';
+        switch(meta.size.scale) {
+          case 'aspect':
+            newAspectRatio = true;
+            break;
+          case 'width-only':
+            newHandles = 'e';
+            break;
+          case 'height-only':
+            newHandles = 's';
+            break;
+        }
+        if (newAspectRatio !== oldAspectRatio || newHandles !== oldHandles) {
+          destroyResizeable($content);
+          makeResizeable($content, that, {
+            aspectRatio : newAspectRatio,
+            handles : newHandles
+          });
+        }
+      }
+    }
+    updateResizeAble();
+    this.on('resize', (event, pos) => {
+      this.zoomTo(pos.size.width, pos.size.height);
+    });
+
     //TODO compute size
-    this.contentSize = meta.size(v.data.dim);
+    this.contentSize = meta.size.scaled(v.data.dim, v.transform());
 
     v.on('changed', () => {
       this.contentSize = meta.size.scaled(v.data.dim, v.transform());
+      updateResizeAble();
     });
     v.on('transform', () => {
       this.contentSize = meta.size.scaled(v.data.dim, v.transform());
