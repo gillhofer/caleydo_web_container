@@ -170,34 +170,6 @@ export class UIWindow extends events.EventHandler implements events.IDataBinding
     }
   }
 
-  /**
-   * return an adapter for a IVisInstance, which is shifted by the own position
-   * @param vis
-   * @returns {{data: *, locate: locate}}
-   */
-  adapter(vis) {
-    var that = this;
-    var r = {
-      data: vis.data,
-      locate: function () {
-        if (!C.isFunction(vis.locate)) {
-          return C.resolved((arguments.length === 1 ? undefined : new Array(arguments.length)));
-        }
-        return vis.locate.apply(vis, C.argList(arguments)).then(function (r) {
-          var p = that.pos;
-          if (C.isArray(r)) {
-            return r.map(function (loc) {
-              return loc ? geom.wrap(loc).shift(p) : loc;
-            })
-          } else {
-            return r ? geom.wrap(r).shift(p) : r;
-          }
-        });
-      }
-    };
-    return r;
-  }
-
   persist() {
     return {
       title: this.title,
@@ -273,6 +245,14 @@ export class UIWindow extends events.EventHandler implements events.IDataBinding
 
   set contentSize(val:number[]) {
     this.size = [val[0], val[1] + (this.options.animatedHeader ? 0 : 20)];
+  }
+
+  get contentPos() : number[] {
+    var p = this.pos;
+    var pp = this.$content.position();
+    p[0] += pp.left;
+    p[1] += pp.top;
+    return p;
   }
 
   /**
@@ -420,6 +400,10 @@ export class VisWindow extends UIWindow {
     if (s[1] <= 0) {
       s[1] = 0.001;
     }
+    this.fire('zoom', {
+      scale : s,
+      rotate: old.rotate
+    }, old);
     return this.vis_.transform(s, old.rotate);
   }
 
@@ -505,6 +489,34 @@ export class VisWindow extends UIWindow {
     });
     //var vis = mw.adapter(multi);
     return this.vis_;
+  }
+
+  /**
+   * return an adapter for a IVisInstance, which is shifted by the own position
+   * @param vis
+   * @returns {{data: *, locate: locate}}
+   */
+  adapter(vis): vis.ILocateAble {
+    var that = this;
+    var r = {
+      data: vis.data,
+      locate: function () {
+        if (!C.isFunction(vis.locate)) {
+          return C.resolved((arguments.length === 1 ? undefined : new Array(arguments.length)));
+        }
+        return vis.locate.apply(vis, C.argList(arguments)).then(function (r) {
+          var p = that.contentPos;
+          if (C.isArray(r)) {
+            return r.map(function (loc) {
+              return loc ? geom.wrap(loc).shift(p) : loc;
+            })
+          } else {
+            return r ? geom.wrap(r).shift(p) : r;
+          }
+        });
+      }
+    };
+    return r;
   }
 }
 

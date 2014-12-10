@@ -38,6 +38,7 @@ export class Table extends vis.AVisInstance implements vis.IVisInstance {
         ]);
         break;
     }
+
   }
 
   get node() {

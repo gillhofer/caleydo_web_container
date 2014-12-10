@@ -106,6 +106,7 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
         }), 1);
       });
       mw.on('drag_stop', updateLinks);
+      mw.on('zoom', updateLinks);
       addLink(vis);
       var entry = {
         mw: mw,

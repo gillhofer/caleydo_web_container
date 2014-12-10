@@ -14,6 +14,11 @@ export interface ITransform {
   rotate: number;
 }
 
+export interface ILocateAble {
+  data: datatypes.IDataType;
+  locate(...range: ranges.Range[]): C.IPromise<any>;
+}
+
 export interface IVisMetaData {
   size : {
     (dim: number[]) : number[];
@@ -28,11 +33,10 @@ export interface IVisPluginDesc extends plugins.IPluginDesc, IVisMetaData {
   iconify(node: HTMLElement);
 }
 
-export interface IVisInstance extends provenance.IPersistable, events.IEventHandler {
+export interface IVisInstance extends provenance.IPersistable, events.IEventHandler, ILocateAble {
   id: string;
   node: Element;
   data: datatypes.IDataType;
-  locate(...range: ranges.Range[]): C.IPromise<any>;
 
   transform(): ITransform;
   transform(scale: number[], rotate: number) : ITransform;

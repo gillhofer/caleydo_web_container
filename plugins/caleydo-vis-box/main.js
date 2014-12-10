@@ -29,6 +29,16 @@ define(['exports', 'd3', '../caleydo-tooltip/main', '../caleydo/main', '../caley
       'class': 'axis'
     });
 
+    $.get("test.json", function (data) {
+      $.get('fasdef.json', function(data2) {
+        afdf
+      })
+    });
+    C.all()
+    $.get("test.json").then(function (data) {
+      return $.get('fadf.');
+    }).then();
+
     this.data.stats().then(function (stats) {
       var text = createText(stats);
 
