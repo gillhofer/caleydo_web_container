@@ -148,9 +148,10 @@ export class IDType extends events.EventHandler implements provenance.IPersistab
       return b;
     }
     this.sel[type] = new_;
-    var args = [type, new_, op !== SelectOperation.REMOVE ? range : ranges.none(), (op === SelectOperation.ADD ? ranges.none() : (op === SelectOperation.SET ? b : range))];
-    this.fire('select', args);
-    this.fire('select-' + type, args.slice(1));
+    var added = op !== SelectOperation.REMOVE ? range : ranges.none();
+    var removed = (op === SelectOperation.ADD ? ranges.none() : (op === SelectOperation.SET ? b : range));
+    this.fire('select', type, new_, added, removed);
+    this.fire('select-' + type, new_, added, removed);
     return b;
   }
 
