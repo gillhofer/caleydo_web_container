@@ -154,6 +154,11 @@ export class Rect extends AShape {
   bs() : Circle {
     return circle(this.cx, this.cy, Math.sqrt(this.w*2+this.h*2));
   }
+
+  transform(scale: number[], rotate: number) {
+    //TODO rotate
+    return rect(this.x * scale[0], this.y * scale[1], this.w * scale[0], this.h * scale[1]);
+  }
 }
 
 export class Circle extends AShape {
@@ -176,6 +181,11 @@ export class Circle extends AShape {
 
   bs() : Circle {
     return this;
+  }
+
+  transform(scale: number[], rotate: number) {
+    //TODO rotate
+    return circle(this.x * scale[0], this.y * scale[1], this.radius * (scale[0] + scale[1])/2);
   }
 }
 
@@ -248,6 +258,17 @@ export class Polygon extends AShape {
     });
     return circle(mean_x, mean_y, Math.sqrt(radius));
   }
+
+  transform(scale: number[], rotate: number) {
+    //TODO rotate
+    return polygon(this.points.map((p) => vec2(p.x * scale[0], p.y * scale[1])));
+  }
+}
+
+export function vec2(x : number, y : number) : IVec2 {
+  return {
+    x : x, y : y
+  };
 }
 
 export function rect(x:number, y:number, w:number, h:number) {
@@ -264,6 +285,7 @@ export function polygon() {
   }
   return new Polygon(C.argList(arguments));
 }
+
 
 export function wrap(obj: any): AShape {
   if(!obj) {
