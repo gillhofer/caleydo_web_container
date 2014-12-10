@@ -94,9 +94,10 @@ export function defineVis(name: string, defaultOptions : any, build : ($parent: 
     if (!r) {
       return null;
     }
+    var that = this;
     return r.then((shape) => {
-      shape = geom.wrap(r);
-      return shape ? shape.transform(this.options.scale || [1,1], this.options.rotate || 0) : shape;
+      shape = geom.wrap(shape);
+      return shape ? shape.transform(that.options.scale || [1,1], that.options.rotate || 0) : shape;
     });
   };
   VisTechnique.prototype.locateIt = function(range) {

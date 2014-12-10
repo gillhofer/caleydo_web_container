@@ -49,19 +49,21 @@ export class HeatMap extends vis.AVisInstance implements vis.IVisInstance {
     }
   }
 
-  locateImpl(range: ranges.Range) {
+  locateImpl(range:ranges.Range) {
     var dims = this.data.dim;
-    var width = dims[1], height = dims[0];
-    function l(r, max) {
+    var width = dims[1], height = dims[0], o = this.options;
+
+    function l(r, max, s) {
       if (r.isAll || r.isNone) {
-        return [0, max*this.options.scale[1]];
+        return [0, max * s];
       }
-      var ex : any =  d3.extent(r.iter().asList());
-      return [ex[0] * this.options.scale[1], (ex[1] - ex[0] + 1) * this.options.scale[1]];
+      var ex:any = d3.extent(r.iter().asList());
+      return [ex[0] * s, (ex[1] - ex[0] + 1) * s];
     }
-    var xw = l(range.dim(1), width);
-    var yh = l(range.dim(0), height);
-    return C.resolved(geom.rect(xw[0],yh[0],xw[1],yh[1]));
+
+    var xw = l(range.dim(1), width, o.scale[0]);
+    var yh = l(range.dim(0), height, o.scale[1]);
+    return C.resolved(geom.rect(xw[0], yh[0], xw[1], yh[1]));
   }
 
   transform(scale?: number[], rotate: number = 0) {
