@@ -10,7 +10,6 @@
         "type": "vis",
         "id": "caleydo-vis-scatterplot",
         "name": "ScatterPlot",
-        "size": [300, 340],
         "filter": "matrix"
       }
     ]

@@ -13,7 +13,6 @@
         "id": "caleydo-vis-parco",
         "name": "Parallel Coordinates Plot",
         "icon": "icon.svg",
-        "size": [360, 150],
         "filter": "table"
       }
     ],

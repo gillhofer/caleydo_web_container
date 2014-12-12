@@ -11,7 +11,10 @@
         "type": "vis",
         "id": "caleydo-vis-lineup",
         "name": "LineUp",
-        "size": "eval!function (dim) { return [Math.min(dim[1] * 100, 1000), Math.min(dim[0] * 20, 600)]; }",
+        "sizeDependsOnDataDimension": [
+          false,
+          true
+        ],
         "filter": "table"
       }
     ],

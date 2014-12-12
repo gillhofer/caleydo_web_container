@@ -11,12 +11,11 @@
         "id": "caleydo-vis-axis",
         "name": "Axis",
         "icon": "icon.svg",
-        "size" : {
-          "size" : [50, 300],
-          "scale" : "height-only",
-          "minSize" : [50, 50]
-        },
-        "filter": "eval!function (data) { return data.desc.type === 'vector' && (data.desc.value.type === 'real' || data.desc.value.type === 'int'); }",
+        "scaling": "height-only",
+        "filter": [
+          "vector",
+          "(real|int)"
+        ],
         "options": {
           "tickSize": {
             "type": "int",

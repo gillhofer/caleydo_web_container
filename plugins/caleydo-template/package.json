@@ -10,7 +10,6 @@
         "type": "vis",
         "id": "caleydo-template",
         "name": "Template",
-        "size": [100,100],
         "filter": "template"
       }
     ]

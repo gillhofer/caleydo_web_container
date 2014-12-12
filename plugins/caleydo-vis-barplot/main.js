@@ -6,16 +6,18 @@
 
 define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo/geom', '../caleydo/d3util', 'css!./style'], function (exports, d3, C, idtypes, geom, d3utils) {
   exports.BarPlot = d3utils.defineVis('BarPLot', {
-    width: 100,
-    heighti : 10,
     cssClass: '',
+    width: 100,
+    heighti: 10,
     min: 0,
     max: NaN
-  }, function ($parent) {
-    var o = this.options, that = this, data = this.data, len = data.length;
+  }, function (data) {
+    return [this.options.width, data.dim[0] * this.options.heighti];
+  }, function ($parent, data, size) {
+    var o = this.options, that = this;
     var $svg = $parent.append('svg').attr({
-      width: o.width,
-      height: len * o.heighti,
+      width: size[0],
+      height: size[1],
       'class': 'barplot ' + o.cssClass
     });
 
@@ -46,7 +48,7 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo/geo
       data.off('select', l);
     });
 
-    this.data.data().then(function (_data) {
+    data.data().then(function (_data) {
       yscale.domain([0, data.length]);
       if (isNaN(o.min) || isNaN(o.max)) {
         var minmax = d3.extent(_data);
@@ -82,7 +84,7 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo/geo
   }, {
     locateIt: function (range) {
       var o = this.options, that = this;
-      var ex_i =  d3.extent(range.dim(0).iter().asList());
+      var ex_i = d3.extent(range.dim(0).iter().asList());
 
       return this.data.data(range).then(function (data) {
         var ex_v = d3.extent(data);
@@ -99,4 +101,5 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo/geo
   exports.create = function createBarPlot(data, parent, options) {
     return exports.BarPlot(data, parent, options);
   };
-});
+})
+;

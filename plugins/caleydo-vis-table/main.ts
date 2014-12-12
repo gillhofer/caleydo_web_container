@@ -38,7 +38,8 @@ export class Table extends vis.AVisInstance implements vis.IVisInstance {
         ]);
         break;
     }
-
+    var dim = this.data.dim;
+    this.size = [dim[1] * 110, dim[0] * 22];
   }
 
   get node() {

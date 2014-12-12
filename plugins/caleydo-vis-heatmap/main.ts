@@ -30,6 +30,10 @@ export class HeatMap extends vis.AVisInstance implements vis.IVisInstance {
     this.$node = this.build(d3.select(parent));
   }
 
+  get rawSize() {
+    return this.data.dim.slice().reverse();
+  }
+
   get node() {
     return this.$node.node();
   }

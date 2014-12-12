@@ -10,7 +10,7 @@
         "type": "vis",
         "id": "caleydo-vis-table",
         "name": "Table",
-        "size": "eval!function (dim) { return [dim[1] * 110, dim[0] * 22]; }"
+        "sizeDependsOnDataDimension": true
       }
     ]
   }

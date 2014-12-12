@@ -14,35 +14,25 @@ define(['exports', 'd3', '../caleydo-tooltip/main', '../caleydo/main', '../caley
     return r;
   }
 
-  exports.BoxPlot = d3utils.defineVis('BoxPlot', {}, function ($parent) {
-    var h = 50, w = 300;
+  exports.BoxPlot = d3utils.defineVis('BoxPlot', {}, [300, 50], function ($parent, data, size) {
     var $svg = $parent.append("svg").attr({
-      width: w,
-      height: h,
+      width: size[0],
+      height: size[1],
       'class': 'box'
     });
 
-    var s = this.scale = d3.scale.linear().domain(this.data.desc.value.range).range([0, w]).clamp(true);
+    var $t = $svg.append('g');
 
-    $svg.append('path').attr({
-      d: 'M0,0 L0,$ M0,§ L%,§ M%,0 L%,$'.replace(/%/g, w).replace(/\$/g, h).replace(/\§/g, h / 2),
+    var s = this.scale = d3.scale.linear().domain(this.data.desc.value.range).range([0, size[0]]).clamp(true);
+
+    $t.append('path').attr({
+      d: 'M0,0 L0,$ M0,§ L%,§ M%,0 L%,$'.replace(/%/g, size[0]).replace(/\$/g, size[1]).replace(/\§/g, size[1] / 2),
       'class': 'axis'
     });
-
-    $.get("test.json", function (data) {
-      $.get('fasdef.json', function(data2) {
-        afdf
-      })
-    });
-    C.all()
-    $.get("test.json").then(function (data) {
-      return $.get('fadf.');
-    }).then();
-
-    this.data.stats().then(function (stats) {
+    data.stats().then(function (stats) {
       var text = createText(stats);
 
-      $svg.append('rect').attr({
+      $t.append('rect').attr({
         x: s(stats.mean - stats.sd),
         y: '10%',
         width: s(stats.sd * 2),
@@ -50,7 +40,7 @@ define(['exports', 'd3', '../caleydo-tooltip/main', '../caleydo/main', '../caley
         'class': 'box'
       }).call(tooltip.bind(text));
 
-      $svg.append('line').attr({
+      $t.append('line').attr({
         x1: s(stats.mean),
         x2: s(stats.mean),
         y1: '10%',

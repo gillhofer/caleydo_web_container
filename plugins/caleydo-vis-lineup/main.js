@@ -1,6 +1,9 @@
 /**
  * Created by Marc Streit on 06.08.2014.
  */
+/* global define */
+"use strict";
+
 define(['exports', 'd3', '../caleydo/main', 'lineupjs', '../caleydo/d3util', 'css!./style'], function (exports, d3, C, LineUpJS, d3utils) {
   function deriveColumns(columns) {
     return columns.map(function (col) {
@@ -26,7 +29,10 @@ define(['exports', 'd3', '../caleydo/main', 'lineupjs', '../caleydo/d3util', 'cs
     });
   }
 
-  exports.LineUp = d3utils.defineVis('LineUp', {}, function build($parent) {
+  exports.LineUp = d3utils.defineVis('LineUp', {}, function (data) {
+    var dim = data.dim;
+    return [ Math.min(dim[1] * 100, 1000), Math.min(dim[0] * 20, 600)];
+  }, function build($parent) {
     var $div = $parent.append('div').classed('lineup', true);
 
     var that = this;

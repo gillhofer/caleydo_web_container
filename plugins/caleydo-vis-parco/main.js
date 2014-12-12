@@ -3,14 +3,12 @@
  */
 define(['exports', 'd3', 'd3.parcoords', '../caleydo/main'], function (exports, d3, d3_parcoords, C) {
   exports.ParCo = d3utils.defineVis('ParCo', {
-    margin: { top: 24, right: 0, bottom: 12, left: 0 },
-    width: 360,
-    height: 150
-  }, function build($parent) {
+    margin: { top: 24, right: 0, bottom: 12, left: 0 }
+  }, [360, 150], function build($parent, data, size) {
     var $base = $parent.append('div').classed('parcoords', true).style({
-      width: this.options.width + 'px',
-      height: this.options.height + 'px'
-    }), data = this.data;
+      width: size[0] + 'px',
+      height: size[1] + 'px'
+    });
 
     var pc = d3_parcoords(this.options)($base.node()), types = {},
       dims;
@@ -86,10 +84,11 @@ define(['exports', 'd3', 'd3.parcoords', '../caleydo/main'], function (exports, 
       if (arguments.length === 0) {
         return bak;
       }
+      var s = this.rawSize();
       this.$node.style({
         transform: 'rotate(' + rotate + 'deg)scale(' + scale[0] + ',' + scale[1] + ')',
-        width: this.options.width * scale[0] + 'px',
-        height: this.options.height * scale[1] + 'px'
+        width: s[0] * scale[0] + 'px',
+        height: s[1] * scale[1] + 'px'
       });
       var new_ = {
         scale: scale,

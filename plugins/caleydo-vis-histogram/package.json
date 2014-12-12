@@ -10,19 +10,21 @@
         "type": "vis",
         "id": "caleydo-vis-histogram",
         "name": "Histogram",
-        "icon" : "icon.png",
-        "size": [200, 100],
-        "filter": "eval!function (data) { return data.desc.type === 'vector' && ['categorical','real','int'].indexOf(data.desc.value.type) >= 0; }"
+        "icon": "icon.png",
+        "filter": [ "vector", "(categorical|real|int)" ]
       },
       {
         "type": "vis",
         "id": "caleydo-vis-mosaic",
-        "folder" : "caleydo-vis-histogram",
+        "folder": "caleydo-vis-histogram",
         "name": "Mosaic",
-        "factory" : "createMosaic",
-        "icon" : "icon_mosaic.png",
-        "size": "eval!function (dim) { return [20, dim[0] * 10]; }",
-        "filter": ["vector", "categorical"]
+        "factory": "createMosaic",
+        "icon": "icon_mosaic.png",
+        "sizeDependsOnDataDimension": [
+          false,
+          true
+        ],
+        "filter": [ "vector", "categorical" ]
       }
     ]
   }

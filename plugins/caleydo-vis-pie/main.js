@@ -19,11 +19,14 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo/geo
   exports.Pie = d3utils.defineVis('Pie', {
     radius: 50,
     innerRadius: 0
-  }, function ($parent) {
-    var o = this.options, that = this, data = this.data;
+  }, function () {
+    var r = this.options.radius;
+    return [r * 2, r * 2];
+  }, function ($parent, data, size) {
+    var o = this.options, that = this;
     var $svg = $parent.append("svg").attr({
-      width: o.radius * 2,
-      height: o.radius * 2,
+      width: size[0],
+      height: size[1],
       'class': 'pie'
     });
     var $base = $svg.append('g').attr('transform', 'translate(' + o.radius + ',' + o.radius + ')');
@@ -60,7 +63,7 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo/geo
       data.off('select', l);
     });
 
-    this.data.hist().then(function (hist) {
+    data.hist().then(function (hist) {
       that.hist = hist;
       var total = hist.count;
       scale.domain([0, total]);
@@ -97,48 +100,49 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo/geo
     });
 
     return $svg;
-  }, {
-    locateIt : function (range) {
-      var that = this, o = this.options;
-      if (range.isAll || range.isNone) {
-        return C.resolved({ x: o.radius, y: o.radius, radius: o.radius});
-      }
-      return this.data.data(range).then(function (data) {
-        var ex = d3.extent(data, function (value) {
-          return that.hist.binOf(value);
-        });
-        var startAngle = that.scale(that.hist_data[ex[0]].start);
-        var endAngle = that.scale(that.hist_data[ex[1]].end);
-        return C.resolved(toPolygon(startAngle, endAngle, o.radius));
-      });
-    },
-    updatedOption : function (name, value) {
-
-    },
-    transform : function (scale, rotate) {
-      var bak = {
-        scale: this.options.scale || [1, 1],
-        rotate: this.options.rotate || 0
-      };
-      if (arguments.length === 0) {
-        return bak;
-      }
-      this.$node.attr({
-        width: this.options.radius * 2 * scale[0],
-        height: this.options.radius * 2 * scale[1]
-      }).style('transform', 'rotate(' + rotate + 'deg)');
-      this.$node.select('g').attr('transform', 'scale(' + scale[0] + ',' + scale[1] + ')translate(' + this.options.radius + ',' + this.options.radius + ')');
-
-      var new_ = {
-        scale: scale,
-        rotate: rotate
-      };
-      this.fire('transform', new_, bak);
-      this.options.scale = scale;
-      this.options.rotate = rotate;
-      return new_;
+  }
+}, {
+  locateIt: function (range) {
+    var that = this, o = this.options;
+    if (range.isAll || range.isNone) {
+      return C.resolved({x: o.radius, y: o.radius, radius: o.radius});
     }
-  });
+    return this.data.data(range).then(function (data) {
+      var ex = d3.extent(data, function (value) {
+        return that.hist.binOf(value);
+      });
+      var startAngle = that.scale(that.hist_data[ex[0]].start);
+      var endAngle = that.scale(that.hist_data[ex[1]].end);
+      return C.resolved(toPolygon(startAngle, endAngle, o.radius));
+    });
+  },
+  updatedOption: function (name, value) {
+
+  },
+  transform: function (scale, rotate) {
+    var bak = {
+      scale: this.options.scale || [1, 1],
+      rotate: this.options.rotate || 0
+    };
+    if (arguments.length === 0) {
+      return bak;
+    }
+    this.$node.attr({
+      width: this.options.radius * 2 * scale[0],
+      height: this.options.radius * 2 * scale[1]
+    }).style('transform', 'rotate(' + rotate + 'deg)');
+    this.$node.select('g').attr('transform', 'scale(' + scale[0] + ',' + scale[1] + ')translate(' + this.options.radius + ',' + this.options.radius + ')');
+
+    var new_ = {
+      scale: scale,
+      rotate: rotate
+    };
+    this.fire('transform', new_, bak);
+    this.options.scale = scale;
+    this.options.rotate = rotate;
+    return new_;
+  }
+});
 
   function create(data, parent, options) {
     return new exports.Pie(data, parent, options);

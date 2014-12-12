@@ -37,19 +37,31 @@ export function selectionUtil(data: datatype.IDataType, $data : D3.Selection, se
     data.select(0, [i], idtypes.toSelectOperation(d3.event));
   }
 }
-
-export function defineVis(name: string, defaultOptions : any, build : ($parent: D3.Selection, data?: datatype.IDataType) => D3.Selection, functions?: any);
-export function defineVis(name: string, defaultOptions : (data: datatype.IDataType, options: any) => any, build : ($parent: D3.Selection, data?: datatype.IDataType) => D3.Selection, functions?: any);
-export function defineVis(name: string, defaultOptions : any, build : ($parent: D3.Selection, data?: datatype.IDataType) => D3.Selection, functions?: any) {
+/**
+ * utility function to define a vis
+ * @param name the name of the vis - will be used during toString
+ * @param defaultOptions a function or an object containing the default options of this vis
+ * @param initialSize a function or the size to compute the initial size of this vis
+ * @param build the builder function
+ * @param functions an object of additional functions to the vis
+ * @returns a function class for this vis
+ */
+export function defineVis(name: string, defaultOptions : any, initialSize : number[], build : ($parent: D3.Selection, data: datatype.IDataType, size: number[]) => D3.Selection, functions?: any): any;
+export function defineVis(name: string, defaultOptions : (data: datatype.IDataType, options: any) => any, initialSize : number[], build : ($parent: D3.Selection, data: datatype.IDataType, size: number[]) => D3.Selection, functions?: any) : any;
+export function defineVis(name: string, defaultOptions : any, initialSize : (data: datatype.IDataType)=>number[], build : ($parent: D3.Selection, data: datatype.IDataType) => D3.Selection, functions?: any) : any;
+export function defineVis(name: string, defaultOptions : (data: datatype.IDataType, options: any) => any, initialSize : (data: datatype.IDataType)=>number[], build : ($parent: D3.Selection, data: datatype.IDataType, size: number[]) => D3.Selection, functions?: any) : any;
+export function defineVis(name: string, defaultOptions : any, initialSize : any,  build : ($parent: D3.Selection, data?: datatype.IDataType) => D3.Selection, functions?: any) : any {
   function VisTechnique(data: datatype.IDataType, parent: Element, options: any) {
     vis.AVisInstance.call(this, data, parent, options);
     this.data = data;
+    this.name = name;
     this.$parent = d3.select(parent);
+    this.initialSize = d3.functor(initialSize);
     this.options = C.mixin(d3.functor(defaultOptions).call(this,data, options || {}), options);
-    this.$node = build.call(this, this.$parent, this.data);
     if (C.isFunction(this.init)) {
       this.init(data);
     }
+    this.$node = build.call(this, this.$parent, this.data, this.size);
   }
   C.extendClass(VisTechnique, vis.AVisInstance);
   VisTechnique.prototype.toString = () => name;
@@ -66,30 +78,31 @@ export function defineVis(name: string, defaultOptions : any, build : ($parent: 
   };
   VisTechnique.prototype.updatedOption = function(name, value) {
   };
-  VisTechnique.prototype.transform = function(scale, rotate) {
+  VisTechnique.prototype.transform = function (scale, rotate) {
     var bak = {
-      scale: this.options.scale || [1,1],
+      scale: this.options.scale || [1, 1],
       rotate: this.options.rotate || 0
     };
     if (arguments.length === 0) {
       return bak;
     }
+    var size = this.rawSize;
     this.$node.attr({
-      width: this.options.width * scale[0],
-      height: this.options.height * scale[1]
-    }).style('transform','rotate('+rotate+'deg)');
-    this.$node.select('g').attr('transform','scale('+scale[0]+','+scale[1]+')');
+      width: size[0] * scale[0],
+      height: size[1] * scale[1]
+    }).style('transform', 'rotate(' + rotate + 'deg)');
+    this.$node.select('g').attr('transform', 'scale(' + scale[0] + ',' + scale[1] + ')');
 
     var new_ = {
       scale: scale,
       rotate: rotate
     };
-    this.fire('transform',new_, bak);
+    this.fire('transform', new_, bak);
     this.options.scale = scale;
     this.options.rotate = rotate;
     return new_;
   };
-  VisTechnique.prototype.locateImpl = function(range) {
+  VisTechnique.prototype.locateImpl = function (range) {
     var r = this.locateIt(range);
     if (!r) {
       return null;
@@ -97,17 +110,22 @@ export function defineVis(name: string, defaultOptions : any, build : ($parent: 
     var that = this;
     return r.then((shape) => {
       shape = geom.wrap(shape);
-      return shape ? shape.transform(that.options.scale || [1,1], that.options.rotate || 0) : shape;
+      return shape ? shape.transform(that.options.scale || [1, 1], that.options.rotate || 0) : shape;
     });
   };
-  VisTechnique.prototype.locateIt = function(range) {
+  VisTechnique.prototype.locateIt = function (range) {
     return null;
   };
-  VisTechnique.prototype = C.mixin(VisTechnique.prototype, functions);
-
-  Object.defineProperty(VisTechnique.prototype,'node', {
-    get : () => this.$node.node(),
+  Object.defineProperty(VisTechnique.prototype, 'node', {
+    get: function() { return this.$node.node(); },
     enumerable: true
   });
+  Object.defineProperty(VisTechnique.prototype, 'rawSize', {
+    get: function() { return this.initialSize(this.data); },
+    enumerable: true
+  });
+  for(var f in functions) {
+    VisTechnique.prototype[f] = functions[f];
+  }
   return VisTechnique;
 }

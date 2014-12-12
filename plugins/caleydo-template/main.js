@@ -13,13 +13,10 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/d3util', 'css!./style'],
    * @param parent
    * @constructor
    */
-  exports.Template = d3utils.defineVis('Template', {
-    width: 100,
-    height: 100
-  }, function ($parent) {
+  exports.Template = d3utils.defineVis('Template', {}, [100, 100], function ($parent, data, size) {
     var $svg = $parent.append('svg').attr({
-      width: this.options.width,
-      height: this.options.height,
+      width: size[0],
+      height: size[1],
       'class': 'template'
     });
     //do the magic

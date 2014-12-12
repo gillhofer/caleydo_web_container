@@ -2,7 +2,7 @@
  * Created by Samuel Gratzl on 13.10.2014.
  */
 /* global define */
-"use strict"
+"use strict";
 
 define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-tooltip/main', '../caleydo/d3util'], function (exports, d3, C, idtypes, tooltip, d3utils) {
 
@@ -56,16 +56,14 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-too
 
   exports.Histogram = d3utils.defineVis('HistogramVis', function (data) {
     return {
-      width: 200,
-      height: 100,
       nbins: Math.round(Math.sqrt(data.length)),
       totalHeight: true
     };
-  }, function ($parent) {
-    var o = this.options, that = this, data = this.data;
+  }, [200, 100], function ($parent, data, size) {
+    var o = this.options, that = this;
     var $svg = $parent.append('svg').attr({
-      width: o.width,
-      height: o.height,
+      width: size[0],
+      height: size[1],
       'class': 'histogram'
     });
     var $t = $svg.append('g');
@@ -73,8 +71,8 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-too
     var $highlight = $t.append('g').style('pointer-events', 'none').classed('select-selected', true);
 
     //using range bands with an ordinal scale for uniform distribution
-    var xscale = that.xscale = d3.scale.ordinal().rangeBands([0, o.width], 0.1);
-    var yscale = that.yscale = d3.scale.linear().range([0, o.height]);
+    var xscale = that.xscale = d3.scale.ordinal().rangeBands([0, size[0]], 0.1);
+    var yscale = that.yscale = d3.scale.linear().range([0, size[1]]);
 
     var l = function (event, type, selected) {
       var highlights = that.hist_data.map(function (entry, i) {
@@ -145,9 +143,9 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-too
     return $svg;
   }, {
     locateImpl: function (range) {
-      var that = this, o = this.options;
+      var that = this, size = this.rawSize;
       if (range.isAll || range.isNone) {
-        return C.resolved({x: 0, y: 0, w: o.width, h: o.height});
+        return C.resolved({x: 0, y: 0, w: size[0], h: size[1]});
       }
       return this.data.data(range).then(function (data) {
         var ex = d3.extent(data, function (value) {
@@ -167,26 +165,28 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-too
 
   exports.Mosaic = d3utils.defineVis('MosaicVis', {
     width: 20,
-    heighti : 10
-  }, function ($parent) {
-    var o = this.options, that = this, data = this.data, len = data.length;
+    initialScale: 10
+  }, function (data) {
+    return [this.options.width, data.dim[0]];
+  }, function ($parent, data, size) {
+    var o = this.options, that = this;
     var $svg = $parent.append('svg').attr({
-      width: o.width,
-      height: len * o.heighti,
+      width: size[0],
+      height: size[1],
       'class': 'mosaic'
     });
     var $data = $svg.append('g');
     var $highlight = $svg.append('g').style('pointer-events', 'none').classed('select-selected', true);
 
     //using range bands with an ordinal scale for uniform distribution
-    var yscale = that.yscale = d3.scale.linear().range([0, len * o.heighti]);
+    var yscale = that.yscale = d3.scale.linear().range([0, size[1]]);
 
     var l = function (event, type, selected) {
       var highlights = that.hist_data.map(function (entry, i) {
         var s = entry.range.intersect(selected);
         return {
           i: i,
-          acc : entry.acc,
+          acc: entry.acc,
           v: s.size()[0]
         };
       }).filter(function (entry) {
@@ -216,7 +216,7 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-too
     this.data.hist(o.nbins).then(function (hist) {
       that.hist = hist;
       yscale.domain([0, hist.count]);
-      var hist_data = that.hist_data = createHistData(hist, that.data.desc.value);
+      var hist_data = that.hist_data = createHistData(hist, data.desc.value);
 
       var $m = $data.selectAll('rect').data(hist_data);
       $m.enter().append('rect')
@@ -243,10 +243,13 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-too
 
     return $svg.node();
   }, {
+    init: function () {
+      this.options.scale = [this.options.initialScale, this.options.initialScale];
+    },
     locateIt: function locateIt(range) {
-      var that = this, o = this.options;
+      var that = this;
       if (range.isAll || range.isNone) {
-        return C.resolved({x: 0, y: 0, w: o.width, h: o.heighti * this.data.length});
+        return C.resolved({x: 0, y: 0, w: this.rawSize[0], h: this.data.length});
       }
       return this.data.data(range).then(function (data) {
         var ex = d3.extent(data, function (value) {
@@ -256,7 +259,7 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-too
         var h1 = that.hist_data[ex[1]];
         return C.resolved({
           x: 0,
-          width: o.width,
+          width: this.rawSize[0],
           height: that.yscale(Math.max(h0.v, h1.v)),
           y: that.yscale(that.yscale.domain()[1] - Math.max(h0.v, h1.v))
         });

@@ -385,8 +385,8 @@ export class VisWindow extends UIWindow {
       return null;
     }
     var old = this.vis_.transform();
-    var s = [zoomX, zoomY];;
-    switch(this.visMeta_.size.scale) {
+    var s = [zoomX, zoomY];
+    switch(this.visMeta_.scaling) {
       case 'width-only':
         s[1] = old.scale[1];
         break;
@@ -411,7 +411,7 @@ export class VisWindow extends UIWindow {
     if (!this.vis_) {
       return null;
     }
-    var ori = this.visMeta.size(this.vis_.data.dim);
+    var ori = this.vis_.rawSize;
     return this.zoomSet(w / ori[0], h/ori[1]);
   }
 
@@ -426,7 +426,7 @@ export class VisWindow extends UIWindow {
   attachVis(vis : vis.IVisInstance, visMeta : vis.IVisMetaData);
   attachVis(factory: (node: Element) => { vis: vis.IVisInstance; meta: vis.IVisMetaData });
   attachVis(vis_or_factory: any) {
-    var v, meta;
+    var v : vis.IVisInstance, meta : vis.IVisMetaData;
     if (C.isFunction(vis_or_factory)) {
       var r = vis_or_factory(this.node);
       v = r.vis;
@@ -449,7 +449,7 @@ export class VisWindow extends UIWindow {
         var oldHandles = $content.resizable('option', 'handles');
         var newAspectRatio = false;
         var newHandles = 'e,s,se';
-        switch(meta.size.scale) {
+        switch(meta.scaling) {
           case 'aspect':
             newAspectRatio = true;
             break;
@@ -475,14 +475,14 @@ export class VisWindow extends UIWindow {
     });
 
     //TODO compute size
-    this.contentSize = meta.size.scaled(v.data.dim, v.transform());
+    this.contentSize = v.size;
 
     v.on('changed', () => {
-      this.contentSize = meta.size.scaled(v.data.dim, v.transform());
+      this.contentSize = v.size;
       updateResizeAble();
     });
     v.on('transform', () => {
-      this.contentSize = meta.size.scaled(v.data.dim, v.transform());
+      this.contentSize = v.size;
     });
     this.on('removed', () => {
       v.destroy();

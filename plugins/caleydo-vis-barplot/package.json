@@ -11,8 +11,8 @@
         "id": "caleydo-vis-barplot",
         "name": "Bar Plot",
         "icon" : "icon.png",
-        "size": "eval!function (dim) { return [100, dim[0] * 10]; }",
-        "filter": "eval!function (data) { return data.desc.type === 'vector' && (data.desc.value.type === 'real' || data.desc.value.type === 'int'); }"
+        "sizeDependsOnDataDimension" : [false, true],
+        "filter": ["vector", "(real|int)"]
       }
     ]
   }

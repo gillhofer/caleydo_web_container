@@ -3,24 +3,22 @@
  */
 define(['exports', 'd3', '../caleydo/main', '../caleydo/d3util', 'css!./style'], function (exports, d3, C, utils) {
   exports.Axis = utils.defineVis('Axis', {
-    width: 50,
-    height: 300,
     shift: 10,
     tickSize: 2,
     orient: 'left',
     r: 2
-  }, function ($parent) {
+  }, [50, 300], function ($parent, data, size) {
     var o = this.options;
     var $svg = $parent.append("svg").attr({
-      width: o.width,
-      height: o.height,
+      width: size[0],
+      height: size[1],
       'class': 'axis'
     });
     $svg.data(this);
     var $root = $svg.append('g');
     var $axis = $root.append('g').attr('class', 'makeover');
     var $points = $root.append('g');
-    var s = this.scale = d3.scale.linear().domain(this.data.desc.value.range).range([o.shift, ((o.orient === 'left' || o.orient === 'right') ? o.height : o.width) - o.shift]).clamp(true);
+    var s = this.scale = d3.scale.linear().domain(data.desc.value.range).range([o.shift, ((o.orient === 'left' || o.orient === 'right') ? size[1] : size[0]) - o.shift]).clamp(true);
     var axis = d3.svg.axis()
       .tickSize(o.tickSize)
       .orient(o.orient)
@@ -28,8 +26,8 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/d3util', 'css!./style'],
 
     switch (o.orient) {
     case 'left':
-      $points.attr('transform', 'translate(' + (o.width - o.shift) + ',0)');
-      $axis.attr('transform', 'translate(' + (o.width - o.shift) + ',0)');
+      $points.attr('transform', 'translate(' + (size[0] - o.shift) + ',0)');
+      $axis.attr('transform', 'translate(' + (size[0] - o.shift) + ',0)');
       break;
     case 'right':
       $points.attr('transform', 'translate(' + o.shift + ',0)');
@@ -40,8 +38,8 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/d3util', 'css!./style'],
       $axis.attr('transform', 'translate(0,' + o.shift + ')');
       break;
     case 'bottom':
-      $points.attr('transform', 'translate(0, ' + (o.height - o.shift) + ')');
-      $axis.attr('transform', 'translate(0,' + (o.height - o.shift) + ')');
+      $points.attr('transform', 'translate(0, ' + (size[1] - o.shift) + ')');
+      $axis.attr('transform', 'translate(0,' + (size[1] - o.shift) + ')');
       break;
     }
     $axis.call(axis);
@@ -49,8 +47,8 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/d3util', 'css!./style'],
     var onClick = utils.selectionUtil(this.data, $points, 'circle');
 
     var cxy = (o.orient === 'left' || o.orient === 'right') ? 'cy' : 'cx';
-    this.data.data().then(function (data) {
-      var $p = $points.selectAll('circle').data(data);
+    data.data().then(function (arr) {
+      var $p = $points.selectAll('circle').data(arr);
       $p.enter().append('circle').attr('r', o.r).on('click', onClick);
       $p.exit().remove();
       $p.attr(cxy, function (d) {
@@ -71,9 +69,10 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/d3util', 'css!./style'],
       });
     },
     wrap : function (base) {
+      var s = this.rawSize;
       switch (this.options.orient) {
       case 'left':
-        base.x = this.options.width - this.options.shift;
+        base.x = s[0] - this.options.shift;
         base.w = 0;
         break;
       case 'right':
@@ -89,7 +88,7 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/d3util', 'css!./style'],
       case 'bottom':
         base.x = base.y;
         base.w = base.h;
-        base.y = this.options.height - this.options.shift;
+        base.y = s[1] - this.options.shift;
         base.h = 0;
         break;
       }

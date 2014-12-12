@@ -9,48 +9,153 @@ import provenance = require('./provenance');
 import events = require('./event');
 
 
+/**
+ * transform description without translation
+ */
 export interface ITransform {
+  /**
+   * scale factors (width, height)
+   */
   scale: number[];
+
+  /**
+   * rotation
+   */
   rotate: number;
 }
 
+/**
+ *
+ */
 export interface ILocateAble {
+  /**
+   * data represented by this vis
+   */
   data: datatypes.IDataType;
+
+  /**
+   * locate method, by convention, when just a single range is given, then return just a promise with this range, else an array
+   * the return type should be something convertable using the geom module
+   */
   locate(...range: ranges.Range[]): C.IPromise<any>;
 }
 
+/**
+ * metadata for a visualization
+ */
 export interface IVisMetaData {
-  size : {
-    (dim: number[]) : number[];
-    scale: string; //'free' | 'aspect' | 'width-only' | 'height-only'
-    isDimensionDependent : boolean;
-    scaled(dim: number[], tranform: ITransform);
-  }
+  /**
+   * scaling behavior
+   * possible values:
+   * - free (default) - no restrictions
+   * - aspect - the initial aspect ratio must be kept, i.e. same scaling values in both dimensions
+   * - width-only - only the width can be scaled
+   * - height-only - only the height can be scaled
+   */
+  scaling: string; //'free' (default) | 'aspect' | 'width-only' | 'height-only'
+
+  /**
+   * defines the rotation change angles
+   * - no / 0 ... no rotation (default)
+   * - free / null / NaN ... any rotation
+   * - transpose / 90 ... 90 degree
+   * - swap / 180 ... 180 degree
+   * - <number> any degree
+   */
+  rotation: number;
+
+  /**
+   * indicator, whether the size of this vis depends on the dimensions of the data, i.e. an axis no, a heatmap yes
+   */
+  sizeDependsOnDataDimension : boolean[];
 }
 
+/**
+ * formal description of the interface of a plugin description
+ */
 export interface IVisPluginDesc extends plugins.IPluginDesc, IVisMetaData {
+  /**
+   * determines whether the given data can be represented using this visualization technique
+   * @param data
+   */
   filter(data: datatypes.IDataType) : boolean;
+
+  /**
+   * add all icon information of this vis to the given html element
+   * @param node
+   */
   iconify(node: HTMLElement);
 }
 
+/**
+ * basic interface of an visualization instance
+ */
 export interface IVisInstance extends provenance.IPersistable, events.IEventHandler, ILocateAble {
-  id: string;
+  /**
+   * the unique id of this vis instance
+   */
+  id: number;
+
+  /**
+   * the base element of this vis
+   */
   node: Element;
+
+  /**
+   * the represented data
+   */
   data: datatypes.IDataType;
 
+  /**
+   * current size of this vis
+   * @returns [width, height]
+   */
+  size: number[];
+
+  /**
+   * the size without transformation applied
+   */
+  rawSize: number[];
+
+  /**
+   * returns the current transformation
+   */
   transform(): ITransform;
+
+  /**
+   * sets the transformation
+   * @param scale [w,h]
+   * @param rotate
+   */
   transform(scale: number[], rotate: number) : ITransform;
 
+  /**
+   * option getter
+   * @param name
+   */
   option(name: string) : any;
+
+  /**
+   * option setter
+   * @param name
+   * @param value
+   */
   option(name: string, value: any) : any;
 
+  /**
+   * destroy this vis and deregister handlers,...
+   */
   destroy();
 }
 
+/**
+ * base class for an visualization
+ */
 export class AVisInstance extends events.EventHandler {
-  id = C.uniqueString('vis');
+  id = C.uniqueId('vis');
 
   option(name: string, value?: any) {
+    //dummy
     return null;
   }
 
@@ -66,6 +171,7 @@ export class AVisInstance extends events.EventHandler {
   }
 
   locateImpl(range: ranges.Range) {
+    //no resolution by default
     return C.resolved(null);
   }
 
@@ -76,6 +182,24 @@ export class AVisInstance extends events.EventHandler {
   destroy() {
 
   }
+
+  transform() {
+    return {
+      scale: [1,1],
+      rotate: 0
+    }
+  }
+
+  get rawSize() {
+    return [100, 100];
+  }
+
+  get size() {
+    var t = this.transform();
+    var r = this.rawSize;
+    //TODO rotation
+    return [r[0] * t.scale[0], r[1] * t.scale[1]];
+  }
 }
 
 function extrapolateFilter(r: any) {
@@ -83,9 +207,9 @@ function extrapolateFilter(r: any) {
   if (typeof v === 'undefined') {
     r.filter = C.constantTrue;
   } else if (typeof v == 'string') {
-    r.filter = (data) => data && data.desc.type === v;
-  } else if (C.isArray(v) && v.length == 2 && typeof v[0] === 'string' && typeof v[1] === 'string') {
-    r.filter = (data) => data && data.desc.type === v[0] && (data.desc.value && data.desc.value.type === v[1]);
+    r.filter = (data) => data && data.desc.type && data.desc.type.match(v);
+  } else if (C.isArray(v)) {
+    r.filter = (data) => data && data && (data.desc.type && data.desc.type.match(v[0])) && (data.desc.value && data.desc.value.type.match(v[1]));
   }
 }
 
@@ -109,45 +233,30 @@ function extrapolateIconify(r: any) {
   };
 }
 function extrapolateSize(r : any) {
-  if (C.isFunction(r.size) && typeof r.size.isDimensionDependent === 'boolean') {
-    return;
-  }
-  var s = r.size;
-  function toFunction(s) {
-    if (Array.isArray(s)) {
-      r.size = () => s;
-      r.size.isDimensionDependent = false;
-      r.size.scale = 'free';
-    } else if (typeof s === 'number') {
-      r.size = () => [s,s];
-      r.size.isDimensionDependent = false;
-      r.size.scale = 'aspect';
-    } else if (C.isFunction(r.size)) {
-      r.size.isDimensionDependent = true; //why else use a function?
-      r.size.scale = 'free';
-    } else {
-      return false;
-    }
-    var t = r.size;
-    r.size.scaled = (dim: number[], transform: ITransform) => {
-      var rr = t(dim);
-        return [transform.scale[0] * rr[0], transform.scale[1] * rr[1]];
-    };
-    return true;
-  }
-  if (toFunction(r.size)) {
+  r.scaling = r.scaling || 'free';
 
-  } else if (C.isPlainObject(s)) {
-    toFunction(s.size);
-    if (typeof s.isDimensionDependent === 'boolean') {
-      r.size.isDimensionDependent = s.isDimensionDependent;
-    }
-    if (typeof s.scale === 'string') {
-      r.size.scale = s.scale;
-    }
-    if (C.isFunction(s.scaled)) {
-      r.size.scaled = s.scaled;
-    }
+  if (Array.isArray(r.sizeDependsOnDataDimension) && typeof r.sizeDependsOnDataDimension[0] === 'boolean') {
+  } else if (typeof r.sizeDependsOnDataDimension === 'boolean') {
+    r.sizeDependsOnDataDimension = [r.sizeDependsOnDataDimension, r.sizeDependsOnDataDimension];
+  } else {
+    r.sizeDependsOnDataDimension = [false, false];
+  }
+}
+
+function extrapolateRotation(r : any) {
+  var m = { //string to text mappings
+    free : NaN,
+    no : 0,
+    transpose: 90,
+    swap: 180
+  };
+  if (typeof r.rotation === 'string' && r.rotation in m) {
+    r.rotation = m[r.rotation];
+  } else if (typeof r.rotation === 'number') {
+  } else if (r.rotation === null) {
+    r.rotation = NaN;
+  } else {
+    r.rotation = 0;
   }
 }
 
@@ -156,6 +265,7 @@ function toVisPlugin(plugin : plugins.IPluginDesc) : IVisPluginDesc {
   extrapolateFilter(r);
   extrapolateIconify(r);
   extrapolateSize(r);
+  extrapolateRotation(r);
   return r;
 }
 

@@ -1,16 +1,9 @@
 /**
  * Created by Marc Streit on 06.08.2014.
  */
-define(['exports', 'd3', '../caleydo/main', '../caleydo-tooltip/main', 'css!./style'], function (exports, d3, C, tooltip) {
-  function ScatterPlot(data, parent) {
-    this.data = data;
-    this.parent = parent;
-
-    this.node = this.build(d3.select(parent));
-  }
-
-  ScatterPlot.prototype.build = function ($parent) {
-    var width = 300, height = 300;
+define(['exports', 'd3', '../caleydo/main', '../caleydo-tooltip/main', '../caleydo/d3util', 'css!./style'], function (exports, d3, C, tooltip, d3tuils) {
+  exports.ScatterPlot = d3tuils.defineVis('ScatterPlot', {}, [300, 300], function ($parent, data, size) {
+    var width = size[0], height = size[1];
 
     var xcol = 0;
     var ycol = 1;
@@ -23,7 +16,7 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo-tooltip/main', 'css!./st
     var that = this;
 
     // bind data to chart
-    C.all([this.data.data(), this.data.rows()]).then(function (promise) {
+    C.all([data.data(), data.rows()]).then(function (promise) {
 
       var arr = promise[0];
       var rowNames = promise[1];
@@ -86,7 +79,7 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo-tooltip/main', 'css!./st
         update();
       });
 
-    this.data.cols().then(function (cols) {
+    data.cols().then(function (cols) {
       var $x = $xaxis.selectAll("option").data(cols);
       $x.enter().append("option");
       $x.attr("value", function (d, i) {
@@ -115,11 +108,10 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo-tooltip/main', 'css!./st
     });
 
     return svg;
-  };
-  exports.ScatterPlot = ScatterPlot;
+  });
 
-  function create(data, parent) {
-    return new ScatterPlot(data, parent);
+  function create(data, parent, options) {
+    return new exports.ScatterPlot(data, parent, options);
   }
 
   exports.create = create;

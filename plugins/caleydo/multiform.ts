@@ -11,7 +11,26 @@ import datatypes = require('./datatype');
 import events = require('./event');
 import provenance = require('./provenance');
 
+class ProxyMetaData implements vis.IVisMetaData {
+  constructor(private proxy : () => vis.IVisMetaData) {
 
+  }
+
+  get scaling() {
+    var p = this.proxy();
+    return p ? p.scaling : 'free';
+  }
+
+  get rotation() {
+    var p = this.proxy();
+    return p ? p.rotation : 0;
+  }
+
+  get sizeDependsOnDataDimension() {
+    var p = this.proxy();
+    return p ? p.sizeDependsOnDataDimension : [false, false];
+  }
+}
 /**
  * a simple multi form class using a select to switch
  */
@@ -29,7 +48,7 @@ export class MultiForm extends vis.AVisInstance implements vis.IVisInstance {
   private actDesc:vis.IVisPluginDesc;
   private $content:D3.Selection;
 
-  private metaData_ : vis.IVisMetaData;
+  private metaData_ : vis.IVisMetaData = new ProxyMetaData(() => this.actDesc);
 
   constructor(public data:datatypes.IDataType, parent:Element) {
     super();
@@ -39,28 +58,6 @@ export class MultiForm extends vis.AVisInstance implements vis.IVisInstance {
     this.visses = vis.list(data);
 
     this.build();
-
-    var that = this;
-    var m : any = {};
-    m.size = (dim: number[]) => {
-      return that.actDesc ? that.actDesc.size(dim) : [100, 100];
-    };
-    m.size.scaled = (dim: number[], transform: vis.ITransform) => {
-      return that.actDesc ? that.actDesc.size.scaled(dim, transform) : [100, 100];
-    };
-    Object.defineProperty(m.size, 'scale' , {
-      get: function() {
-        return that.actDesc ? that.actDesc.size.scale : 'free';
-      },
-      enumerable: true
-    });
-    Object.defineProperty(m.size, 'isDimensionDependent',  {
-      get: function() {
-        return that.actDesc ? that.actDesc.size.isDimensionDependent : false;
-      },
-      enumerable: true
-    });
-    this.metaData_ = m;
   }
 
   /**
@@ -149,14 +146,17 @@ export class MultiForm extends vis.AVisInstance implements vis.IVisInstance {
   }
 
   get size() {
-    var s = [200,200];
-    var d : any = this.actDesc;
-    if (d && C.isFunction(d.size)) {
-      s = d.size(this.data.dim);
-    } else if (d && C.isArray(d.size)) {
-      s = d.size;
+    if (this.actVis) {
+      return this.actVis.size;
     }
-    return s;
+    return [100, 100];
+  }
+
+  get rawSize() {
+    if (this.actVis) {
+      return this.actVis.rawSize;
+    }
+    return [100, 100];
   }
 
   /**
@@ -228,8 +228,12 @@ class GridElem implements provenance.IPersistable {
     }
   }
 
-  size(actDesc: vis.IVisPluginDesc) : number[] {
-    return actDesc.size(this.data.dim);
+  get size(): number[] {
+    return this.actVis ? this.actVis.size : [100, 100];
+  }
+
+  get rawSize(): number[] {
+    return this.actVis ? this.actVis.rawSize : [100, 100];
   }
 
   persist() {
@@ -303,7 +307,7 @@ export class MultiFormGrid extends vis.AVisInstance implements vis.IVisInstance 
   private dims : ranges.Range1DGroup[][];
   private grid : GridElem[];
 
-  private metaData_ : vis.IVisMetaData;
+  private metaData_ : vis.IVisMetaData = new ProxyMetaData(() => this.actDesc);
 
   constructor(public data:datatypes.IDataType, public range: ranges.Range, parent:Element, viewFactory : (data:datatypes.IDataType, range : ranges.Range) => datatypes.IDataType) {
     super();
@@ -338,29 +342,6 @@ export class MultiFormGrid extends vis.AVisInstance implements vis.IVisInstance 
     product(0, []);
 
     this.build();
-
-    var that = this;
-    var m : any = {};
-    m.size = () => {
-      return that.size;
-    };
-    m.size.scaled = (dim: number[], transform: vis.ITransform) => {
-      var r =that.size;
-      return [ r[0] * transform.scale[0], r[1] * transform.scale[1]];
-    };
-    Object.defineProperty(m.size, 'scale', {
-      get: function() {
-        return that.actDesc ? that.actDesc.size.scale : 'free';
-      },
-      enumerable: true
-    });
-    Object.defineProperty(m.size, 'isDimensionDependent', {
-      get: function() {
-        return that.actDesc ? that.actDesc.size.isDimensionDependent : false;
-      },
-      enumerable: true
-    });
-    this.metaData_ = m;
   }
 
   /**
@@ -450,8 +431,8 @@ export class MultiFormGrid extends vis.AVisInstance implements vis.IVisInstance 
     return this.actDesc;
   }
 
-  get gridSize() : { cols: number[]; rows: number[]; grid: number[][][]} {
-    var sizes = this.grid.map((elem) => elem.size(this.actDesc));
+  gridSize(raw = false) : { cols: number[]; rows: number[]; grid: number[][][]} {
+    var sizes = this.grid.map(raw ? (elem) => elem.rawSize : (elem) => elem.size);
 
     if (this.dims.length === 1) {
       //vertically groups only
@@ -472,7 +453,12 @@ export class MultiFormGrid extends vis.AVisInstance implements vis.IVisInstance 
   }
 
   get size() {
-    var gridSize = this.gridSize;
+    var gridSize = this.gridSize();
+    return [ d3.sum(gridSize.cols), d3.sum(gridSize.rows)];
+  }
+
+  get rawSize() {
+    var gridSize = this.gridSize(true);
     return [ d3.sum(gridSize.cols), d3.sum(gridSize.rows)];
   }
 
