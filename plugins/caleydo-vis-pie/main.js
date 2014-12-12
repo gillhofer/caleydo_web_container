@@ -5,13 +5,16 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo/geo
 
   function toPolygon(start, end, radius) {
     var r = [
-      { x: radius, y: radius },
-      { x: radius + Math.cos(start) * radius, y: radius + Math.sin(start) * radius },
-      { x: radius + Math.cos(end) * radius, y: radius + Math.sin(end) * radius }
+      {x: radius, y: radius},
+      {x: radius + Math.cos(start) * radius, y: radius + Math.sin(start) * radius},
+      {x: radius + Math.cos(end) * radius, y: radius + Math.sin(end) * radius}
     ];
     //approximate by triangle
     if (end - start > Math.PI) { //more than 180 degree use one more point
-      r.splice(2, 0, { x: radius + Math.cos((end - start) * 0.5) * radius, y: radius + Math.sin((end - start) * 0.5) * radius });
+      r.splice(2, 0, {
+        x: radius + Math.cos((end - start) * 0.5) * radius,
+        y: radius + Math.sin((end - start) * 0.5) * radius
+      });
     }
     return geom.polygon(r);
   }
@@ -100,49 +103,48 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo/geo
     });
 
     return $svg;
-  }
-}, {
-  locateIt: function (range) {
-    var that = this, o = this.options;
-    if (range.isAll || range.isNone) {
-      return C.resolved({x: o.radius, y: o.radius, radius: o.radius});
-    }
-    return this.data.data(range).then(function (data) {
-      var ex = d3.extent(data, function (value) {
-        return that.hist.binOf(value);
+  }, {
+    locateIt: function (range) {
+      var that = this, o = this.options;
+      if (range.isAll || range.isNone) {
+        return C.resolved({x: o.radius, y: o.radius, radius: o.radius});
+      }
+      return this.data.data(range).then(function (data) {
+        var ex = d3.extent(data, function (value) {
+          return that.hist.binOf(value);
+        });
+        var startAngle = that.scale(that.hist_data[ex[0]].start);
+        var endAngle = that.scale(that.hist_data[ex[1]].end);
+        return C.resolved(toPolygon(startAngle, endAngle, o.radius));
       });
-      var startAngle = that.scale(that.hist_data[ex[0]].start);
-      var endAngle = that.scale(that.hist_data[ex[1]].end);
-      return C.resolved(toPolygon(startAngle, endAngle, o.radius));
-    });
-  },
-  updatedOption: function (name, value) {
+    },
+    updatedOption: function (name, value) {
 
-  },
-  transform: function (scale, rotate) {
-    var bak = {
-      scale: this.options.scale || [1, 1],
-      rotate: this.options.rotate || 0
-    };
-    if (arguments.length === 0) {
-      return bak;
+    },
+    transform: function (scale, rotate) {
+      var bak = {
+        scale: this.options.scale || [1, 1],
+        rotate: this.options.rotate || 0
+      };
+      if (arguments.length === 0) {
+        return bak;
+      }
+      this.$node.attr({
+        width: this.options.radius * 2 * scale[0],
+        height: this.options.radius * 2 * scale[1]
+      }).style('transform', 'rotate(' + rotate + 'deg)');
+      this.$node.select('g').attr('transform', 'scale(' + scale[0] + ',' + scale[1] + ')translate(' + this.options.radius + ',' + this.options.radius + ')');
+
+      var new_ = {
+        scale: scale,
+        rotate: rotate
+      };
+      this.fire('transform', new_, bak);
+      this.options.scale = scale;
+      this.options.rotate = rotate;
+      return new_;
     }
-    this.$node.attr({
-      width: this.options.radius * 2 * scale[0],
-      height: this.options.radius * 2 * scale[1]
-    }).style('transform', 'rotate(' + rotate + 'deg)');
-    this.$node.select('g').attr('transform', 'scale(' + scale[0] + ',' + scale[1] + ')translate(' + this.options.radius + ',' + this.options.radius + ')');
-
-    var new_ = {
-      scale: scale,
-      rotate: rotate
-    };
-    this.fire('transform', new_, bak);
-    this.options.scale = scale;
-    this.options.rotate = rotate;
-    return new_;
-  }
-});
+  });
 
   function create(data, parent, options) {
     return new exports.Pie(data, parent, options);
