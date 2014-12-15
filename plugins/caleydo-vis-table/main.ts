@@ -38,8 +38,11 @@ export class Table extends vis.AVisInstance implements vis.IVisInstance {
         ]);
         break;
     }
+  }
+
+  get rawSize() {
     var dim = this.data.dim;
-    this.size = [dim[1] * 110, dim[0] * 22];
+    return [(dim[1]||1) * 200, dim[0] * 22]
   }
 
   get node() {
