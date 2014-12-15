@@ -67,7 +67,7 @@ export class IDType extends events.EventHandler implements provenance.IPersistab
    * @param name the name of this idtype
    * @param names the plural name
    */
-  constructor(public id: string, public name:string, public names:string) {
+  constructor(public id: string, public name:string, public names:string, public internal = false) {
     super();
   }
 
@@ -157,6 +157,65 @@ export class IDType extends events.EventHandler implements provenance.IPersistab
 
   clear(type = defaultSelectionType) {
     return this.selectImpl(ranges.none(), SelectOperation.SET, type);
+  }
+}
+
+export interface IHasUniqueId {
+  id: number;
+}
+
+export function toId(elem : IHasUniqueId) {
+  return elem.id;
+}
+
+export function isId(id: number) {
+  return (elem: IHasUniqueId) => elem && elem.id === id;
+}
+
+/**
+ * a manager of a bunch of objects with selection support
+ */
+export class ObjectManager<T extends IHasUniqueId> extends IDType {
+  private instances : any = {};
+  constructor(id: string, name : string) {
+    super(id, name, name + 's', true);
+  }
+
+  nextId() {
+    return C.uniqueId(this.id);
+  }
+
+  push(...items : T[]) {
+    items.forEach((item) => {
+      this.instances[item.id] = item;
+    });
+  }
+
+  byId(id: number) {
+    return this.instances[id];
+  }
+
+  forEach(callbackfn: (value: T) => void, thisArg?: any): void {
+    Object.keys(this.instances).forEach((id) => callbackfn.call(thisArg, this.instances[id]));
+  }
+
+  remove(id: number);
+  remove(item: T);
+  remove(item: any): T {
+    var old = null;
+    if (typeof item.id === 'number') {
+      item = item.id;
+    }
+    if (typeof item === 'number') {
+      old = this.instances[item];
+      delete this.instances[item];
+    }
+    return old;
+  }
+
+  selectedObjects(type = defaultSelectionType) {
+    var s = this.selections(type);
+    return s.filter(this.instances);
   }
 }
 

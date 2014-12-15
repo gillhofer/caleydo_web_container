@@ -193,10 +193,10 @@ export class VectorBase extends idtypes.SelectAble {
     return this.data().then((d) => {
       switch(v.type) {
       case 'categorical':
-          return math.categoricalHist(d, this.indices.dim(0), v.categories.map((d) => typeof d === 'string' ? d : d.name));
+          return math.categoricalHist(d, this.indices.dim(0), d.length, v.categories.map((d) => typeof d === 'string' ? d : d.name));
       case 'real':
       case 'int':
-        return math.hist(d, this.indices.dim(0), bins ? bins : Math.round(Math.sqrt(this.length)), v.range);
+        return math.hist(d, this.indices.dim(0), d.length, bins ? bins : Math.round(Math.sqrt(this.length)), v.range);
       default:
           return null; //cant create hist for unique objects or other ones
       }

@@ -121,15 +121,15 @@ export function computeStats(arr: IIterable<number>) : IStatistics {
   return r;
 }
 
-export function hist(arr: IIterable<number>, indices: ranges.Range1D, bins: number, range: number[]) : IHistogram {
+export function hist(arr: IIterable<number>, indices: ranges.Range1D, size: number, bins: number, range: number[]) : IHistogram {
   var r = new Histogram(bins, range);
-  r.pushAll(arr, indices);
+  r.pushAll(arr, indices, size);
   return r;
 }
 
-export function categoricalHist(arr: IIterable<string>, indices: ranges.Range1D, categories: string[]) : IHistogram {
+export function categoricalHist(arr: IIterable<string>, indices: ranges.Range1D, size: number, categories: string[]) : IHistogram {
   var r = new CatHistogram(categories);
-  r.pushAll(arr, indices);
+  r.pushAll(arr, indices, size);
   return r;
 }
 
@@ -178,8 +178,8 @@ class AHistogram implements IHistogram {
     return this.missingRange_;
   }
 
-  pushAll(arr: IIterable<any>, indices: ranges.Range1D) {
-    var it = indices.iter();
+  pushAll(arr: IIterable<any>, indices: ranges.Range1D, size: number) {
+    var it = indices.iter(size);
     var binindex = [], missingindex = [];
     for(var i = this.bins-1; i>=0; --i) {
       binindex.push([]);

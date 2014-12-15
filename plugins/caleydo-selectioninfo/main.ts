@@ -7,14 +7,15 @@ import idtypes = require('../caleydo/idtype');
 import ranges = require('../caleydo/range');
 import C = require('../caleydo/main');
 
-class SelectionIDType {
+export class SelectionIDType {
   private l = (event, type: string, selection: ranges.Range) => {
     this.update(type, selection);
   };
   private $div: D3.Selection;
   private $ul : D3.Selection;
 
-  constructor(public idType: idtypes.IDType, parent: D3.Selection) {
+  constructor(public idType: idtypes.IDType, parent: D3.Selection, private options = {}) {
+    this.options = C.mixin({}, options);
     idType.on('select', this.l);
     this.$div = parent.append('div');
     this.$div.append('span').text(idType.name);
@@ -43,14 +44,13 @@ class SelectionIDType {
  * selection info shows a div for each id type and a list of all selected ids in it
  */
 export class SelectionInfo {
-  private options:any;
   private $div : D3.Selection;
   private handler : SelectionIDType[] = [];
   private listener = (event, idtype) => {
-    this.handler.push(new SelectionIDType(idtype, this.$div));
+    this.handler.push(new SelectionIDType(idtype, this.$div, this.options));
   };
 
-  constructor(public parent:HTMLElement, options = {}) {
+  constructor(public parent:HTMLElement, private options = {}) {
     this.options = C.mixin({}, options);
     this.build(d3.select(parent));
   }
@@ -71,6 +71,10 @@ export class SelectionInfo {
     this.handler.forEach((h) => h.destroy());
     this.handler.length = 0;
   }
+}
+
+export function createFor(idtype: idtypes.IDType, parent, options) {
+  return new SelectionIDType(idtype, d3.select(parent), options);
 }
 
 export function create(parent, options) {

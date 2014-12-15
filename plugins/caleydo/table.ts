@@ -238,7 +238,7 @@ export class Table extends TableBase implements ITable {
   rowIds(range:ranges.Range = ranges.all()) {
     var that = this;
     return this.load().then(function (data) {
-      return range.preMultiply(data.rowIds, that.dim);
+      return data.rowIds.preMultiply(range, that.dim);
     });
   }
   ids(range:ranges.Range = ranges.all()) {

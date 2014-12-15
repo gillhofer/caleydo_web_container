@@ -87,7 +87,9 @@ function destroyAnimatedHeader($div, $header) {
 }
 
 
-export class UIWindow extends events.EventHandler implements events.IDataBinding {
+export var manager = new idtypes.ObjectManager('uiwindow', 'Window');
+
+export class UIWindow extends events.EventHandler implements events.IDataBinding, idtypes.IHasUniqueId {
   options : any;
   private $parent : JQuery;
   private $div : JQuery;
@@ -95,6 +97,7 @@ export class UIWindow extends events.EventHandler implements events.IDataBinding
   toolbar: ToolBar;
   private $content : JQuery;
   private _data = {};
+  id = manager.nextId();
 
   constructor(parent, options) {
     super();
@@ -112,8 +115,14 @@ export class UIWindow extends events.EventHandler implements events.IDataBinding
         'z-index': 0
       });
     this.$div.on({
-      mouseenter: () => this.fire('mouseenter', this),
-      mouseleave: () => this.fire('mouseleave', this)
+      mouseenter: () => {
+        manager.select(idtypes.hoverSelectionType, [this.id], idtypes.SelectOperation.ADD);
+        this.fire('mouseenter', this);
+      },
+      mouseleave: () => {
+        manager.select(idtypes.hoverSelectionType, [this.id], idtypes.SelectOperation.REMOVE);
+        this.fire('mouseleave', this)
+      }
     });
     //title
     this.$header = $('<div>').appendTo(this.$div)
