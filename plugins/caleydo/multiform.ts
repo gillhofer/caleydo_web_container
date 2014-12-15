@@ -329,7 +329,7 @@ export class MultiFormGrid extends vis.AVisInstance implements vis.IVisInstance 
     var grid = this.grid = [];
     function product(level: number, range : ranges.Range1D[]) {
       if (level === dims.length) {
-        var r = ranges.list(range.slice()); //work on a copy for safety reason
+        var r = range.length === 0 ? ranges.all() : ranges.list(range.slice()); //work on a copy for safety reason
         grid.push(new GridElem(r, viewFactory(data, r)));
       } else {
         dims[level].forEach((group) => {

@@ -354,7 +354,7 @@ export class VisWindow extends UIWindow {
         var shiftKey = event.shiftKey;
         var altKey = event.altKey;
         var m = (<any>event).originalEvent.wheelDelta;
-        this.zoom(m * (ctrlKey || shiftKey ? 1: 0), m * (ctrlKey || altKey ? 1 : 0));
+        this.zoom(m * (ctrlKey || altKey ? 1: 0), m * (ctrlKey || shiftKey ? 1 : 0));
         return !(ctrlKey || shiftKey || altKey);
       });
     }
