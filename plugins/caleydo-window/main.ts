@@ -1,5 +1,5 @@
 /**
- * Created by AK113797 on 24.11.2014.
+ * Created by Samuel Gratzl on 24.11.2014.
  */
 /// <amd-dependency path="jquery-ui" />
 /// <amd-dependency path="font-awesome" />
@@ -348,7 +348,7 @@ export class VisWindow extends UIWindow {
   constructor(parent, options) {
     super(parent, options);
 
-    if (options.zoomAble) {
+    if (this.options.zoomAble) {
       $(this.node).on('mousewheel', (event) => {
         var ctrlKey = event.ctrlKey;
         var shiftKey = event.shiftKey;

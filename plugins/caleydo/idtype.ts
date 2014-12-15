@@ -11,7 +11,7 @@ import provenance = require('./provenance');
 
 var cache = {}, filledUp = false;
 
-export var defaultSelectionType = 'selected';
+ export var defaultSelectionType = 'selected';
 export var hoverSelectionType = 'hovered';
 
 export enum SelectOperation {
@@ -67,7 +67,7 @@ export class IDType extends events.EventHandler implements provenance.IPersistab
    * @param name the name of this idtype
    * @param names the plural name
    */
-  constructor(public name:string, public names:string) {
+  constructor(public id: string, public name:string, public names:string) {
     super();
   }
 
@@ -363,13 +363,18 @@ export class SelectAble extends events.EventHandler {
 function fillUpData(entries) {
   entries.forEach(function (row) {
     var entry = cache[row.id];
+    var new_ = false;
     if (entry) {
       entry.name = row.name;
       entry.names = row.names;
     } else {
-      entry = new IDType(row.name, row.names);
+      entry = new IDType(row.id, row.name, row.names);
+      new_ = true;
     }
     cache[row.id] = entry;
+    if (new_) {
+      events.fire('register.idtype', entry);
+    }
   });
 }
 
@@ -385,7 +390,7 @@ function fillUp() {
 }
 
 export function resolve(id:string):IDType {
-  return register(id, new IDType(id, id + 's'));
+  return register(id, new IDType(id, id, id + 's'));
 }
 
 /**
@@ -394,7 +399,7 @@ export function resolve(id:string):IDType {
  */
 export function list() {
   fillUp(); //trigger loading of the meta data
-  return cache;
+  return Object.keys(cache).map((d) => cache[d]);
 }
 
 export function register(id:string, idtype:IDType) {
@@ -403,6 +408,7 @@ export function register(id:string, idtype:IDType) {
     return cache[id];
   }
   cache[id] = idtype;
+  events.fire('register.idtype', idtype);
   return idtype;
 }
 
