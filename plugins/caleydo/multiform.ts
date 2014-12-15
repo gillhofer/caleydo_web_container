@@ -498,9 +498,11 @@ export class MultiFormGrid extends vis.AVisInstance implements vis.IVisInstance 
         if (this.actDesc !== vis) { //changed in the meanwhile
           return null;
         }
-        return this.grid.map((elem) => {
+        var r = this.grid.map((elem) => {
           return elem.build(plugin);
         });
+        this.fire('changed', vis, bak);
+        return r;
       });
     } else {
       return C.resolved([]);

@@ -241,10 +241,10 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-too
       });
     });
 
-    return $svg.node();
+    return $svg;
   }, {
     init: function () {
-      this.options.scale = [this.options.initialScale, this.options.initialScale];
+      this.options.scale = [1, this.options.initialScale];
     },
     locateIt: function locateIt(range) {
       var that = this;
