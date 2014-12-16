@@ -8,6 +8,7 @@
 import $ = require('jquery');
 import events = require('../caleydo/event');
 import C = require('../caleydo/main');
+import behaviors = require('../caleydo/behavior');
 import geom = require('../caleydo/geom');
 import idtypes = require('../caleydo/idtype');
 import vis = require('../caleydo/vis');
@@ -97,7 +98,7 @@ export class UIWindow extends events.EventHandler implements events.IDataBinding
   toolbar: ToolBar;
   private $content : JQuery;
   private _data = {};
-  id = manager.nextId();
+  id = manager.nextId(this);
 
   constructor(parent, options) {
     super();
@@ -160,6 +161,7 @@ export class UIWindow extends events.EventHandler implements events.IDataBinding
    */
   close() {
     this.$div.remove();
+    manager.remove(this);
     this.fire('removed', this);
   }
 
@@ -353,75 +355,15 @@ export class StaticToolBar extends ToolBar {
 export class VisWindow extends UIWindow {
   private vis_: vis.IVisInstance;
   private visMeta_ : vis.IVisMetaData;
+  private zoom : behaviors.ZoomBehavior;
 
   constructor(parent, options) {
     super(parent, options);
 
     if (this.options.zoomAble) {
-      $(this.node).on('mousewheel', (event) => {
-        var ctrlKey = event.ctrlKey;
-        var shiftKey = event.shiftKey;
-        var altKey = event.altKey;
-        var m = (<any>event).originalEvent.wheelDelta;
-        this.zoom(m * (ctrlKey || altKey ? 1: 0), m * (ctrlKey || shiftKey ? 1 : 0));
-        return !(ctrlKey || shiftKey || altKey);
-      });
+      this.zoom = new behaviors.ZoomBehavior(this.node, null, null);
+      this.propagate(this.zoom, 'zoom');
     }
-  }
-
-  zoomIn() {
-    return this.zoom(1,1);
-  }
-  zoomOut() {
-    return this.zoom(-1,-1);
-  }
-
-  zoom (zoomX: number, zoomY : number) {
-    if (!this.vis_) {
-      return null;
-    }
-    function toDelta(x) {
-      return x > 0 ? 0.2 : (x < 0 ? -0.2 : 0);
-    }
-    var old = this.vis_.transform();
-    var deltaX = toDelta(zoomX);
-    var deltaY = toDelta(zoomY);
-    return this.zoomSet(old.scale[0] + deltaX, old.scale[1] + deltaY);
-  }
-
-  zoomSet(zoomX : number, zoomY : number) {
-    if (!this.vis_) {
-      return null;
-    }
-    var old = this.vis_.transform();
-    var s = [zoomX, zoomY];
-    switch(this.visMeta_.scaling) {
-      case 'width-only':
-        s[1] = old.scale[1];
-        break;
-      case 'height-only':
-        s[0] = old.scale[0];
-        break;
-    }
-    if (s[0] <= 0) {
-      s[0] = 0.001;
-    }
-    if (s[1] <= 0) {
-      s[1] = 0.001;
-    }
-    this.fire('zoom', {
-      scale : s,
-      rotate: old.rotate
-    }, old);
-    return this.vis_.transform(s, old.rotate);
-  }
-
-  zoomTo(w : number, h : number) {
-    if (!this.vis_) {
-      return null;
-    }
-    var ori = this.vis_.rawSize;
-    return this.zoomSet(w / ori[0], h/ori[1]);
   }
 
   get vis() {
@@ -448,6 +390,10 @@ export class VisWindow extends UIWindow {
     this.visMeta_ = meta;
     this.data('vis', this.vis_);
     this.data('visMeta', this.visMeta_);
+    if (this.zoom) {
+      this.zoom.v = v;
+      this.zoom.meta = meta;
+    }
 
     this.title = v.data.desc.name;
     var that = this;
@@ -480,7 +426,9 @@ export class VisWindow extends UIWindow {
     }
     updateResizeAble();
     this.on('resize', (event, pos) => {
-      this.zoomTo(pos.size.width, pos.size.height);
+      if (this.zoom) {
+        this.zoom.zoomTo(pos.size.width, pos.size.height);
+      }
     });
 
     //TODO compute size
