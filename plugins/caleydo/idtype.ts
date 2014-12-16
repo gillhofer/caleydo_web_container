@@ -176,13 +176,19 @@ export function isId(id: number) {
  * a manager of a bunch of objects with selection support
  */
 export class ObjectManager<T extends IHasUniqueId> extends IDType {
-  private instances : any = {};
+  private instances: T[] = [];
+  private pool = new C.IdPool();
+
   constructor(id: string, name : string) {
     super(id, name, name + 's', true);
   }
 
-  nextId() {
-    return C.uniqueId(this.id);
+  nextId(item?: T) {
+    var n = this.pool.checkOut();
+    if (item) {
+      this.instances[n] = item;
+    }
+    return n;
   }
 
   push(...items : T[]) {
@@ -196,7 +202,11 @@ export class ObjectManager<T extends IHasUniqueId> extends IDType {
   }
 
   forEach(callbackfn: (value: T) => void, thisArg?: any): void {
-    Object.keys(this.instances).forEach((id) => callbackfn.call(thisArg, this.instances[id]));
+    this.instances.forEach((item, i) => this.pool.isCheckedOut(i) ? callbackfn.call(thisArg, item) : null);
+  }
+
+  get entries() {
+    return this.instances.filter((item, i) => this.pool.isCheckedOut(i));
   }
 
   remove(id: number);
@@ -210,6 +220,7 @@ export class ObjectManager<T extends IHasUniqueId> extends IDType {
       old = this.instances[item];
       delete this.instances[item];
     }
+    this.pool.checkIn(item);
     return old;
   }
 
