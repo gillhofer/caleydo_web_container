@@ -49,6 +49,22 @@ export class EventHandler implements IEventHandler {
     this.$obj.trigger(event, extraArguments);
     return this;
   }
+
+  /**
+   * registers on the given event handler and propagates the given events to itself
+   * @param progatee
+   * @param events
+   */
+  propagate(progatee: IEventHandler, ...events: string[]) {
+    var that = this;
+    events.forEach((event) => {
+      progatee.on(event, () => {
+        var a = Array.prototype.slice.call(arguments);
+        a[0] = event; //replace the event object with the type
+        that.fire.apply(that, a);
+      })
+    })
+  }
 }
 
 var global = new EventHandler();
