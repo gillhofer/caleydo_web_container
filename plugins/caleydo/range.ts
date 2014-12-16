@@ -795,7 +795,9 @@ export class Range {
       };
     }
 
-    return filterDim(0)(data);
+    var f = filterDim(0);
+
+    return f(data);
   }
 
   /**

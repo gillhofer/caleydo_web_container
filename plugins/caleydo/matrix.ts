@@ -111,10 +111,16 @@ export class MatrixBase extends idtypes.SelectAble {
   }
 
   view(range:ranges.Range = ranges.all()) : IMatrix {
+    if (range.isAll) {
+      return this._root;
+    }
     return new MatrixView(this._root, range);
   }
 
   idView(idRange:ranges.Range = ranges.all()) : C.IPromise<IMatrix> {
+    if (idRange.isAll) {
+      return C.resolved(this._root);
+    }
     return this.ids().then((ids) => this.view(ids.indexOf(idRange)));
   }
 
