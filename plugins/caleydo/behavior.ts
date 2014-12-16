@@ -9,6 +9,9 @@ export class ZoomBehavior extends events.EventHandler {
   constructor(private node: Element, public v: vis.IVisInstance, public meta : vis.IVisMetaData) {
     super();
     node.addEventListener('mousewheel', (event : any) => {
+      if (!this.v) {
+        return;
+      }
       var ctrlKey = event.ctrlKey;
       var shiftKey = event.shiftKey;
       var altKey = event.altKey;
@@ -46,7 +49,7 @@ export class ZoomBehavior extends events.EventHandler {
     }
     var old = this.v.transform();
     var s = [zoomX, zoomY];
-    switch(this.meta.scaling) {
+    switch((this.meta ? this.meta.scaling : 'free')) {
       case 'width-only':
         s[1] = old.scale[1];
         break;

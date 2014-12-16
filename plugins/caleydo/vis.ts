@@ -225,6 +225,7 @@ function extrapolateIconify(r: any) {
     } else if (this.icon) {
       node.classList.add('fa');
       node.classList.add('fa-fw');
+      node.style.width = '1em';
       node.style['background-image'] = 'url(' + this.baseUrl + '/' + this.icon + ')';
       node.innerHTML = '&nbsp';
     } else {

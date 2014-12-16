@@ -92,6 +92,10 @@ export class IDType extends events.EventHandler implements provenance.IPersistab
     return name;
   }
 
+  selectionTypes() {
+    return Object.keys(this.sel);
+  }
+
   /**
    * return the current selections of the given type
    * @param type optional the selection type
@@ -220,6 +224,10 @@ export class ObjectManager<T extends IHasUniqueId> extends IDType {
       old = this.instances[item];
       delete this.instances[item];
     }
+    //clear from selections
+    this.selectionTypes().forEach((type) => {
+      this.select(type, [item], SelectOperation.REMOVE);
+    })
     this.pool.checkIn(item);
     return old;
   }

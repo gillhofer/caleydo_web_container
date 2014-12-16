@@ -31,10 +31,17 @@ class ProxyMetaData implements vis.IVisMetaData {
     return p ? p.sizeDependsOnDataDimension : [false, false];
   }
 }
+
+interface IMultiForm {
+  visses: vis.IVisPluginDesc[];
+  switchTo(index: number)  : C.IPromise<any>;
+  switchTo(vis:vis.IVisPluginDesc) : C.IPromise<any>;
+}
+
 /**
  * a simple multi form class using a select to switch
  */
-export class MultiForm extends vis.AVisInstance implements vis.IVisInstance {
+export class MultiForm extends vis.AVisInstance implements vis.IVisInstance, IMultiForm {
   parent:D3.Selection;
   node: Element;
   /**
@@ -290,7 +297,7 @@ class GridElem implements provenance.IPersistable {
 /**
  * a simple multi form class using a select to switch
  */
-export class MultiFormGrid extends vis.AVisInstance implements vis.IVisInstance {
+export class MultiFormGrid extends vis.AVisInstance implements vis.IVisInstance, IMultiForm {
   parent:D3.Selection;
   node: Element;
   /**
@@ -525,7 +532,7 @@ function createIconFromDesc(s : D3.Selection) {
  * @param forms
  * @return {*}
  */
-function toAvailableVisses(forms: MultiForm[]) {
+export function toAvailableVisses(forms: IMultiForm[]) {
   if (forms.length === 0) {
     return [];
   } if (forms.length === 1) {
@@ -535,7 +542,7 @@ function toAvailableVisses(forms: MultiForm[]) {
   return forms[0].visses.filter((vis) => forms.every((f) => f.visses.indexOf(vis) >= 0))
 }
 
-export function addIconVisChooser(toolbar: Element, ...forms: MultiForm[]){
+export function addIconVisChooser(toolbar: Element, ...forms: IMultiForm[]){
   var $toolbar = d3.select(toolbar);
   var $s = $toolbar.insert('div','*');
   var visses = toAvailableVisses(forms);
@@ -549,7 +556,7 @@ export function addIconVisChooser(toolbar: Element, ...forms: MultiForm[]){
     });
 }
 
-export function addSelectVisChooser(toolbar: Element, ...forms: MultiForm[]){
+export function addSelectVisChooser(toolbar: Element, ...forms: IMultiForm[]){
   var $toolbar = d3.select(toolbar);
   var $s = $toolbar.insert('select','*');
   var visses = toAvailableVisses(forms);
