@@ -57,8 +57,11 @@ export class MultiForm extends vis.AVisInstance implements vis.IVisInstance, IMu
 
   private metaData_ : vis.IVisMetaData = new ProxyMetaData(() => this.actDesc);
 
-  constructor(public data:datatypes.IDataType, parent:Element) {
+  constructor(public data:datatypes.IDataType, parent:Element, private options : any = {}) {
     super();
+    this.options = C.mixin({
+      initialVis : 0
+    }, options);
     this.parent = d3.select(parent).append('div').attr('class', 'multiform');
     this.node = this.parent.node();
     //find all suitable plugins
@@ -83,7 +86,14 @@ export class MultiForm extends vis.AVisInstance implements vis.IVisInstance, IMu
     //create content
     this.$content = p.append('div').attr('class', 'content');
     //switch to first
-    this.switchTo(this.visses[0]);
+    //switch to first
+    var initial = this.options.initialVis;
+    if (typeof initial === 'number') {
+
+    } else {
+      initial = this.visses.indexOf(initial);
+    }
+    this.switchTo(this.visses[ initial < 0 ? 0 : initial]);
   }
 
   destroy() {
@@ -316,8 +326,11 @@ export class MultiFormGrid extends vis.AVisInstance implements vis.IVisInstance,
 
   private metaData_ : vis.IVisMetaData = new ProxyMetaData(() => this.actDesc);
 
-  constructor(public data:datatypes.IDataType, public range: ranges.Range, parent:Element, viewFactory : (data:datatypes.IDataType, range : ranges.Range) => datatypes.IDataType) {
+  constructor(public data:datatypes.IDataType, public range: ranges.Range, parent:Element, viewFactory : (data:datatypes.IDataType, range : ranges.Range) => datatypes.IDataType, private options : any = {}) {
     super();
+    this.options = C.mixin({
+      initialVis : 0
+    }, options);
     this.parent = d3.select(parent).append('div').attr('class', 'multiformgrid');
     this.node = this.parent.node();
     //find all suitable plugins
@@ -369,7 +382,13 @@ export class MultiFormGrid extends vis.AVisInstance implements vis.IVisInstance,
     //TODO how to layout as a grid
     this.grid.forEach((elem) => elem.$content = p.append('div').attr('class', 'content'));
     //switch to first
-    this.switchTo(this.visses[0]);
+    var initial = this.options.initialVis;
+    if (typeof initial === 'number') {
+
+    } else {
+      initial = this.visses.indexOf(initial);
+    }
+    this.switchTo(this.visses[ initial < 0 ? 0 : initial]);
   }
 
   destroy() {
@@ -571,10 +590,10 @@ export function addSelectVisChooser(toolbar: Element, ...forms: IMultiForm[]){
   });
 }
 
-export function create(data:datatypes.IDataType, parent:Element) {
-  return new MultiForm(data, parent);
+export function create(data:datatypes.IDataType, parent:Element, options?) {
+  return new MultiForm(data, parent, options);
 }
 
-export function createGrid(data:datatypes.IDataType, range: ranges.Range, parent:Element, viewFactory : (data:datatypes.IDataType, range : ranges.Range) => datatypes.IDataType) {
-  return new MultiFormGrid(data, range, parent, viewFactory);
+export function createGrid(data:datatypes.IDataType, range: ranges.Range, parent:Element, viewFactory : (data:datatypes.IDataType, range : ranges.Range) => datatypes.IDataType, options?) {
+  return new MultiFormGrid(data, range, parent, viewFactory, options);
 }

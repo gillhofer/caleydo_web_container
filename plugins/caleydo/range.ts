@@ -10,13 +10,14 @@ export interface IRangeElem {
   isAll : boolean;
   isSingle : boolean;
   size(size:number):number;
-  clone();
+  clone() : IRangeElem;
   invert(index:number, size?:number);
   iter(size?:number):Iterator.IIterator<number>;
   toString();
   from: number;
   step: number;
   to: number;
+  reverse() : IRangeElem;
 }
 
 
@@ -82,6 +83,12 @@ export class RangeElem implements IRangeElem {
 
   clone() {
     return new RangeElem(this.from, this.to, this.step);
+  }
+
+  reverse() {
+    var t = this.from < 0 ? this.from : this.from + 1;
+    var f = this.to < 0 ? this.to : this.to - 1;
+    return new RangeElem(f, t,  - this.step);
   }
 
   invert(index:number, size?:number) {
@@ -155,6 +162,10 @@ export class SingleRangeElem implements IRangeElem {
     return new SingleRangeElem(this.from);
   }
 
+  reverse() {
+    return this.clone();
+  }
+
   invert(index:number, size?:number) {
     return fix(this.from, size) + index;
   }
@@ -220,7 +231,7 @@ export class Range1D {
         //+1 since end is excluded
         //fix while just +1 -1 is allowed
         if (Math.abs(deltas[start]) === 1) {
-          r.push(RangeElem.range(indices[start], indices[act - 1] + 1, deltas[start]));
+          r.push(RangeElem.range(indices[start], indices[act - 1] + deltas[start], deltas[start]));
         } else {
           for (i = start; i < act; i++) {
             r.push(RangeElem.single(indices[i]));
@@ -540,8 +551,33 @@ export class Range1D {
     return Iterator.concat.apply(Iterator, this.arr.map((d) => d.iter(size)));
   }
 
+  /**
+   * for each element
+   * @param callbackfn
+   * @param thisArg
+   */
   forEach(callbackfn:(value:number) => void, thisArg?:any):void {
     return this.iter().forEach(callbackfn, thisArg);
+  }
+
+  /**
+   * sort
+   * @param cmp
+   * @return {Range1D}
+   */
+  sort(cmp : (a: number, b: number) => number): Range1D {
+    var arr = this.iter().asList();
+    var r = arr.sort(cmp);
+    return Range1D.from(r);
+  }
+
+  /**
+   * reverts the order of this range
+   */
+  reverse(): Range1D {
+    var a = this.arr.map((r) => r.reverse());
+    a.reverse();
+    return new Range1D(a);
   }
 
   toString() {
@@ -565,27 +601,32 @@ export class Range1DGroup extends Range1D {
     return new Range1DGroup(this.name, this.color, r);
   }
 
-  union(other:Range1D, size?:number) :Range1DGroup {
+  union(other:Range1D, size?:number):Range1DGroup {
     var r = super.union(other, size);
     return new Range1DGroup(this.name, this.color, r);
   }
 
-  intersect(other:Range1D, size?:number) : Range1DGroup{
+  intersect(other:Range1D, size?:number):Range1DGroup {
     var r = super.intersect(other, size);
     return new Range1DGroup(this.name, this.color, r);
   }
 
-  without(without:Range1D, size?:number) : Range1DGroup{
+  without(without:Range1D, size?:number):Range1DGroup {
     var r = super.without(without, size);
     return new Range1DGroup(this.name, this.color, r);
   }
 
-  clone() : Range1DGroup {
-    return new Range1DGroup(name, this.color, super.clone());
+  sort(cmp:(a:number, b:number) => number):Range1D {
+    var r = super.sort(cmp);
+    return new Range1DGroup(this.name, this.color, r);
+  }
+
+  clone():Range1DGroup {
+    return new Range1DGroup(this.name, this.color, super.clone());
   }
 
   toString() {
-    return '"'+this.name+'""'+this.color+'"'+super.toString();
+    return '"' + this.name + '""' + this.color + '"' + super.toString();
   }
 }
 
@@ -597,19 +638,24 @@ export function composite(name: string, groups: Range1DGroup[]) {
   return new CompositeRange1D(name, groups);
 }
 
+function toBase(groups: Range1DGroup[]) {
+  if (groups.length === 1) {
+    return groups[0];
+  }
+  var r = groups[0].iter().asList();
+  groups.slice(1).forEach((g) => {
+    g.iter().forEach((i) => {
+      if (r.indexOf(i) < 0) {
+        r.push(i);
+      }
+    })
+  });
+  return Range1D.from(r);
+}
+
 export class CompositeRange1D extends Range1D {
-  constructor(public name:string, public groups:Range1DGroup[]) {
-    super();
-    var r = groups[0].iter().asList();
-    groups.slice(1).forEach((g) => {
-      g.iter().forEach((i) => {
-        if (r.indexOf(i) < 0) {
-          r.push(i);
-        }
-      })
-    });
-    r.sort();
-    this.setList(r);
+  constructor(public name:string, public groups:Range1DGroup[], base? : Range1D) {
+    super(base ? base : toBase(groups));
   }
 
   preMultiply(sub:Range1D, size?:number):Range1D {
@@ -632,8 +678,13 @@ export class CompositeRange1D extends Range1D {
     return new CompositeRange1D(name, this.groups.map((g) => <Range1DGroup>g.clone()));
   }
 
+  sort(cmp:(a:number, b:number) => number):Range1D {
+    var r = this.groups.length > 1 ? super.sort(cmp) : undefined;
+    return new CompositeRange1D(this.name, this.groups.map((g) => <Range1DGroup>g.sort(cmp)), r);
+  }
+
   toString() {
-    return '"'+this.name+'"{'+this.groups.join(',')+'}';
+    return '"' + this.name + '"{' + this.groups.join(',') + '}';
   }
 }
 

@@ -37,6 +37,7 @@ export function selectionUtil(data: datatype.IDataType, $data : D3.Selection, se
     data.select(0, [i], idtypes.toSelectOperation(d3.event));
   }
 }
+
 /**
  * utility function to define a vis
  * @param name the name of the vis - will be used during toString
@@ -51,6 +52,7 @@ export function defineVis(name: string, defaultOptions : (data: datatype.IDataTy
 export function defineVis(name: string, defaultOptions : any, initialSize : (data: datatype.IDataType)=>number[], build : ($parent: D3.Selection, data: datatype.IDataType) => D3.Selection, functions?: any) : any;
 export function defineVis(name: string, defaultOptions : (data: datatype.IDataType, options: any) => any, initialSize : (data: datatype.IDataType)=>number[], build : ($parent: D3.Selection, data: datatype.IDataType, size: number[]) => D3.Selection, functions?: any) : any;
 export function defineVis(name: string, defaultOptions : any, initialSize : any,  build : ($parent: D3.Selection, data?: datatype.IDataType) => D3.Selection, functions?: any) : any {
+  C.extendClass(VisTechnique, vis.AVisInstance);
   function VisTechnique(data: datatype.IDataType, parent: Element, options: any) {
     vis.AVisInstance.call(this, data, parent, options);
     this.data = data;
@@ -63,7 +65,6 @@ export function defineVis(name: string, defaultOptions : any, initialSize : any,
     }
     this.$node = build.call(this, this.$parent, this.data, this.size);
   }
-  C.extendClass(VisTechnique, vis.AVisInstance);
   VisTechnique.prototype.toString = () => name;
   VisTechnique.prototype.option = function(name, value) {
     if (arguments.length === 1) {

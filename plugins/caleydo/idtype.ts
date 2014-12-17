@@ -191,6 +191,7 @@ export class ObjectManager<T extends IHasUniqueId> extends IDType {
     var n = this.pool.checkOut();
     if (item) {
       this.instances[n] = item;
+      this.fire('add', n, item);
     }
     return n;
   }
@@ -198,6 +199,7 @@ export class ObjectManager<T extends IHasUniqueId> extends IDType {
   push(...items : T[]) {
     items.forEach((item) => {
       this.instances[item.id] = item;
+      this.fire('add', item.id, item);
     });
   }
 
@@ -223,11 +225,12 @@ export class ObjectManager<T extends IHasUniqueId> extends IDType {
     if (typeof item === 'number') {
       old = this.instances[item];
       delete this.instances[item];
+      this.fire('remove', item, old);
     }
     //clear from selections
     this.selectionTypes().forEach((type) => {
       this.select(type, [item], SelectOperation.REMOVE);
-    })
+    });
     this.pool.checkIn(item);
     return old;
   }
