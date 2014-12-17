@@ -99,7 +99,7 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo/geo
   });
 
   exports.create = function createBarPlot(data, parent, options) {
-    return exports.BarPlot(data, parent, options);
+    return new exports.BarPlot(data, parent, options);
   };
 })
 ;
