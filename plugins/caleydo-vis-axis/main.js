@@ -16,10 +16,10 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/d3util', 'css!./style'],
     });
     $svg.data(this);
     var $root = $svg.append('g');
-    var $axis = $root.append('g').attr('class', 'makeover');
-    var $points = $root.append('g');
+    var $axis = this.$axis = $root.append('g').attr('class', 'makeover');
+    var $points = this.$points = $root.append('g');
     var s = this.scale = d3.scale.linear().domain(data.desc.value.range).range([o.shift, ((o.orient === 'left' || o.orient === 'right') ? size[1] : size[0]) - o.shift]).clamp(true);
-    var axis = d3.svg.axis()
+    var axis = this.axis = d3.svg.axis()
       .tickSize(o.tickSize)
       .orient(o.orient)
       .scale(s);
@@ -51,13 +51,11 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/d3util', 'css!./style'],
       var $p = $points.selectAll('circle').data(arr);
       $p.enter().append('circle').attr('r', o.r).on('click', onClick);
       $p.exit().remove();
-      $p.attr(cxy, function (d) {
-        return s(d);
-      });
+      $p.attr(cxy, s);
     });
     return $svg;
   }, {
-    locateIt : function (range) {
+    locateImpl : function (range) {
       var that = this;
       if (range.isAll || range.isNone) {
         var r = this.scale.range();
@@ -67,6 +65,35 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/d3util', 'css!./style'],
         var ex = d3.extent(data, that.scale);
         return that.wrap({ y: ex[0], h: ex[1] - ex[0] });
       });
+    },
+    transform : function (scale, rotate) {
+      var bak = {
+        scale: this.options.scale || [1, 1],
+        rotate: this.options.rotate || 0
+      };
+      if (arguments.length === 0) {
+        return bak;
+      }
+      var o = this.options;
+      var size = this.rawSize;
+      this.$node.attr({
+        width: size[0] * scale[0],
+        height: size[1] * scale[1]
+      }).style('transform', 'rotate(' + rotate + 'deg)');
+
+      this.scale.range([o.shift, ((o.orient === 'left' || o.orient === 'right') ? size[1] * scale[1] : size[0] * scale[0]) - o.shift]);
+      var cxy = (o.orient === 'left' || o.orient === 'right') ? 'cy' : 'cx';
+      this.$points.selectAll('circle').attr(cxy, this.scale);
+      this.$axis.call(this.axis);
+
+      var new_ = {
+        scale: scale,
+        rotate: rotate
+      };
+      this.fire('transform', new_, bak);
+      this.options.scale = scale;
+      this.options.rotate = rotate;
+      return new_;
     },
     wrap : function (base) {
       var s = this.rawSize;
