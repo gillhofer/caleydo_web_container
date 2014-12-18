@@ -45,7 +45,7 @@ module.exports = function (grunt) {
       },
       dev: {                              // another target
         options: {                      // dictionary of render options
-          sourceMap: true
+          sourceMap: false
         },
         files: [{
           expand: true,
