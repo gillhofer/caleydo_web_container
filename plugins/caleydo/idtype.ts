@@ -190,6 +190,7 @@ export class ObjectManager<T extends IHasUniqueId> extends IDType {
   nextId(item?: T) {
     var n = this.pool.checkOut();
     if (item) {
+      item.id = n;
       this.instances[n] = item;
       this.fire('add', n, item);
     }
