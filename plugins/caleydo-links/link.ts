@@ -67,6 +67,29 @@ function selectCorners(a: geom.AShape, b: geom.AShape) {
   //TODO better
 }
 
+
+var line = d3.svg.line().interpolate('linear-closed').x((d) => d.x).y((d) => d.y);
+
+function createBlockRep(a : geom.AShape, b: geom.AShape, paths : any[]) {
+  var aa = a.aabb();
+  var bb = b.aabb();
+  if (aa.x2 < (bb.x - 10)) {
+
+  } else if (bb.x2 < (aa.x - 10)) {
+    //swap
+    bb = aa;
+    aa = b.aabb();
+  } else {
+    //too close
+    return;
+  }
+  var l = [aa.corner('ne'), bb.corner('nw'), bb.corner('sw'), aa.corner('se')];
+  paths.push({
+    clazz : 'rel-block',
+    d : line(l)
+  });
+}
+
 class LinkIDTypeContainer {
   private listener = (event, type:string, selected: ranges.Range, added: ranges.Range, removed: ranges.Range) => this.selectionUpdate(type, selected, added, removed);
   private change = (elem: IDataVis) => this.changed(elem);
@@ -156,7 +179,6 @@ class LinkIDTypeContainer {
     }
 
     prepareCombinations();
-    var line = d3.svg.line().x((d) => d.x).y((d) => d.y);
 
     function createLink(a, b) {
       var id = toId(a, b);
@@ -164,15 +186,16 @@ class LinkIDTypeContainer {
       var loca = a.location;
       var locb = b.location;
 
-      var cs = selectCorners(loca, locb);
-      var r = [loca.corner(cs[0]), locb.corner(cs[1])];
       var links = [];
-      links.push(r);
+      createBlockRep(loca, locb, links);
 
       var $links = $g.selectAll('path').data(links);
-      $links.enter().append('path').classed('item', true);
+      $links.enter().append('path');
       $links.exit().remove();
-      $links.attr('d', line);
+      $links.attr({
+        'class' : (d) => d.clazz,
+        d: (d) => d.d
+      });
     }
     this.arr.forEach((o) => o.vis !== elem ? createLink(o.vis, elem) : null);
 
