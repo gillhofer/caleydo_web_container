@@ -44,8 +44,9 @@ export class AIterator<T> {
   }
 
   forEach(callbackfn: (value: T) => void, thisArg?: any): void {
+    var i = 0;
     while (this.hasNext()) {
-      callbackfn.call(thisArg, this.next());
+      callbackfn.call(thisArg, this.next(), i++);
     }
   }
 

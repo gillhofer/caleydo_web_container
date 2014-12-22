@@ -438,14 +438,25 @@ export class MultiFormGrid extends vis.AVisInstance implements vis.IVisInstance,
     return null;
   }
 
+  private locateGroup(range : ranges.Range) {
+    return C.resolved(undefined);
+  }
+
   locate() {
     var p = this.actVisPromise || C.resolved(null), args = C.argList(arguments);
-    return p.then((vis) => {
-      //FIXME
-      if (vis && C.isFunction(vis.locate)) {
-        return vis.locate.apply(vis, args);
-      } else {
+    return p.then((visses) => {
+      if (!visses) {
         return C.resolved((arguments.length === 1 ? undefined : new Array(args.length)));
+      }
+      if (visses.length === 1) {
+        return visses[0].locate.apply(visses[0], args);
+      } else {
+        //multiple groups
+        if (arguments.length === 1) {
+          return this.locateGroup(arguments[0]);
+        } else {
+          return C.all(args.map((arg) => this.locateGroup(arg)));
+        }
       }
     });
   }
