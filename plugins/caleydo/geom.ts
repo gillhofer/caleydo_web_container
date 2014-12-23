@@ -7,14 +7,14 @@ import C = require('./main');
 import _2D = require('./2D');
 
 
-export var CORNER : any = <any>[];
-CORNER['N']  = CORNER[0] = 'n';
+export var CORNER:any = <any>[];
+CORNER['N'] = CORNER[0] = 'n';
 CORNER['NE'] = CORNER[1] = 'ne';
-CORNER['E']  = CORNER[2] = 'e';
+CORNER['E'] = CORNER[2] = 'e';
 CORNER['SE'] = CORNER[3] = 'se';
-CORNER['S']  = CORNER[4] = 's';
+CORNER['S'] = CORNER[4] = 's';
 CORNER['SW'] = CORNER[5] = 'sw';
-CORNER['W']  = CORNER[6] = 'w';
+CORNER['W'] = CORNER[6] = 'w';
 CORNER['NW'] = CORNER[7] = 'nw';
 
 /**
@@ -26,9 +26,9 @@ export class AShape implements _2D.IShape {
    * @param x
    * @param y
    */
-  shift(x:number, y:number) : AShape;
-  shift(xy:_2D.Vector2D) : AShape;
-  shift(xy: number[]) : AShape;
+  shift(x:number, y:number):AShape;
+  shift(xy:_2D.Vector2D):AShape;
+  shift(xy:number[]):AShape;
   shift() {
     if (typeof arguments[0] === 'number') {
       this.shiftImpl(arguments[0], arguments[1]);
@@ -44,14 +44,14 @@ export class AShape implements _2D.IShape {
    * center of this shape
    * @returns {Circle}
    */
-  get center(): _2D.Vector2D {
+  get center():_2D.Vector2D {
     return this.bs().xy;
   }
 
   /**
    * axis aligned bounding box (ro)
    */
-  aabb() : Rect {
+  aabb():Rect {
     throw new Error('not implemented');
   }
 
@@ -60,25 +60,25 @@ export class AShape implements _2D.IShape {
    * @param corner
    * @returns {_2D.Vector2D}
    */
-  corner(corner: string) : _2D.Vector2D {
+  corner(corner:string):_2D.Vector2D {
     var r = this.aabb();
-    switch(corner) {
+    switch (corner) {
       case CORNER.N:
-        return vec2(r.cx,r.y);
+        return vec2(r.cx, r.y);
       case CORNER.S:
-        return vec2(r.cx,r.y2);
+        return vec2(r.cx, r.y2);
       case CORNER.W:
-        return vec2(r.x,r.cy);
+        return vec2(r.x, r.cy);
       case CORNER.E:
-        return vec2(r.x2,r.cy);
+        return vec2(r.x2, r.cy);
       case CORNER.NE:
-        return vec2(r.x2,r.y);
+        return vec2(r.x2, r.y);
       case CORNER.NW:
         return r.xy;
       case CORNER.SE:
-        return vec2(r.x2,r.y2);
+        return vec2(r.x2, r.y2);
       case CORNER.SW:
-        return vec2(r.x,r.y2);
+        return vec2(r.x, r.y2);
     }
     return this.center;
   }
@@ -86,19 +86,19 @@ export class AShape implements _2D.IShape {
   /**
    * bounding sphere (ro)
    */
-  bs(): Circle {
+  bs():Circle {
     throw new Error('not implemented');
   }
 
-  shiftImpl(x: number, y: number) {
+  shiftImpl(x:number, y:number) {
 
   }
 
-  asIntersectionParams() : _2D.IIntersectionParam {
+  asIntersectionParams():_2D.IIntersectionParam {
     throw new Error('Not Implemented');
   }
 
-  intersects(other: AShape) {
+  intersects(other:AShape) {
     return _2D.Intersection.intersectShapes(this, other);
   }
 }
@@ -131,11 +131,11 @@ export class Rect extends AShape {
     return this.y + this.h / 2;
   }
 
-  set cx(val: number) {
+  set cx(val:number) {
     this.x = val - this.w / 2;
   }
 
-  set cy(val: number) {
+  set cy(val:number) {
     this.y = val - this.y / 2;
   }
 
@@ -147,11 +147,11 @@ export class Rect extends AShape {
     return this.y + this.h;
   }
 
-  set x2(val: number) {
+  set x2(val:number) {
     this.w = val - this.x;
   }
 
-  set y2(val: number) {
+  set y2(val:number) {
     this.h = val - this.y;
   }
 
@@ -160,23 +160,23 @@ export class Rect extends AShape {
     this.y += y;
   }
 
-  aabb() : Rect {
+  aabb():Rect {
     return this;
   }
 
-  bs() : Circle {
-    return circle(this.cx, this.cy, Math.sqrt(this.w*2+this.h*2));
+  bs():Circle {
+    return circle(this.cx, this.cy, Math.sqrt(this.w * 2 + this.h * 2));
   }
 
-  transform(scale: number[], rotate: number) {
+  transform(scale:number[], rotate:number) {
     //TODO rotate
     return rect(this.x * scale[0], this.y * scale[1], this.w * scale[0], this.h * scale[1]);
   }
 
-  asIntersectionParams() : _2D.IIntersectionParam {
+  asIntersectionParams():_2D.IIntersectionParam {
     return {
       name: 'Rectangle',
-      params : [this.xy, this.x2y2]
+      params: [this.xy, this.x2y2]
     };
   }
 
@@ -200,40 +200,125 @@ export class Circle extends AShape {
     this.y += y;
   }
 
-  aabb() : Rect {
-    return rect(this.x-this.radius,this.y-this.radius, this.radius*2, this.radius*2);
+  aabb():Rect {
+    return rect(this.x - this.radius, this.y - this.radius, this.radius * 2, this.radius * 2);
   }
 
-  bs() : Circle {
+  bs():Circle {
     return this;
   }
 
-  transform(scale: number[], rotate: number) {
+  transform(scale:number[], rotate:number) {
     //TODO rotate
-    return circle(this.x * scale[0], this.y * scale[1], this.radius * (scale[0] + scale[1])/2);
+    return circle(this.x * scale[0], this.y * scale[1], this.radius * (scale[0] + scale[1]) / 2);
   }
 
-  asIntersectionParams() : _2D.IIntersectionParam {
+  asIntersectionParams():_2D.IIntersectionParam {
     return {
       name: 'Circle',
-      params : [this.xy, this.radius]
+      params: [this.xy, this.radius]
     };
   }
 }
 
-/*Ellipse.prototype.getIntersectionParams() {
-  return new IntersectionParams("Ellipse", [this.center.point, parseFloat(this.svgNode.getAttributeNS(null, "rx")), parseFloat(this.svgNode.getAttributeNS(null, "ry"))]);
-};
-return new IntersectionParams("Line", [this.p1.point, this.p2.point]);
-*/
-
-export class Polygon extends AShape {
-  constructor(private points : _2D.Vector2D[] = []) {
+export class Ellipse extends AShape {
+  constructor(public x = 0, public y = 0, public radiusX = 0, public radiusY = 0) {
     super();
   }
 
-  push(x: number, y: number);
-  push(...points: _2D.Vector2D[]);
+  get xy() {
+    return new _2D.Vector2D(this.x, this.y);
+  }
+
+  toString() {
+    return 'Ellipse(x=' + this.x + ',y=' + this.y + ',radiusX=' + this.radiusX + +',radiusY=' + this.radiusY + ')';
+  }
+
+  shiftImpl(x, y) {
+    this.x += x;
+    this.y += y;
+  }
+
+  aabb():Rect {
+    return rect(this.x - this.radiusX, this.y - this.radiusY, this.radiusX * 2, this.radiusY * 2);
+  }
+
+  bs():Circle {
+    return circle(this.x, this.y, Math.max(this.radiusX, this.radiusY));
+  }
+
+  transform(scale:number[], rotate:number) {
+    //TODO rotate
+    return new Ellipse(this.x * scale[0], this.y * scale[1], this.radiusX * scale[0], this.radiusX * scale[1]);
+  }
+
+  asIntersectionParams():_2D.IIntersectionParam {
+    return {
+      name: 'Ellipse',
+      params: [this.xy, this.radiusX, this.radiusY]
+    };
+  }
+}
+
+export class Line extends AShape {
+  constructor(public x1 = 0, public y1 = 0, public x2 = 0, public y2 = 0) {
+    super();
+  }
+
+  get xy() {
+    return new _2D.Vector2D(this.x1, this.y1);
+  }
+
+  get x1y1() {
+    return this.xy;
+  }
+
+  get x2y2() {
+    return new _2D.Vector2D(this.x2, this.y2);
+  }
+
+  toString() {
+    return 'Line(x1=' + this.x1 + ',y1=' + this.y1 + ',x2=' + this.x2 + +',y2=' + this.y2 + ')';
+  }
+
+  shiftImpl(x, y) {
+    this.x1 += x;
+    this.y1 += y;
+    this.x2 += x;
+    this.y2 += y;
+  }
+
+  aabb():Rect {
+    return rect(Math.min(this.x1, this.x2), Math.min(this.y1, this.y2), Math.abs(this.x1 - this.x2), Math.abs(this.y1 - this.y2));
+  }
+
+  bs():Circle {
+    var x = 0.5 * (this.x1 + this.x2);
+    var y = 0.5 * (this.y1 + this.y2);
+    return circle(x, y, Math.max(Math.abs(this.x1 - this.x2), Math.abs(this.y1 - this.y2)) / 2);
+  }
+
+  transform(scale:number[], rotate:number) {
+    //TODO rotate
+    return new Line(this.x1 * scale[0], this.y1 * scale[1], this.x2 * scale[0], this.y2 * scale[1]);
+  }
+
+  asIntersectionParams():_2D.IIntersectionParam {
+    return {
+      name: 'Line',
+      params: [this.xy, this.x2y2]
+    };
+  }
+}
+
+
+export class Polygon extends AShape {
+  constructor(private points:_2D.Vector2D[] = []) {
+    super();
+  }
+
+  push(x:number, y:number);
+  push(...points:_2D.Vector2D[]);
   push() {
     if (arguments.length == 2 && typeof arguments[0] === 'number') {
       this.points.push(vec2(arguments[0], arguments[1]));
@@ -243,7 +328,7 @@ export class Polygon extends AShape {
   }
 
   toString() {
-    return 'Polygon(' + this.points.join(',')+')';
+    return 'Polygon(' + this.points.join(',') + ')';
   }
 
   shiftImpl(x, y) {
@@ -257,7 +342,7 @@ export class Polygon extends AShape {
     return this.points.length;
   }
 
-  aabb() : Rect {
+  aabb():Rect {
     var min_x = Number.POSITIVE_INFINITY, min_y = Number.POSITIVE_INFINITY, max_x = Number.NEGATIVE_INFINITY, max_y = Number.NEGATIVE_INFINITY;
     this.points.forEach((p) => {
       if (p.x < min_x) {
@@ -276,7 +361,7 @@ export class Polygon extends AShape {
     return rect(min_x, min_y, max_x - min_x, max_y - min_y);
   }
 
-  bs() : Circle {
+  bs():Circle {
     var mean_x = 0, mean_y = 0;
     this.points.forEach((p) => {
       mean_x += p.x;
@@ -289,7 +374,7 @@ export class Polygon extends AShape {
     this.points.forEach((p) => {
       var dx = p.x - mean_x;
       var dy = p.y - mean_y;
-      var d = dx*dx + dy*dy;
+      var d = dx * dx + dy * dy;
       if (d > radius) {
         radius = d;
       }
@@ -297,12 +382,12 @@ export class Polygon extends AShape {
     return circle(mean_x, mean_y, Math.sqrt(radius));
   }
 
-  transform(scale: number[], rotate: number) {
+  transform(scale:number[], rotate:number) {
     //TODO rotate
     return polygon(this.points.map((p) => vec2(p.x * scale[0], p.y * scale[1])));
   }
 
-  pointInPolygon(point: _2D.Vector2D) {
+  pointInPolygon(point:_2D.Vector2D) {
     var length = this.points.length;
     var counter = 0;
     var x_inter;
@@ -336,6 +421,7 @@ export class Polygon extends AShape {
     }
     return area / 2;
   }
+
   get centroid() {
     var length = this.points.length;
     var area6x = 6 * this.area;
@@ -350,9 +436,11 @@ export class Polygon extends AShape {
     }
     return vec2(x_sum / area6x, y_sum / area6x);
   }
+
   get isClockwise() {
     return this.area < 0;
   }
+
   get isCounterClockwise() {
     return this.area > 0;
   }
@@ -380,10 +468,17 @@ export class Polygon extends AShape {
   get isConvex() {
     return !this.isConvex;
   }
+
+  asIntersectionParams():_2D.IIntersectionParam {
+    return {
+      name: 'Polygon',
+      params: [this.points.slice()]
+    };
+  }
 }
 
-export function vec2(x : number, y : number) : _2D.Vector2D {
-  return new _2D.Vector2D(x,y);
+export function vec2(x:number, y:number):_2D.Vector2D {
+  return new _2D.Vector2D(x, y);
 }
 
 export function rect(x:number, y:number, w:number, h:number) {
@@ -392,8 +487,14 @@ export function rect(x:number, y:number, w:number, h:number) {
 export function circle(x:number, y:number, radius:number) {
   return new Circle(x, y, radius);
 }
-export function polygon(...points : _2D.Vector2D[]);
-export function polygon(points : _2D.Vector2D[]);
+export function ellipse(x:number, y:number, radiusX:number, radiusY:number) {
+  return new Ellipse(x, y, radiusX, radiusY);
+}
+export function line(x1:number, y1:number, x2:number, y2:number) {
+  return new Line(x1, y1, x2, y2);
+}
+export function polygon(...points:_2D.Vector2D[]);
+export function polygon(points:_2D.Vector2D[]);
 export function polygon() {
   if (C.isArray(arguments[0])) {
     return new Polygon(arguments[0]);
@@ -401,9 +502,8 @@ export function polygon() {
   return new Polygon(C.argList(arguments));
 }
 
-
-export function wrap(obj: any): AShape {
-  if(!obj) {
+export function wrap(obj:any):AShape {
+  if (!obj) {
     return obj;
   }
   if (obj instanceof AShape) {
@@ -413,12 +513,18 @@ export function wrap(obj: any): AShape {
     if (obj.hasOwnProperty('radius') || obj.hasOwnProperty('r')) {
       return circle(obj.x, obj.y, obj.hasOwnProperty('radius') ? obj.radius : obj.r);
     }
+    if ((obj.hasOwnProperty('radiusX') || obj.hasOwnProperty('rx')) && (obj.hasOwnProperty('radiusY') || obj.hasOwnProperty('ry'))) {
+      return ellipse(obj.x, obj.y, obj.hasOwnProperty('radiusX') ? obj.radiusX : obj.rx, obj.hasOwnProperty('radiusY') ? obj.radiusY : obj.ry);
+    }
     if (obj.hasOwnProperty('w') && obj.hasOwnProperty('h')) {
       return rect(obj.x, obj.y, obj.w, obj.h);
     }
     if (obj.hasOwnProperty('width') && obj.hasOwnProperty('height')) {
       return rect(obj.x, obj.y, obj.width, obj.height);
     }
+  }
+  if (obj.hasOwnProperty('x1') && obj.hasOwnProperty('y1') && obj.hasOwnProperty('x2') && obj.hasOwnProperty('y2')) {
+    return line(obj.x1, obj.y1, obj.x2, obj.y2);
   }
   if (C.isArray(obj) && obj.length > 0 && obj[0].hasOwnProperty('x') && obj[0].hasOwnProperty('y')) {
     return polygon(obj);
