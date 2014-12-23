@@ -15,6 +15,7 @@ export interface IDataVis extends events.IEventHandler, vis.ILocateAble {
   id: number;
   location : geom.AShape;
   range: ranges.Range;
+  ids() : ranges.Range;
 }
 
 class VisWrapper implements vis.ILocateAble {
@@ -52,11 +53,11 @@ class VisWrapper implements vis.ILocateAble {
   }
 
   get data() {
-    return this.vis.data;
+    return this.v.data;
   }
 
   ids() {
-    return this.data.ids();
+    return this.v.ids();
   }
 
   get idtypes() {
@@ -64,7 +65,7 @@ class VisWrapper implements vis.ILocateAble {
   }
 
   locate(...range: ranges.Range[]): C.IPromise<any> {
-    return this.vis.locate.apply(this.vis, range);
+    return this.v.locate.apply(this.vis, range);
   }
 
   destroy() {
@@ -209,7 +210,7 @@ class Link {
 
   private createBlockRep(a: VisWrapper, aa: geom.Rect, b: VisWrapper, bb: geom.Rect):C.IPromise<ILink[]> {
     var adim = a.dimOf(this.idtype),
-        bdim = b.dimOf(this.idtype);
+      bdim = b.dimOf(this.idtype);
     return C.all([a.ids(), b.ids()]).then((ids) => {
       var ida:ranges.Range1D = ids[0].dim(adim);
       var idb:ranges.Range1D = ids[1].dim(bdim);
@@ -219,25 +220,36 @@ class Link {
       var l : _2D.Vector2D[] = [aa.corner('ne'), bb.corner('nw')];
 
       var r = [];
-      function addBlock(ar, br, id, clazz) {
+      function addBlock(ar, br, id, clazz, ashift, bshift) {
         var ll = l.slice();
         //compute the edge vector and scale it by the ratio
-        ll.push(l[1].add(_2D.Vector2D.fromPoints(l[1], bb.corner('sw')).multiplyEquals(ar)));
-        ll.push(l[0].add(_2D.Vector2D.fromPoints(l[0], aa.corner('se')).multiplyEquals(br)));
-
+        var a_dir = _2D.Vector2D.fromPoints(l[0], aa.corner('se'));
+        var b_dir = _2D.Vector2D.fromPoints(l[1], bb.corner('sw'));
+        ll.push(l[1].add(b_dir.multiply(ar)));
+        ll.push(l[0].add(a_dir.multiply(br)));
+        if (ashift > 0) {
+          ll[0].addEquals(a_dir.multiplyEquals(ashift));
+        }
+        if (bshift > 0) {
+          ll[1].addEquals(b_dir.multiplyEquals(bshift));
+        }
         r.push({
           clazz: clazz,
           d: line.interpolate('linear-closed')(ll),
           id: id
         });
       }
-      addBlock(ul / ida.length, ul / idb.length, 'block', 'rel-block');
 
+      //create a selection overlay
       var s = this.idtype.selections().dim(0);
+      var selected = 0;
       if (!s.isNone) {
-        var selected = union.intersect(s).length;
-        addBlock(selected / ida.length, selected / idb.length, 'block-sel', 'rel-block select-selected');
+        selected = union.intersect(s).length;
       }
+      if (selected > 0) {
+        addBlock(selected / ida.length, selected / idb.length, 'block-sel', 'rel-block select-selected', 0, 0);
+      }
+      addBlock(ul / ida.length, ul / idb.length, 'block', 'rel-block', selected / ida.length, selected / idb.length);
       return r;
     });
   }
@@ -280,16 +292,17 @@ class Link {
         locb = locations[2];
       var r = [];
       line.interpolate('linear');
+      var selections = this.idtype.selections().dim(0);
       union.forEach((id, i) => {
         var la = geom.wrap(loca[i]);
         var lb = geom.wrap(locb[i]);
         if (la && lb) {
           r.push({
-            clazz: 'rel-item',
+            clazz: 'rel-item' + (selections.contains(id) ? ' select-selected' : ''),
             id: id,
             d: line([toPoint(la, lb, amulti), toPoint(lb, la, bmulti)])
           });
-        }
+        } //TODO optimize use the native select to just update the classes and not recreate them
       });
       return r;
     });
