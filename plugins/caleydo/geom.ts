@@ -4,10 +4,8 @@
 
 import C = require('./main');
 
-export interface IVec2 {
-  x: number;
-  y: number;
-}
+import _2D = require('./2D');
+
 
 export var CORNER : any = <any>[];
 CORNER['N']  = CORNER[0] = 'n';
@@ -19,18 +17,17 @@ CORNER['SW'] = CORNER[5] = 'sw';
 CORNER['W']  = CORNER[6] = 'w';
 CORNER['NW'] = CORNER[7] = 'nw';
 
-
 /**
  * a simple basic shape
  */
-export class AShape {
+export class AShape implements _2D.IShape {
   /**
    * shift the shape by the given amount
    * @param x
    * @param y
    */
   shift(x:number, y:number) : AShape;
-  shift(xy:IVec2) : AShape;
+  shift(xy:_2D.Vector2D) : AShape;
   shift(xy: number[]) : AShape;
   shift() {
     if (typeof arguments[0] === 'number') {
@@ -47,8 +44,8 @@ export class AShape {
    * center of this shape
    * @returns {Circle}
    */
-  get center() {
-    return this.bs();
+  get center(): _2D.Vector2D {
+    return this.bs().xy;
   }
 
   /**
@@ -61,27 +58,27 @@ export class AShape {
   /**
    * a specific corner of th axis aligned bounding box
    * @param corner
-   * @returns {IVec2}
+   * @returns {_2D.Vector2D}
    */
-  corner(corner: string) : IVec2 {
+  corner(corner: string) : _2D.Vector2D {
     var r = this.aabb();
     switch(corner) {
       case CORNER.N:
-        return { x : r.cx, y : r.y};
+        return vec2(r.cx,r.y);
       case CORNER.S:
-        return { x : r.cx, y : r.y2};
+        return vec2(r.cx,r.y2);
       case CORNER.W:
-        return { x : r.x, y : r.cy};
+        return vec2(r.x,r.cy);
       case CORNER.E:
-        return { x : r.x2, y : r.cy};
+        return vec2(r.x2,r.cy);
       case CORNER.NE:
-        return { x : r.x2, y : r.y};
+        return vec2(r.x2,r.y);
       case CORNER.NW:
-        return r;
+        return r.xy;
       case CORNER.SE:
-        return { x : r.x2, y : r.y2};
+        return vec2(r.x2,r.y2);
       case CORNER.SW:
-        return { x : r.x, y : r.y2};
+        return vec2(r.x,r.y2);
     }
     return this.center;
   }
@@ -96,6 +93,14 @@ export class AShape {
   shiftImpl(x: number, y: number) {
 
   }
+
+  asIntersectionParams() : _2D.IIntersectionParam {
+    throw new Error('Not Implemented');
+  }
+
+  intersects(other: AShape) {
+    return _2D.Intersection.intersectShapes(this, other);
+  }
 }
 
 /**
@@ -108,6 +113,14 @@ export class Rect extends AShape {
 
   toString() {
     return 'Rect(x=' + this.x + ',y=' + this.y + ',w=' + this.w + ',h=' + this.h + ')';
+  }
+
+  get xy() {
+    return new _2D.Vector2D(this.x, this.y);
+  }
+
+  get x2y2() {
+    return new _2D.Vector2D(this.x2, this.y2);
   }
 
   get cx() {
@@ -159,11 +172,23 @@ export class Rect extends AShape {
     //TODO rotate
     return rect(this.x * scale[0], this.y * scale[1], this.w * scale[0], this.h * scale[1]);
   }
+
+  asIntersectionParams() : _2D.IIntersectionParam {
+    return {
+      name: 'Rectangle',
+      params : [this.xy, this.x2y2]
+    };
+  }
+
 }
 
 export class Circle extends AShape {
   constructor(public x = 0, public y = 0, public radius = 0) {
     super();
+  }
+
+  get xy() {
+    return new _2D.Vector2D(this.x, this.y);
   }
 
   toString() {
@@ -187,20 +212,33 @@ export class Circle extends AShape {
     //TODO rotate
     return circle(this.x * scale[0], this.y * scale[1], this.radius * (scale[0] + scale[1])/2);
   }
+
+  asIntersectionParams() : _2D.IIntersectionParam {
+    return {
+      name: 'Circle',
+      params : [this.xy, this.radius]
+    };
+  }
 }
 
+/*Ellipse.prototype.getIntersectionParams() {
+  return new IntersectionParams("Ellipse", [this.center.point, parseFloat(this.svgNode.getAttributeNS(null, "rx")), parseFloat(this.svgNode.getAttributeNS(null, "ry"))]);
+};
+return new IntersectionParams("Line", [this.p1.point, this.p2.point]);
+*/
+
 export class Polygon extends AShape {
-  constructor(private points : IVec2[] = []) {
+  constructor(private points : _2D.Vector2D[] = []) {
     super();
   }
 
   push(x: number, y: number);
-  push(...points: IVec2[]);
+  push(...points: _2D.Vector2D[]);
   push() {
     if (arguments.length == 2 && typeof arguments[0] === 'number') {
-      this.points.push({ x: arguments[0], y : arguments[1]});
+      this.points.push(vec2(arguments[0], arguments[1]));
     } else {
-      this.points.push.apply(this.points, <IVec2[]>C.argList(arguments));
+      this.points.push.apply(this.points, <_2D.Vector2D[]>C.argList(arguments));
     }
   }
 
@@ -263,12 +301,89 @@ export class Polygon extends AShape {
     //TODO rotate
     return polygon(this.points.map((p) => vec2(p.x * scale[0], p.y * scale[1])));
   }
+
+  pointInPolygon(point: _2D.Vector2D) {
+    var length = this.points.length;
+    var counter = 0;
+    var x_inter;
+    var p1 = this.points[0];
+    for (var i = 1; i <= length; i++) {
+      var p2 = this.points[i % length];
+      if (point.y > Math.min(p1.y, p2.y)) {
+        if (point.y <= Math.max(p1.y, p2.y)) {
+          if (point.x <= Math.max(p1.x, p2.x)) {
+            if (p1.y != p2.y) {
+              x_inter = (point.y - p1.y) * (p2.x - p1.x) / (p2.y - p1.y) + p1.x;
+              if (p1.x == p2.x || point.x <= x_inter) {
+                counter++;
+              }
+            }
+          }
+        }
+      }
+      p1 = p2;
+    }
+    return (counter % 2 == 1);
+  }
+
+  get area() {
+    var area = 0;
+    var length = this.points.length;
+    for (var i = 0; i < length; i++) {
+      var h1 = this.points[i];
+      var h2 = this.points[(i + 1) % length];
+      area += (h1.x * h2.y - h2.x * h1.y);
+    }
+    return area / 2;
+  }
+  get centroid() {
+    var length = this.points.length;
+    var area6x = 6 * this.area;
+    var x_sum = 0;
+    var y_sum = 0;
+    for (var i = 0; i < length; i++) {
+      var p1 = this.points[i];
+      var p2 = this.points[(i + 1) % length];
+      var cross = (p1.x * p2.y - p2.x * p1.y);
+      x_sum += (p1.x + p2.x) * cross;
+      y_sum += (p1.y + p2.y) * cross;
+    }
+    return vec2(x_sum / area6x, y_sum / area6x);
+  }
+  get isClockwise() {
+    return this.area < 0;
+  }
+  get isCounterClockwise() {
+    return this.area > 0;
+  }
+
+  get isConcave() {
+    var positive = 0;
+    var negative = 0;
+    var length = this.points.length;
+    for (var i = 0; i < length; i++) {
+      var p0 = this.points[i];
+      var p1 = this.points[(i + 1) % length];
+      var p2 = this.points[(i + 2) % length];
+      var v0 = _2D.Vector2D.fromPoints(p0, p1);
+      var v1 = _2D.Vector2D.fromPoints(p1, p2);
+      var cross = v0.cross(v1);
+      if (cross < 0) {
+        negative++;
+      } else {
+        positive++;
+      }
+    }
+    return (negative != 0 && positive != 0);
+  }
+
+  get isConvex() {
+    return !this.isConvex;
+  }
 }
 
-export function vec2(x : number, y : number) : IVec2 {
-  return {
-    x : x, y : y
-  };
+export function vec2(x : number, y : number) : _2D.Vector2D {
+  return new _2D.Vector2D(x,y);
 }
 
 export function rect(x:number, y:number, w:number, h:number) {
@@ -277,8 +392,8 @@ export function rect(x:number, y:number, w:number, h:number) {
 export function circle(x:number, y:number, radius:number) {
   return new Circle(x, y, radius);
 }
-export function polygon(...points : IVec2[]);
-export function polygon(points : IVec2[]);
+export function polygon(...points : _2D.Vector2D[]);
+export function polygon(points : _2D.Vector2D[]);
 export function polygon() {
   if (C.isArray(arguments[0])) {
     return new Polygon(arguments[0]);
