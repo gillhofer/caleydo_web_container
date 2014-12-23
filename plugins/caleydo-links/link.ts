@@ -297,7 +297,7 @@ class LinkIDTypeContainer {
         combinations.push(toId(a, b));
       }
     }
-    var $combi = $root.selectAll('g').data(combinations);
+    var $combi = $root.selectAll('g').data(combinations, C.identity);
     $combi.enter().append('g');
     $combi.exit().remove();
     $combi.attr('data-id', C.identity);

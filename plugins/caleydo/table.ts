@@ -100,7 +100,9 @@ export class TableBase extends idtypes.SelectAble {
 
   restore(persisted: any) : provenance.IPersistable {
     if (persisted && persisted.f) {
+      /* tslint:disable:no-eval */
       return this.reduce(eval(persisted.f), this, persisted.valuetype, persisted.idtype ? idtypes.resolve(persisted.idtype) : undefined);
+      /* tslint:enable:no-eval */
     } else if (persisted && persisted.range) { //some view onto it
       return this.view(ranges.parse(persisted.range));
     } else {

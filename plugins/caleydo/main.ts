@@ -324,9 +324,13 @@ export function extendClass(subClass, baseClass) {
       subClass[p] = baseClass[p];
     }
   }
-  function __() { this.constructor = subClass; }
+  /* tslint:disable:no-unused-variable */
+  function __() {
+    this.constructor = subClass;
+  }
   __.prototype = baseClass.prototype;
   subClass.prototype = new __();
+  /* tslint:enable:no-unused-variable */
 }
 
 /**
