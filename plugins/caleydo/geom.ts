@@ -481,21 +481,21 @@ export function vec2(x:number, y:number):_2D.Vector2D {
   return new _2D.Vector2D(x, y);
 }
 
-export function rect(x:number, y:number, w:number, h:number) {
+export function rect(x:number, y:number, w:number, h:number):Rect {
   return new Rect(x, y, w, h);
 }
-export function circle(x:number, y:number, radius:number) {
+export function circle(x:number, y:number, radius:number):Circle {
   return new Circle(x, y, radius);
 }
-export function ellipse(x:number, y:number, radiusX:number, radiusY:number) {
+export function ellipse(x:number, y:number, radiusX:number, radiusY:number):Ellipse {
   return new Ellipse(x, y, radiusX, radiusY);
 }
-export function line(x1:number, y1:number, x2:number, y2:number) {
+export function line(x1:number, y1:number, x2:number, y2:number):Line {
   return new Line(x1, y1, x2, y2);
 }
-export function polygon(...points:_2D.Vector2D[]);
-export function polygon(points:_2D.Vector2D[]);
-export function polygon() {
+export function polygon(...points:_2D.Vector2D[]):Polygon;
+export function polygon(points:_2D.Vector2D[]):Polygon;
+export function polygon():Polygon {
   if (C.isArray(arguments[0])) {
     return new Polygon(arguments[0]);
   }

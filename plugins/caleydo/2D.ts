@@ -23,6 +23,15 @@ class IntersectionParams implements IIntersectionParam {
 export class Intersection {
   points : Vector2D[] = [];
 
+  /**
+   *  'Outside',
+   *  'Inside',
+   *  'Tangent'
+   *  'Coincident'
+   *  'Parallel'
+   *  'Intersection'
+   *  'No Intersection'
+   */
   constructor(public status = 'No Intersection') {
 
   }

@@ -97,6 +97,136 @@ function toId(a,b) {
   return Math.min(a,b)+'-'+Math.max(a,b);
 }
 
+class Link {
+  constructor(public a : VisWrapper, public b: VisWrapper, private $g : D3.Selection, private idtype : idtypes.IDType, private all: VisWrapper[]) {
+
+  }
+
+  update() {
+    if (!this.shouldRender()) {
+      this.render([]);
+      return;
+    }
+    var factories = [this.createBlockRep(), this.createGroupRep(), this.createItemRep() ];
+    C.all(factories).then((llinks) => {
+      var links = [].concat.apply([], llinks);
+      this.render(links);
+    });
+  }
+
+  private shouldRender() {
+    var aa = this.a.location.aabb(),
+      bb = this.b.location.aabb(),
+      tmp;
+    if (aa.x2 < (bb.x - 10)) {
+      //nothing to do
+    } else if (bb.x2 < (aa.x - 10)) {
+      //swap
+      tmp = bb;
+      bb = aa;
+      aa = tmp;
+    } else {
+      return false;
+    }
+    var shape = geom.polygon(aa.corner('ne'), bb.corner('nw'), bb.corner('sw'), aa.corner('se'));
+    //check if we have an intersection
+    return this.all.every((other) => {
+      if (other === this.a || other === this.b) { //don't check me
+        return true;
+      }
+      var o = other.location;
+      var int = shape.intersects(o);
+      return !int.intersects;
+    });
+  }
+
+  private render(links : ILink[]) {
+    var $links = this.$g.selectAll('path').data(links, (d) => d.id);
+    $links.enter().append('path');
+    $links.exit().remove();
+    $links.attr({
+      'class' : (d) => d.clazz,
+      d: (d) => d.d
+    });
+  }
+
+  private createBlockRep():C.IPromise<ILink[]> {
+    var aa = this.a.location.aabb(),
+      bb = this.b.location.aabb(),
+      tmp;
+    if (aa.x2 < (bb.x - 10)) {
+      //nothing to do
+    } else if (bb.x2 < (aa.x - 10)) {
+      //swap
+      tmp = bb;
+      bb = aa;
+      aa = tmp;
+    } else {
+      //too close
+      return C.resolved([]);
+    }
+    var l = [aa.corner('ne'), bb.corner('nw'), bb.corner('sw'), aa.corner('se')];
+    return C.resolved([{
+      clazz: 'rel-block',
+      d: line.interpolate('linear-closed')(l),
+      id: 'block'
+    }]);
+  }
+
+  private createGroupRep():C.IPromise<ILink[]> {
+    return C.resolved([]);
+  }
+
+  private createItemRep():C.IPromise<ILink[]> {
+    var adim = this.a.dimOf(this.idtype),
+      bdim = this.b.dimOf(this.idtype),
+      amulti = this.a.data.dim.length > 1,
+      bmulti = this.b.data.dim.length > 1;
+
+    function toPoint(loc, other, multi) {
+      if (!multi) {
+        return loc.center;
+      }
+      var c = selectCorners(loc, other);
+      return loc.corner(c[0]);
+    }
+    return C.all([this.a.ids(), this.b.ids()]).then((ids) => {
+      var ida:ranges.Range1D = ids[0].dim(adim);
+      var idb:ranges.Range1D = ids[1].dim(bdim);
+      var union = ida.union(idb);
+      var ars = [], brs = [];
+      union.forEach((index) => {
+        var r = ranges.all();
+        r.dim(adim).setList([index]);
+        ars.push(r);
+
+        r = ranges.all();
+        r.dim(bdim).setList([index]);
+        brs.push(r);
+      });
+      return C.all([C.resolved(union), this.a.locate.apply(this.a, ars), this.b.locate.apply(this.b, brs)]);
+    }).then((locations) => {
+      var union = locations[0],
+        loca = locations[1],
+        locb = locations[2];
+      var r = [];
+      line.interpolate('linear');
+      union.forEach((id, i) => {
+        var la = geom.wrap(loca[i]);
+        var lb = geom.wrap(locb[i]);
+        if (la && lb) {
+          r.push({
+            clazz: 'rel-item',
+            id: id,
+            d: line([toPoint(la, lb, amulti), toPoint(lb, la, bmulti)])
+          });
+        }
+      });
+      return r;
+    });
+  }
+}
+
 class LinkIDTypeContainer {
   private listener = (event, type:string, selected: ranges.Range, added: ranges.Range, removed: ranges.Range) => this.selectionUpdate(type, selected, added, removed);
   private change = (elem: VisWrapper) => this.changed(elem);
@@ -156,83 +286,6 @@ class LinkIDTypeContainer {
     this.$node.select('g').attr('transform', 'translate(' + (-l.x) + ',' + (-l.y) + ')');
   }
 
-
-  private createBlockRep(a:VisWrapper, b:VisWrapper):C.IPromise<ILink[]> {
-    var aa = a.location.aabb(),
-      bb = b.location.aabb(),
-      tmp;
-    if (aa.x2 < (bb.x - 10)) {
-      //nothing to do
-    } else if (bb.x2 < (aa.x - 10)) {
-      //swap
-      tmp = bb;
-      bb = aa;
-      aa = tmp;
-    } else {
-      //too close
-      return C.resolved([]);
-    }
-    var l = [aa.corner('ne'), bb.corner('nw'), bb.corner('sw'), aa.corner('se')];
-    return C.resolved([{
-      clazz: 'rel-block',
-      d: line.interpolate('linear-closed')(l),
-      id: 'block'
-    }]);
-  }
-
-  private createGroupRep(a:VisWrapper, b:VisWrapper):C.IPromise<ILink[]> {
-    return C.resolved([]);
-  }
-
-  private createItemRep(a:VisWrapper, b:VisWrapper):C.IPromise<ILink[]> {
-    var adim = a.dimOf(this.idtype),
-      bdim = b.dimOf(this.idtype),
-      amulti = a.data.dim.length > 1,
-      bmulti = b.data.dim.length > 1;
-
-    function toPoint(loc, other, multi) {
-      if (!multi) {
-        return loc.center;
-      }
-      var c = selectCorners(loc, other);
-      return loc.corner(c[0]);
-    }
-    return C.all([a.ids(), b.ids()]).then((ids) => {
-      var ida:ranges.Range1D = ids[0].dim(adim);
-      var idb:ranges.Range1D = ids[1].dim(bdim);
-      var union = ida.union(idb);
-      var ars = [], brs = [];
-      union.forEach((index) => {
-        var r = ranges.all();
-        r.dim(adim).setList([index]);
-        ars.push(r);
-
-        r = ranges.all();
-        r.dim(bdim).setList([index]);
-        brs.push(r);
-      });
-      return C.all([C.resolved(union), a.locate.apply(a, ars), b.locate.apply(b, brs)]);
-    }).then((locations) => {
-      var union = locations[0],
-        loca = locations[1],
-        locb = locations[2];
-      var r = [];
-      line.interpolate('linear');
-      union.forEach((id, i) => {
-        var la = geom.wrap(loca[i]);
-        var lb = geom.wrap(locb[i]);
-        if (la && lb) {
-          r.push({
-            clazz: 'rel-item',
-            id: id,
-            d: line([toPoint(la, lb, amulti), toPoint(lb, la, bmulti)])
-          });
-        }
-      });
-      return r;
-    });
-  }
-
   private prepareCombinations() {
     var $root = this.$node.select('g');
     var combinations = [];
@@ -256,43 +309,13 @@ class LinkIDTypeContainer {
     this.prepareCombinations();
     var $root = this.$node.select('g');
 
-    var arr = this.arr;
-    function prepareCombinations() {
-      var combinations = [];
-      var l = arr.length, i, j, a,b;
-      for (i = 0; i < l; ++i) {
-        a = arr[i].id;
-        for (j = 0; j < i; ++j) {
-          b = arr[j].id;
-          combinations.push(toId(a, b));
-        }
+    this.arr.forEach((o) => {
+      if (o !== elem) {
+        var id = toId(o, elem);
+        var $g = $root.select('g[data-id="' + id + '"]');
+        new Link(o, elem, $g, this.idtype, this.arr).update();
       }
-      var $combi = $root.selectAll('g').data(combinations);
-      $combi.enter().append('g');
-      $combi.exit().remove();
-      $combi.attr('data-id', C.identity);
-    }
-
-    prepareCombinations();
-
-    var that = this;
-    function createLink(a, b) {
-      var id = toId(a, b);
-      var $g = $root.select('g[data-id="' + id + '"]');
-
-      var factories = [that.createBlockRep(a, b), that.createGroupRep(a, b), that.createItemRep(a, b) ];
-      C.all(factories).then((llinks) => {
-        var links = [].concat.apply([], llinks);
-        var $links = $g.selectAll('path').data(links, (d) => d.id);
-        $links.enter().append('path');
-        $links.exit().remove();
-        $links.attr({
-          'class' : (d) => d.clazz,
-          d: (d) => d.d
-        });
-      });
-    }
-    this.arr.forEach((o) => o !== elem ? createLink(o, elem) : null);
+    });
   }
 
   private destroy() {
