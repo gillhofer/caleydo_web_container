@@ -469,6 +469,21 @@ export class VisWindow extends UIWindow {
             return r ? geom.wrap(r).shift(p) : r;
           }
         });
+      },
+      locateById: function () {
+        if (!C.isFunction(vis.locateById)) {
+          return C.resolved((arguments.length === 1 ? undefined : new Array(arguments.length)));
+        }
+        return vis.locateById.apply(vis, C.argList(arguments)).then(function (r) {
+          var p = that.contentPos;
+          if (C.isArray(r)) {
+            return r.map(function (loc) {
+              return loc ? geom.wrap(loc).shift(p) : loc;
+            });
+          } else {
+            return r ? geom.wrap(r).shift(p) : r;
+          }
+        });
       }
     };
     return r;

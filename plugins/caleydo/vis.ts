@@ -38,6 +38,8 @@ export interface ILocateAble {
    * the return type should be something convertable using the geom module
    */
   locate(...range: ranges.Range[]): C.IPromise<any>;
+
+  locateById(... range: ranges.Range[]): C.IPromise<any>;
 }
 
 /**
@@ -168,6 +170,15 @@ export class AVisInstance extends events.EventHandler {
       return this.locateImpl(range[0]);
     }
     return C.all(range.map(this.locateImpl, this));
+  }
+
+  locateById(...range:ranges.Range[]) {
+    return (<any>this).data.ids().then((ids) => {
+      if (range.length === 1) {
+        return this.locateImpl(ids.indexOf(range[0]));
+      }
+      return C.all(range.map((r) => this.locateImpl(ids.indexOf(r))));
+    });
   }
 
   locateImpl(range: ranges.Range) {

@@ -139,6 +139,17 @@ export class MultiForm extends vis.AVisInstance implements vis.IVisInstance, IMu
     });
   }
 
+  locateById() {
+    var p = this.actVisPromise || C.resolved(null), args = C.argList(arguments);
+    return p.then((vis) => {
+      if (vis && C.isFunction(vis.locateById)) {
+        return vis.locateById.apply(vis, args);
+      } else {
+        return C.resolved((arguments.length === 1 ? undefined : new Array(args.length)));
+      }
+    });
+  }
+
   transform(scale?: number[], rotate? : number) {
     if (this.actVis) {
       if (arguments.length === 0) {
@@ -437,7 +448,12 @@ export class MultiFormGrid extends vis.AVisInstance implements vis.IVisInstance,
     return null;
   }
 
-  private locateGroup(range : ranges.Range) {
+    private locateGroup(range : ranges.Range) {
+
+      return C.resolved(undefined);
+    }
+
+  private locateGroupById(range : ranges.Range) {
 
     return C.resolved(undefined);
   }
@@ -456,6 +472,25 @@ export class MultiFormGrid extends vis.AVisInstance implements vis.IVisInstance,
           return this.locateGroup(arguments[0]);
         } else {
           return C.all(args.map((arg) => this.locateGroup(arg)));
+        }
+      }
+    });
+  }
+
+  locateById(...range:ranges.Range[]) {
+    var p = this.actVisPromise || C.resolved(null), args = C.argList(arguments);
+    return p.then((visses) => {
+      if (!visses) {
+        return C.resolved((arguments.length === 1 ? undefined : new Array(args.length)));
+      }
+      if (visses.length === 1) {
+        return visses[0].locateById.apply(visses[0], args);
+      } else {
+        //multiple groups
+        if (arguments.length === 1) {
+          return this.locateGroupById(arguments[0]);
+        } else {
+          return C.all(args.map((arg) => this.locateGroupById(arg)));
         }
       }
     });
