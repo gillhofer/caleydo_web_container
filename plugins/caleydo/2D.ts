@@ -1000,7 +1000,7 @@ export class Vector2D {
     return new Vector2D(-this.y, this.x);
   }
 
-  static fromPoints(p1, p2) {
+  static fromPoints(p1, p2): Vector2D {
     return new Vector2D(p2.x - p1.x, p2.y - p1.y);
   }
 }

@@ -9,7 +9,7 @@ import Iterator = require('./iterator');
 export interface IRangeElem {
   isAll : boolean;
   isSingle : boolean;
-  size(size:number):number;
+  size(size?:number):number;
   clone() : IRangeElem;
   invert(index:number, size?:number);
   iter(size?:number):Iterator.IIterator<number>;
@@ -66,7 +66,7 @@ export class RangeElem implements IRangeElem {
     return new RangeElem(from, to, step);
   }
 
-  size(size:number):number {
+  size(size?:number):number {
     var t = fix(this.to, size), f = fix(this.from, size);
     if (this.step === 1) {
       return Math.max(t - f, 0);
@@ -154,7 +154,7 @@ export class SingleRangeElem implements IRangeElem {
     return true;
   }
 
-  size(size:number):number {
+  size(size?:number):number {
     return 1;
   }
 
@@ -196,7 +196,7 @@ export class Range1D {
   }
 
   get length() {
-    return this.arr.length;
+    return this.size();
   }
 
   static all() {
@@ -306,7 +306,7 @@ export class Range1D {
     return this.arr[index];
   }
 
-  size(size:number) {
+  size(size?:number) {
     return this.arr.map((d) => d.size(size)).reduce((a, b) => a + b, 0);
   }
 
@@ -350,7 +350,7 @@ export class Range1D {
    * @param other
    * @returns {RangeDim}
    */
-  union(other:Range1D, size?:number) {
+  union(other:Range1D, size?:number): Range1D {
     if (this.isAll || other.isNone) {
       return this.clone();
     }

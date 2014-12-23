@@ -4,6 +4,7 @@
 
 import C = require('../caleydo/main');
 import geom = require('../caleydo/geom');
+import _2D = require('../caleydo/2D');
 import events = require('../caleydo/event');
 import idtypes = require('../caleydo/idtype');
 import ranges = require('../caleydo/range');
@@ -13,6 +14,7 @@ import d3 = require('d3');
 export interface IDataVis extends events.IEventHandler, vis.ILocateAble {
   id: number;
   location : geom.AShape;
+  range: ranges.Range;
 }
 
 class VisWrapper implements vis.ILocateAble {
@@ -98,33 +100,58 @@ function toId(a,b) {
 }
 
 class Link {
-  constructor(public a : VisWrapper, public b: VisWrapper, private $g : D3.Selection, private idtype : idtypes.IDType, private all: VisWrapper[]) {
-
+  id : string;
+  constructor(public a : VisWrapper, public b: VisWrapper, private idtype : idtypes.IDType, private all: VisWrapper[]) {
+    this.id = toId(a, b);
   }
 
-  update() {
-    if (!this.shouldRender()) {
-      this.render([]);
+  update($g : D3.Selection) {
+    var a = this.a,
+      b = this.b,
+      al = a.location.aabb(),
+      bl = b.location.aabb(),
+      tmp;
+    if (bl.x2 < (al.x - 10)) {
+      //swap
+      tmp = b;
+      b = a;
+      a = tmp;
+      tmp = bl;
+      bl = al;
+      al = tmp;
+    }
+
+    if (!this.shouldRender(a, al, b, bl)) {
+      this.render([], $g);
       return;
     }
-    var factories = [this.createBlockRep(), this.createGroupRep(), this.createItemRep() ];
-    C.all(factories).then((llinks) => {
-      var links = [].concat.apply([], llinks);
-      this.render(links);
+    var f;
+    switch (this.mode($g)) {
+      case 'group':
+      case '-group':
+        f = this.createGroupRep(a, al, b, bl);
+        break;
+      case 'item':
+        f = this.createItemRep(a, al, b, bl);
+        break;
+      default:
+        f = this.createBlockRep(a, al, b, bl);
+        break;
+    }
+    f.then((llinks) => {
+      var r = [{
+        clazz: 'rel-back',
+        d: line.interpolate('linear-closed')([al.corner('ne'), bl.corner('nw'), bl.corner('sw'), al.corner('se')]),
+        id: 'background'
+      }];
+      r = r.concat.apply(r, llinks);
+      this.render(r, $g);
     });
   }
 
-  private shouldRender() {
-    var aa = this.a.location.aabb(),
-      bb = this.b.location.aabb(),
-      tmp;
+  private shouldRender(a: VisWrapper, aa: geom.Rect, b: VisWrapper, bb: geom.Rect) {
     if (aa.x2 < (bb.x - 10)) {
       //nothing to do
-    } else if (bb.x2 < (aa.x - 10)) {
-      //swap
-      tmp = bb;
-      bb = aa;
-      aa = tmp;
     } else {
       return false;
     }
@@ -140,48 +167,90 @@ class Link {
     });
   }
 
-  private render(links : ILink[]) {
-    var $links = this.$g.selectAll('path').data(links, (d) => d.id);
+  mode($g: D3.Selection) : string {
+    return $g.attr('data-mode') || 'block';
+  }
+
+  setMode($g: D3.Selection, value: string) {
+    $g.attr('data-mode', value);
+    this.update($g);
+  }
+
+  private nextMode($g: D3.Selection) {
+    switch (this.mode($g)) {
+    case 'item':
+      this.setMode($g, '-group');
+      break;
+    case 'group':
+      this.setMode($g, 'item');
+      break;
+    case '-group':
+      this.setMode($g, 'block');
+      break;
+    default:
+      this.setMode($g, 'group');
+      break;
+    }
+  }
+
+  private render(links : ILink[], $g: D3.Selection) {
+    var $links = $g.selectAll('path').data(links, (d) => d.id);
     $links.enter().append('path');
     $links.exit().remove();
     $links.attr({
       'class' : (d) => d.clazz,
       d: (d) => d.d
     });
+    $g.select('path.rel-back').on('contextmenu', () => {
+      this.nextMode($g);
+      d3.event.preventDefault();
+    })
   }
 
-  private createBlockRep():C.IPromise<ILink[]> {
-    var aa = this.a.location.aabb(),
-      bb = this.b.location.aabb(),
-      tmp;
-    if (aa.x2 < (bb.x - 10)) {
-      //nothing to do
-    } else if (bb.x2 < (aa.x - 10)) {
-      //swap
-      tmp = bb;
-      bb = aa;
-      aa = tmp;
-    } else {
-      //too close
-      return C.resolved([]);
-    }
-    var l = [aa.corner('ne'), bb.corner('nw'), bb.corner('sw'), aa.corner('se')];
-    return C.resolved([{
-      clazz: 'rel-block',
-      d: line.interpolate('linear-closed')(l),
-      id: 'block'
-    }]);
+  private createBlockRep(a: VisWrapper, aa: geom.Rect, b: VisWrapper, bb: geom.Rect):C.IPromise<ILink[]> {
+    var adim = a.dimOf(this.idtype),
+        bdim = b.dimOf(this.idtype);
+    return C.all([a.ids(), b.ids()]).then((ids) => {
+      var ida:ranges.Range1D = ids[0].dim(adim);
+      var idb:ranges.Range1D = ids[1].dim(bdim);
+      var union = ida.intersect(idb);
+      var ul = union.length;
+
+      var l : _2D.Vector2D[] = [aa.corner('ne'), bb.corner('nw')];
+
+      var r = [];
+      function addBlock(ar, br, id, clazz) {
+        var ll = l.slice();
+        //compute the edge vector and scale it by the ratio
+        ll.push(l[1].add(_2D.Vector2D.fromPoints(l[1], bb.corner('sw')).multiplyEquals(ar)));
+        ll.push(l[0].add(_2D.Vector2D.fromPoints(l[0], aa.corner('se')).multiplyEquals(br)));
+
+        r.push({
+          clazz: clazz,
+          d: line.interpolate('linear-closed')(ll),
+          id: id
+        });
+      }
+      addBlock(ul / ida.length, ul / idb.length, 'block', 'rel-block');
+
+      var s = this.idtype.selections().dim(0);
+      if (!s.isNone) {
+        var selected = union.intersect(s).length;
+        addBlock(selected / ida.length, selected / idb.length, 'block-sel', 'rel-block select-selected');
+      }
+      return r;
+    });
   }
 
-  private createGroupRep():C.IPromise<ILink[]> {
+  private createGroupRep(a: VisWrapper, aa: geom.Rect, b: VisWrapper, bb: geom.Rect):C.IPromise<ILink[]> {
     return C.resolved([]);
   }
 
-  private createItemRep():C.IPromise<ILink[]> {
-    var adim = this.a.dimOf(this.idtype),
-      bdim = this.b.dimOf(this.idtype),
-      amulti = this.a.data.dim.length > 1,
-      bmulti = this.b.data.dim.length > 1;
+  private createItemRep(a: VisWrapper, aa: geom.Rect, b: VisWrapper, bb: geom.Rect):C.IPromise<ILink[]> {
+    var adim = a.dimOf(this.idtype),
+      bdim = b.dimOf(this.idtype),
+      amulti = a.data.dim.length > 1,
+      bmulti = b.data.dim.length > 1;
 
     function toPoint(loc, other, multi) {
       if (!multi) {
@@ -190,10 +259,10 @@ class Link {
       var c = selectCorners(loc, other);
       return loc.corner(c[0]);
     }
-    return C.all([this.a.ids(), this.b.ids()]).then((ids) => {
+    return C.all([a.ids(), b.ids()]).then((ids) => {
       var ida:ranges.Range1D = ids[0].dim(adim);
       var idb:ranges.Range1D = ids[1].dim(bdim);
-      var union = ida.union(idb);
+      var union = ida.intersect(idb);
       var ars = [], brs = [];
       union.forEach((index) => {
         var r = ranges.all();
@@ -204,7 +273,7 @@ class Link {
         r.dim(bdim).setList([index]);
         brs.push(r);
       });
-      return C.all([C.resolved(union), this.a.locate.apply(this.a, ars), this.b.locate.apply(this.b, brs)]);
+      return C.all([C.resolved(union), a.locate.apply(a, ars), b.locate.apply(b, brs)]);
     }).then((locations) => {
       var union = locations[0],
         loca = locations[1],
@@ -246,6 +315,7 @@ class LinkIDTypeContainer {
 
   private selectionUpdate(type:string, selected: ranges.Range, added: ranges.Range, removed: ranges.Range) {
     //TODO
+    this.renderAll();
   }
 
   private changed(elem: VisWrapper) {
@@ -291,16 +361,32 @@ class LinkIDTypeContainer {
     var combinations = [];
     var l = this.arr.length, i, j, a,b;
     for (i = 0; i < l; ++i) {
-      a = this.arr[i].id;
+      a = this.arr[i];
       for (j = 0; j < i; ++j) {
-        b = this.arr[j].id;
-        combinations.push(toId(a, b));
+        b = this.arr[j];
+        combinations.push(new Link(a, b, this.idtype, this.arr));
       }
     }
-    var $combi = $root.selectAll('g').data(combinations, C.identity);
+    var $combi = $root.selectAll('g').data(combinations, (l) => l.id);
     $combi.enter().append('g');
     $combi.exit().remove();
-    $combi.attr('data-id', C.identity);
+    $combi.attr('data-id', (l) => l.id);
+  }
+
+  private renderAll() {
+    var $root = this.$node.select('g');
+    var i , j, ai, aj, l = this.arr.length;
+    for(i = 0; i < l ; ++i) {
+      ai = this.arr[i];
+      for(j = 1; j < l; ++j) {
+        aj = this.arr[j];
+        var id = toId(ai, aj);
+        var $g = $root.select('g[data-id="' + id + '"]');
+        $g.each(function(link) {
+          link.update(d3.select(this));
+        });
+      }
+    }
   }
 
   private render(elem: VisWrapper) {
@@ -312,8 +398,9 @@ class LinkIDTypeContainer {
     this.arr.forEach((o) => {
       if (o !== elem) {
         var id = toId(o, elem);
-        var $g = $root.select('g[data-id="' + id + '"]');
-        new Link(o, elem, $g, this.idtype, this.arr).update();
+        $root.select('g[data-id="' + id + '"]').each(function(link) {
+          link.update(d3.select(this));
+        });
       }
     });
   }
