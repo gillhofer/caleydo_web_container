@@ -18,6 +18,7 @@ export interface IRangeElem {
   step: number;
   to: number;
   reverse() : IRangeElem;
+  contains(value: number, size?:number);
 }
 
 
@@ -106,6 +107,16 @@ export class RangeElem implements IRangeElem {
     return Iterator.range(fix(this.from, size), fix(this.to, size), this.step);
   }
 
+  contains(value: number, size?:number) {
+    var f = fix(this.from, size);
+    var t = fix(this.to, size);
+    if (this.step === -1) {
+      return (value <= f) && (value > t);
+    } else { //+1
+      return (value >= f) && (value < t);
+    }
+  }
+
   toString() {
     if (this.isAll) {
       return '';
@@ -160,6 +171,10 @@ export class SingleRangeElem implements IRangeElem {
 
   clone() {
     return new SingleRangeElem(this.from);
+  }
+
+  contains(value: number, size?: number){
+    return fix(this.from, size) === value;
   }
 
   reverse() {
@@ -560,6 +575,10 @@ export class Range1D {
     return this.iter().forEach(callbackfn, thisArg);
   }
 
+  contains(value: number, size?:number) : boolean {
+    return this.arr.some((elem) => elem.contains(value, size));
+  }
+
   /**
    * sort
    * @param cmp
@@ -659,23 +678,28 @@ export class CompositeRange1D extends Range1D {
   }
 
   preMultiply(sub:Range1D, size?:number):Range1D {
-    return new CompositeRange1D(this.name, this.groups.map((g) => <Range1DGroup>g.preMultiply(sub,size)));
+    var r = this.groups.length > 1 ? super.preMultiply(sub, size) : undefined;
+    return new CompositeRange1D(this.name, this.groups.map((g) => <Range1DGroup>g.preMultiply(sub,size)), r);
   }
 
   union(other:Range1D, size?:number) {
-    return new CompositeRange1D(this.name, this.groups.map((g) => <Range1DGroup>g.union(other,size)));
+    var r = this.groups.length > 1 ? super.union(other, size) : undefined;
+    return new CompositeRange1D(this.name, this.groups.map((g) => <Range1DGroup>g.union(other,size)), r);
   }
 
   intersect(other:Range1D, size?:number) {
-    return new CompositeRange1D(this.name, this.groups.map((g) => <Range1DGroup>g.intersect(other,size)));
+    var r = this.groups.length > 1 ? super.intersect(other, size) : undefined;
+    return new CompositeRange1D(this.name, this.groups.map((g) => <Range1DGroup>g.intersect(other,size)), r);
   }
 
   without(without:Range1D, size?:number) {
-    return new CompositeRange1D(this.name, this.groups.map((g) => <Range1DGroup>g.without(without,size)));
+    var r = this.groups.length > 1 ? super.without(without, size) : undefined;
+    return new CompositeRange1D(this.name, this.groups.map((g) => <Range1DGroup>g.without(without,size)), r);
   }
 
   clone() {
-    return new CompositeRange1D(name, this.groups.map((g) => <Range1DGroup>g.clone()));
+    var r = this.groups.length > 1 ? super.clone() : undefined;
+    return new CompositeRange1D(name, this.groups.map((g) => <Range1DGroup>g.clone()), r);
   }
 
   sort(cmp:(a:number, b:number) => number):Range1D {

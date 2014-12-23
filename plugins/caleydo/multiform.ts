@@ -438,6 +438,7 @@ export class MultiFormGrid extends vis.AVisInstance implements vis.IVisInstance,
   }
 
   private locateGroup(range : ranges.Range) {
+
     return C.resolved(undefined);
   }
 
