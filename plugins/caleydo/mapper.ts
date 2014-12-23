@@ -21,14 +21,14 @@ export function map(source:idtypes.IDType, target:idtypes.IDType, id:number[]) :
 
 export function map(source:idtypes.IDType, target:idtypes.IDType) : any {
   var that = this;
-  if (arguments.length == 2) {
+  if (arguments.length === 2) {
     //return a mapper
     return function() {
       var args = C.argList(arguments);
       args.unshift(target);
       args.unshift(source);
       return map.apply(that, args);
-    }
+    };
   }
   var args = C.argList(arguments);
   args.shift(); //source

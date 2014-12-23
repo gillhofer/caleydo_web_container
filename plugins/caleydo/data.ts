@@ -69,7 +69,7 @@ export function get(persisted: any) : C.IPromise<datatypes.IDataType> {
   if (persisted.root) {
     return get(persisted.root).then((parent) => {
       return parent ? parent.restore(persisted) : null;
-    })
+    });
   } else {
     //can't restore non root and non data id
     return C.resolved(null);

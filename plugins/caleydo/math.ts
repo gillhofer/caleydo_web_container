@@ -65,14 +65,16 @@ class Statistics implements IStatistics {
   }
 
   get kurtosis() {
-    if (this.n == 0)
+    if (this.n === 0) {
       return 0;
+    }
     return (this.n * this.moment4) / (this.moment2 * this.moment2) - 3;
   }
 
   get skewness() {
-    if (this.n == 0)
+    if (this.n === 0) {
       return 0;
+    }
     return Math.sqrt(this.n) * this.moment3 / (Math.pow(this.moment2, 3. / 2.));
   }
 
@@ -95,7 +97,7 @@ class Statistics implements IStatistics {
     // See Knuth TAOCP vol 2, 3rd edition, page 232
     // http://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Higher-order_statistics
 
-    if (this.n == 1) {
+    if (this.n === 1) {
       this.mean = x;
       this._var = 0;
       this.moment2 = this.moment3 = this.moment4 = 0;

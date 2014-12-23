@@ -35,7 +35,7 @@ function fix(v:number, size:number) {
 export class RangeElem implements IRangeElem {
   constructor(public from:number, public to = -1, public step = 1) {
     if (step !== 1 && step !== -1) {
-      throw new Error("currently just +1 and -1 are valid steps");
+      throw new Error('currently just +1 and -1 are valid steps');
     }
   }
 
@@ -44,7 +44,7 @@ export class RangeElem implements IRangeElem {
   }
 
   get isSingle() {
-    return (this.from + this.step) === this.to
+    return (this.from + this.step) === this.to;
   }
 
   static all() {
@@ -126,11 +126,11 @@ export class RangeElem implements IRangeElem {
     }
     var parts = code.split(':');
     if (parts.length === 1) {
-      return RangeElem.single(parseInt(parts[0]));
+      return RangeElem.single(parseFloat(parts[0]));
     } else if (parts.length === 2) {
-      return new RangeElem(parseInt(parts[0]), parseInt(parts[1]));
+      return new RangeElem(parseFloat(parts[0]), parseFloat(parts[1]));
     }
-    return new RangeElem(parseInt(parts[0]), parseInt(parts[1]), parseInt(parts[2]));
+    return new RangeElem(parseFloat(parts[0]), parseFloat(parts[1]), parseFloat(parts[2]));
   }
 }
 
@@ -222,7 +222,7 @@ export class Range1D {
       deltas = indices.slice(1).map((e, i) => e - indices[i]),
       start = 0, act = 1, i = 0;
     while (act < indices.length) {
-      while (deltas[start] == deltas[act - 1] && act < indices.length) { //while the same delta
+      while (deltas[start] === deltas[act - 1] && act < indices.length) { //while the same delta
         act++;
       }
       if (act === start + 1) { //just a single item used
@@ -648,7 +648,7 @@ function toBase(groups: Range1DGroup[]) {
       if (r.indexOf(i) < 0) {
         r.push(i);
       }
-    })
+    });
   });
   return Range1D.from(r);
 }
@@ -979,10 +979,10 @@ export function range() {
         return;
       }
       r.dim(i).setSlice(arr[0], arr[1], arr[2]);
-    })
+    });
   }
   if (typeof arguments[0] === 'number') { //single slice mode
-    r.dim(0).setSlice(arguments[0], arguments[1], arguments[2])
+    r.dim(0).setSlice(arguments[0], arguments[1], arguments[2]);
   }
   return r;
 }
@@ -1019,7 +1019,7 @@ export function list(): Range {
       } else {
         r.dim(i).setList(arr);
       }
-    })
+    });
   } else if (typeof arguments[0] === 'number') { //single slice mode
     r.dim(0).setList(C.argList(arguments));
   } else if (arguments[0] instanceof Range1D) {
@@ -1089,7 +1089,7 @@ function parseNamedRange1D(code:string, act:number) : { dim : Range1D; act: numb
     };
   case '{':
     var groups = [];
-    while (code.charAt(act) != '}') {
+    while (code.charAt(act) !== '}') {
       r = parseNamedRange1D(code,act+1);
       groups.push(r.dim);
       act = r.act;
@@ -1102,7 +1102,7 @@ function parseNamedRange1D(code:string, act:number) : { dim : Range1D; act: numb
     return {
       dim: Range1D.all(),
       act : act
-    }
+    };
   }
 }
 
@@ -1132,7 +1132,7 @@ function parseRange1D(code:string, act:number) {
   return {
     act : next,
     dim : r
-  }
+  };
 }
 /**
  * parses the given encoded string created by toString to a range object

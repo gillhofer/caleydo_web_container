@@ -8,7 +8,6 @@ import C = require('./main');
 import vis = require('./vis');
 import ranges = require('./range');
 import datatypes = require('./datatype');
-import events = require('./event');
 import provenance = require('./provenance');
 
 class ProxyMetaData implements vis.IVisMetaData {
@@ -191,8 +190,8 @@ export class MultiForm extends vis.AVisInstance implements vis.IVisInstance, IMu
   switchTo(param : any) : C.IPromise<any> {
     var vis: vis.IVisPluginDesc = null;
     if (typeof param === 'number') {
-      if (param < 0 || param >= this.visses.length){
-        throw new RangeError('index '+param+ ' out of range: [0,'+this.visses.length+']');
+      if (param < 0 || param >= this.visses.length) {
+        throw new RangeError('index ' + param + ' out of range: [0,' + this.visses.length + ']');
       }
       vis = this.visses[<number>param];
     } else {
@@ -486,7 +485,7 @@ export class MultiFormGrid extends vis.AVisInstance implements vis.IVisInstance,
         cols: this.dims[1].map((d, i) => <number>d3.max(grid, (row) => row[i][0])),
         rows: grid.map((row) => <number>d3.max(row, (s) => s[1])),
         grid: grid
-      }
+      };
     }
   }
 
@@ -509,7 +508,7 @@ export class MultiFormGrid extends vis.AVisInstance implements vis.IVisInstance,
   switchTo(param : any) : C.IPromise<any> {
     var vis: vis.IVisPluginDesc = null;
     if (typeof param === 'number') {
-      if (param < 0 || param >= this.visses.length){
+      if (param < 0 || param >= this.visses.length) {
         throw new RangeError('index '+param+ ' out of range: [0,'+this.visses.length+']');
       }
       vis = this.visses[<number>param];
@@ -570,10 +569,10 @@ export function toAvailableVisses(forms: IMultiForm[]) {
     return forms[0].visses;
   }
   //intersection of all
-  return forms[0].visses.filter((vis) => forms.every((f) => f.visses.indexOf(vis) >= 0))
+  return forms[0].visses.filter((vis) => forms.every((f) => f.visses.indexOf(vis) >= 0));
 }
 
-export function addIconVisChooser(toolbar: Element, ...forms: IMultiForm[]){
+export function addIconVisChooser(toolbar: Element, ...forms: IMultiForm[]) {
   var $toolbar = d3.select(toolbar);
   var $s = $toolbar.insert('div','*');
   var visses = toAvailableVisses(forms);
@@ -587,7 +586,7 @@ export function addIconVisChooser(toolbar: Element, ...forms: IMultiForm[]){
     });
 }
 
-export function addSelectVisChooser(toolbar: Element, ...forms: IMultiForm[]){
+export function addSelectVisChooser(toolbar: Element, ...forms: IMultiForm[]) {
   var $toolbar = d3.select(toolbar);
   var $s = $toolbar.insert('select','*');
   var visses = toAvailableVisses(forms);

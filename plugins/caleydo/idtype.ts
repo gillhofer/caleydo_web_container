@@ -78,7 +78,7 @@ export class IDType extends events.EventHandler implements provenance.IPersistab
       sel: s,
       name: this.name,
       names: this.names
-    }
+    };
   }
 
   restore(persisted: any) {
@@ -297,7 +297,7 @@ export class SelectAble extends events.EventHandler {
       this.selectionCache[index] = {
         act: act, added: added, removed: removed
       };
-      if (this.accumulateEvents < 0 || (++this.accumulateEvents) == total) {
+      if (this.accumulateEvents < 0 || (++this.accumulateEvents) === total) {
         this.fillAndSend(type, index);
       }
     };
@@ -308,7 +308,7 @@ export class SelectAble extends events.EventHandler {
     var ids = this.idtypes;
     var full = ids.map((id, i) => {
       var entry = this.selectionCache[i];
-      if (entry) { return entry};
+      if (entry) { return entry; }
       return {
         act: id.selections(type),
         added: ranges.none(),
@@ -406,7 +406,7 @@ export class SelectAble extends events.EventHandler {
   private selectImpl(range: ranges.Range, op = SelectOperation.SET, type : string = defaultSelectionType, dim = -1) {
     return this.ids().then((ids: ranges.Range) => {
       var types = this.idtypes;
-      if (dim == -1) {
+      if (dim === -1) {
         range = ids.preMultiply(range);
         this.accumulateEvents = 0;
         var r = ranges.join(range.split().map((r, i) => types[i].select(type, r, op)));

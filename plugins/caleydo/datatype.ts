@@ -4,7 +4,6 @@
 
 'use strict';
 import C = require('./main');
-import events = require('./event');
 import idtypes = require('./idtype');
 import ranges = require('./range');
 import provenance = require('./provenance')
@@ -100,7 +99,7 @@ export function categorical2paritioning(data: string[], categories: string[], op
       name: d,
       color: m.colors[i],
       indices: []
-    }
+    };
   });
   data.forEach((d, j) => {
     var i = categories.indexOf(d);

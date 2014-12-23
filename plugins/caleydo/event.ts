@@ -62,8 +62,8 @@ export class EventHandler implements IEventHandler {
         var a = Array.prototype.slice.call(arguments);
         a[0] = event; //replace the event object with the type
         that.fire.apply(that, a);
-      })
-    })
+      });
+    });
   }
 }
 

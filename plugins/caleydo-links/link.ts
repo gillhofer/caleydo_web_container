@@ -3,7 +3,6 @@
  */
 
 import C = require('../caleydo/main');
-import datatypes = require('../caleydo/datatype');
 import geom = require('../caleydo/geom');
 import events = require('../caleydo/event');
 import idtypes = require('../caleydo/idtype');
@@ -28,7 +27,7 @@ class VisWrapper implements vis.ILocateAble {
     this.dirtyEvents.forEach((event) => v.on(event, this.l));
     this.v.data.idtypes.forEach((idtype, i) => {
       this.lookup.set(idtype.id, i);
-    })
+    });
   }
 
   get vis() {
@@ -79,7 +78,7 @@ function selectCorners(a: geom.AShape, b: geom.AShape) {
   } else {
     return ['e','w'];
   }
-  //TODO better
+  // TODO better
 }
 
 
@@ -95,7 +94,7 @@ interface ILink {
 function toId(a,b) {
   a = typeof a === 'number' ? a : a.id;
   b = typeof b === 'number' ? b : b.id;
-  return Math.min(a,b)+'-'+Math.max(a,b)
+  return Math.min(a,b)+'-'+Math.max(a,b);
 }
 
 class LinkIDTypeContainer {
@@ -163,7 +162,7 @@ class LinkIDTypeContainer {
       bb = b.location.aabb(),
       tmp;
     if (aa.x2 < (bb.x - 10)) {
-
+      //nothing to do
     } else if (bb.x2 < (aa.x - 10)) {
       //swap
       tmp = bb;
@@ -186,8 +185,18 @@ class LinkIDTypeContainer {
   }
 
   private createItemRep(a:VisWrapper, b:VisWrapper):C.IPromise<ILink[]> {
-    var adim = a.dimOf(this.idtype);
-    var bdim = b.dimOf(this.idtype);
+    var adim = a.dimOf(this.idtype),
+      bdim = b.dimOf(this.idtype),
+      amulti = a.data.dim.length > 1,
+      bmulti = b.data.dim.length > 1;
+
+    function toPoint(loc, other, multi) {
+      if (!multi) {
+        return loc.center;
+      }
+      var c = selectCorners(loc, other);
+      return loc.corner(c[0]);
+    }
     return C.all([a.ids(), b.ids()]).then((ids) => {
       var ida:ranges.Range1D = ids[0].dim(adim);
       var idb:ranges.Range1D = ids[1].dim(bdim);
@@ -216,7 +225,7 @@ class LinkIDTypeContainer {
           r.push({
             clazz: 'rel-item',
             id: id,
-            d: line([la.center, lb.center])
+            d: line([toPoint(la, lb, amulti), toPoint(lb, la, bmulti)])
           });
         }
       });
@@ -343,8 +352,8 @@ export class LinkContainer {
         var n = new LinkIDTypeContainer(idtype,  this.node);
         n.push(w);
         this.links.push(n);
-      })
-    })
+      });
+    });
   }
 
   remove(elem: IDataVis) {

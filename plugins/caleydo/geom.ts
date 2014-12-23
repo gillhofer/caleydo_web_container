@@ -8,14 +8,14 @@ import _2D = require('./2D');
 
 
 export var CORNER:any = <any>[];
-CORNER['N'] = CORNER[0] = 'n';
-CORNER['NE'] = CORNER[1] = 'ne';
-CORNER['E'] = CORNER[2] = 'e';
-CORNER['SE'] = CORNER[3] = 'se';
-CORNER['S'] = CORNER[4] = 's';
-CORNER['SW'] = CORNER[5] = 'sw';
-CORNER['W'] = CORNER[6] = 'w';
-CORNER['NW'] = CORNER[7] = 'nw';
+CORNER.N = CORNER[0] = 'n';
+CORNER.NE = CORNER[1] = 'ne';
+CORNER.E = CORNER[2] = 'e';
+CORNER.SE = CORNER[3] = 'se';
+CORNER.S = CORNER[4] = 's';
+CORNER.SW = CORNER[5] = 'sw';
+CORNER.W = CORNER[6] = 'w';
+CORNER.NW = CORNER[7] = 'nw';
 
 /**
  * a simple basic shape
@@ -91,7 +91,7 @@ export class AShape implements _2D.IShape {
   }
 
   shiftImpl(x:number, y:number) {
-
+    throw new Error('Not Implemented');
   }
 
   asIntersectionParams():_2D.IIntersectionParam {
@@ -320,7 +320,7 @@ export class Polygon extends AShape {
   push(x:number, y:number);
   push(...points:_2D.Vector2D[]);
   push() {
-    if (arguments.length == 2 && typeof arguments[0] === 'number') {
+    if (arguments.length === 2 && typeof arguments[0] === 'number') {
       this.points.push(vec2(arguments[0], arguments[1]));
     } else {
       this.points.push.apply(this.points, <_2D.Vector2D[]>C.argList(arguments));
@@ -397,9 +397,9 @@ export class Polygon extends AShape {
       if (point.y > Math.min(p1.y, p2.y)) {
         if (point.y <= Math.max(p1.y, p2.y)) {
           if (point.x <= Math.max(p1.x, p2.x)) {
-            if (p1.y != p2.y) {
+            if (p1.y !== p2.y) {
               x_inter = (point.y - p1.y) * (p2.x - p1.x) / (p2.y - p1.y) + p1.x;
-              if (p1.x == p2.x || point.x <= x_inter) {
+              if (p1.x === p2.x || point.x <= x_inter) {
                 counter++;
               }
             }
@@ -408,7 +408,7 @@ export class Polygon extends AShape {
       }
       p1 = p2;
     }
-    return (counter % 2 == 1);
+    return (counter % 2 === 1);
   }
 
   get area() {
@@ -462,7 +462,7 @@ export class Polygon extends AShape {
         positive++;
       }
     }
-    return (negative != 0 && positive != 0);
+    return (negative !== 0 && positive !== 0);
   }
 
   get isConvex() {

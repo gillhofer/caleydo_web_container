@@ -2,7 +2,7 @@
  * Created by Samuel Gratzl on 29.08.2014.
  */
 /* global define */
-"use strict"
+'use strict';
 
 import C = require('../caleydo/main');
 import datatypes = require('../caleydo/datatype');

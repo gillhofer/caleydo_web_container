@@ -7,7 +7,6 @@ import C = require('./main');
 import ranges = require('./range');
 import idtypes = require('./idtype');
 import datatypes = require('./datatype');
-import events = require('./event');
 import vector = require('./vector');
 import provenance = require('./provenance');
 
@@ -166,7 +165,7 @@ function viaAPILoader() {
       _data = data; //store cache
       return data;
     });
-  }
+  };
 }
 
 /**
@@ -247,7 +246,7 @@ export class Matrix extends MatrixBase implements IMatrix {
    * return the row ids of the matrix
    * @returns {*}
    */
-  rows(range: ranges.Range = ranges.all()) : C.IPromise<string[]>{
+  rows(range: ranges.Range = ranges.all()) : C.IPromise<string[]> {
     var that = this;
     return this.load().then(function (d : any) {
       return range.dim(0).filter(d.rows, that.nrow);
@@ -274,7 +273,7 @@ export class Matrix extends MatrixBase implements IMatrix {
  * @param base
  * @constructor
  */
-class TransposedMatrix extends MatrixBase  implements IMatrix{
+class TransposedMatrix extends MatrixBase  implements IMatrix {
   t:IMatrix;
 
   constructor(base:Matrix) {
@@ -348,7 +347,7 @@ class TransposedMatrix extends MatrixBase  implements IMatrix{
  * @param t optional its transposed version
  * @constructor
  */
-class MatrixView extends MatrixBase implements IMatrix{
+class MatrixView extends MatrixBase implements IMatrix {
   constructor(root:IMatrix, private range:ranges.Range, public t? : IMatrix) {
     super(root);
     this.range = range;
@@ -445,7 +444,7 @@ class ProjectedVector extends vector.VectorBase implements vector.IVector {
       f: this.f.toString(),
       valuetype: this.valuetype === this.m.valuetype ? undefined : this.valuetype,
       idtype: this.idtype === this.m.rowtype ? undefined: this.idtype.name
-    }
+    };
   }
 
   restore(persisted: any) {

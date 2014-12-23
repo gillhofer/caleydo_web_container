@@ -35,7 +35,7 @@ export function selectionUtil(data: datatype.IDataType, $data : D3.Selection, se
 
   return (d, i) => {
     data.select(0, [i], idtypes.toSelectOperation(d3.event));
-  }
+  };
 }
 
 /**
@@ -78,6 +78,7 @@ export function defineVis(name: string, defaultOptions : any, initialSize : any,
     }
   };
   VisTechnique.prototype.updatedOption = function(name, value) {
+    //dummy
   };
   VisTechnique.prototype.transform = function (scale, rotate) {
     var bak = {
@@ -125,8 +126,8 @@ export function defineVis(name: string, defaultOptions : any, initialSize : any,
     get: function() { return this.initialSize(this.data); },
     enumerable: true
   });
-  for(var f in functions) {
+  Object.keys(functions).forEach((f) => {
     VisTechnique.prototype[f] = functions[f];
-  }
+  });
   return VisTechnique;
 }

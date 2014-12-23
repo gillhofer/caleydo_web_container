@@ -180,14 +180,14 @@ export class AVisInstance extends events.EventHandler {
   }
 
   destroy() {
-
+    // nothing to destroy
   }
 
   transform() {
     return {
       scale: [1,1],
       rotate: 0
-    }
+    };
   }
 
   get rawSize() {
@@ -206,7 +206,7 @@ function extrapolateFilter(r: any) {
   var v = r.filter;
   if (typeof v === 'undefined') {
     r.filter = C.constantTrue;
-  } else if (typeof v == 'string') {
+  } else if (typeof v === 'string') {
     r.filter = (data) => data && data.desc.type && data.desc.type.match(v);
   } else if (C.isArray(v)) {
     r.filter = (data) => data && data && (data.desc.type && data.desc.type.match(v[0])) && (data.desc.value && data.desc.value.type.match(v[1]));
@@ -237,6 +237,7 @@ function extrapolateSize(r : any) {
   r.scaling = r.scaling || 'free';
 
   if (Array.isArray(r.sizeDependsOnDataDimension) && typeof r.sizeDependsOnDataDimension[0] === 'boolean') {
+    // ok
   } else if (typeof r.sizeDependsOnDataDimension === 'boolean') {
     r.sizeDependsOnDataDimension = [r.sizeDependsOnDataDimension, r.sizeDependsOnDataDimension];
   } else {
@@ -254,6 +255,7 @@ function extrapolateRotation(r : any) {
   if (typeof r.rotation === 'string' && r.rotation in m) {
     r.rotation = m[r.rotation];
   } else if (typeof r.rotation === 'number') {
+    r.rotation = + r.rotation;
   } else if (r.rotation === null) {
     r.rotation = NaN;
   } else {

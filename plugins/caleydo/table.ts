@@ -7,7 +7,6 @@ import C = require('./main');
 import ranges = require('./range');
 import idtypes = require('./idtype');
 import datatypes = require('./datatype');
-import events = require('./event');
 import vector = require('./vector');
 import provenance = require('./provenance');
 
@@ -143,7 +142,7 @@ function viaAPILoader() {
       data.data = datatypes.transpose(data.data);
       return data;
     });
-  }
+  };
 }
 
 function viaDataLoader(data: any[], idProperty: string, nameProperty: string) {
@@ -478,7 +477,7 @@ class MultiTableVector extends vector.VectorBase implements vector.IVector {
       f: this.f.toString(),
       valuetype: this.valuetype ? this.valuetype : undefined,
       idtype: this.idtype === this.table.rowtype ? undefined: this.idtype.name
-    }
+    };
   }
 
   restore(persisted: any) {

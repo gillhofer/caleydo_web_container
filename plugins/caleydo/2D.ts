@@ -1,11 +1,9 @@
-/*****
+/**
+ * The intersection is based on Kevin Lindsey
+ * http://www.kevlindev.com/gui/index.htm
  *
- *   The intersection is based on Kevin Lindsey
- *   http://www.kevlindev.com/gui/index.htm
- *   copyright 2002 Kevin Lindsey
- *
- *
- *****/
+ * copyright 2002 Kevin Lindsey
+ */
 
 export interface IIntersectionParam {
   name: string;
@@ -234,7 +232,9 @@ export class Intersection {
     var roots = new Polynomial(ryry * c2.x * c2.x + rxrx * c2.y * c2.y, 2 * (ryry * c2.x * c1.x + rxrx * c2.y * c1.y), ryry * (2 * c2.x * c0.x + c1.x * c1.x) + rxrx * (2 * c2.y * c0.y + c1.y * c1.y) - 2 * (ryry * ec.x * c2.x + rxrx * ec.y * c2.y), 2 * (ryry * c1.x * (c0.x - ec.x) + rxrx * c1.y * (c0.y - ec.y)), ryry * (c0.x * c0.x + ec.x * ec.x) + rxrx * (c0.y * c0.y + ec.y * ec.y) - 2 * (ryry * ec.x * c0.x + rxrx * ec.y * c0.y) - rxrx * ryry).getRoots();
     for (var i = 0; i < roots.length; i++) {
       var t = roots[i];
-      if (0 <= t && t <= 1)result.points.push(c2.multiply(t * t).add(c1.multiply(t).add(c0)));
+      if (0 <= t && t <= 1) {
+        result.points.push(c2.multiply(t * t).add(c1.multiply(t).add(c0)));
+      }
     }
     return result;
   }
@@ -262,11 +262,11 @@ export class Intersection {
         var p4 = p1.lerp(p2, t);
         var p5 = p2.lerp(p3, t);
         var p6 = p4.lerp(p5, t);
-        if (a1.x == a2.x) {
+        if (a1.x === a2.x) {
           if (min.y <= p6.y && p6.y <= max.y) {
             result.appendPoint(p6);
           }
-        } else if (a1.y == a2.y) {
+        } else if (a1.y === a2.y) {
           if (min.x <= p6.x && p6.x <= max.x) {
             result.appendPoint(p6);
           }
@@ -465,11 +465,11 @@ export class Intersection {
         var p8 = p5.lerp(p6, t);
         var p9 = p6.lerp(p7, t);
         var p10 = p8.lerp(p9, t);
-        if (a1.x == a2.x) {
+        if (a1.x === a2.x) {
           if (min.y <= p10.y && p10.y <= max.y) {
             result.appendPoint(p10);
           }
-        } else if (a1.y == a2.y) {
+        } else if (a1.y === a2.y) {
           if (min.x <= p10.x && p10.x <= max.x) {
             result.appendPoint(p10);
           }
@@ -516,11 +516,11 @@ export class Intersection {
     var r_min = Math.abs(r1 - r2);
     var c_dist = c1.distanceFrom(c2);
     if (c_dist > r_max) {
-      result = new Intersection("Outside");
+      result = new Intersection('Outside');
     } else if (c_dist < r_min) {
-      result = new Intersection("Inside");
+      result = new Intersection('Inside');
     } else {
-      result = new Intersection("Intersection");
+      result = new Intersection('Intersection');
       var a = (r1 * r1 - r2 * r2 + c_dist * c_dist) / (2 * c_dist);
       var h = Math.sqrt(r1 * r1 - a * a);
       var p = c1.lerp(c2, a / c_dist);
@@ -542,23 +542,27 @@ export class Intersection {
     var cc = c.x * c.x + c.y * c.y + a1.x * a1.x + a1.y * a1.y - 2 * (c.x * a1.x + c.y * a1.y) - r * r;
     var deter = b * b - 4 * a * cc;
     if (deter < 0) {
-      result = new Intersection("Outside");
-    } else if (deter == 0) {
-      result = new Intersection("Tangent");
+      result = new Intersection('Outside');
+    } else if (deter === 0) {
+      result = new Intersection('Tangent');
     } else {
       var e = Math.sqrt(deter);
       var u1 = (-b + e) / (2 * a);
       var u2 = (-b - e) / (2 * a);
       if ((u1 < 0 || u1 > 1) && (u2 < 0 || u2 > 1)) {
         if ((u1 < 0 && u2 < 0) || (u1 > 1 && u2 > 1)) {
-          result = new Intersection("Outside");
+          result = new Intersection('Outside');
         } else {
-          result = new Intersection("Inside");
+          result = new Intersection('Inside');
         }
       } else {
-        result = new Intersection("Intersection");
-        if (0 <= u1 && u1 <= 1)result.points.push(a1.lerp(a2, u1));
-        if (0 <= u2 && u2 <= 1)result.points.push(a1.lerp(a2, u2));
+        result = new Intersection('Intersection');
+        if (0 <= u1 && u1 <= 1) {
+          result.points.push(a1.lerp(a2, u1));
+        }
+        if (0 <= u2 && u2 <= 1) {
+          result.points.push(a1.lerp(a2, u2));
+        }
       }
     }
     return result;
@@ -574,7 +578,11 @@ export class Intersection {
       inter = Intersection.intersectCircleLine(c, r, a1, a2);
       result.appendPoints(inter.points);
     }
-    if (result.points.length > 0)result.status = "Intersection"; else result.status = inter.status;
+    if (result.points.length > 0) {
+      result.status = 'Intersection';
+    } else {
+      result.status = inter.status;
+    }
     return result;
   }
 
@@ -592,7 +600,11 @@ export class Intersection {
     result.appendPoints(inter2.points);
     result.appendPoints(inter3.points);
     result.appendPoints(inter4.points);
-    if (result.points.length > 0)result.status = "Intersection"; else result.status = inter1.status;
+    if (result.points.length > 0) {
+      result.status = 'Intersection';
+    } else {
+      result.status = inter1.status;
+    }
     return result;
   }
 
@@ -634,25 +646,33 @@ export class Intersection {
     c = diff.dot(mDiff) - 1.0;
     var d = b * b - a * c;
     if (d < 0) {
-      result = new Intersection("Outside");
+      result = new Intersection('Outside');
     } else if (d > 0) {
       var root = Math.sqrt(d);
       var t_a = (-b - root) / a;
       var t_b = (-b + root) / a;
       if ((t_a < 0 || 1 < t_a) && (t_b < 0 || 1 < t_b)) {
-        if ((t_a < 0 && t_b < 0) || (t_a > 1 && t_b > 1))result = new Intersection("Outside"); else result = new Intersection("Inside");
+        if ((t_a < 0 && t_b < 0) || (t_a > 1 && t_b > 1)) {
+          result = new Intersection('Outside');
+        } else {
+          result = new Intersection('Inside');
+        }
       } else {
-        result = new Intersection("Intersection");
-        if (0 <= t_a && t_a <= 1)result.appendPoint(a1.lerp(a2, t_a));
-        if (0 <= t_b && t_b <= 1)result.appendPoint(a1.lerp(a2, t_b));
+        result = new Intersection('Intersection');
+        if (0 <= t_a && t_a <= 1) {
+          result.appendPoint(a1.lerp(a2, t_a));
+        }
+        if (0 <= t_b && t_b <= 1) {
+          result.appendPoint(a1.lerp(a2, t_b));
+        }
       }
     } else {
       var t = -b / a;
       if (0 <= t && t <= 1) {
-        result = new Intersection("Intersection");
+        result = new Intersection('Intersection');
         result.appendPoint(a1.lerp(a2, t));
       } else {
-        result = new Intersection("Outside");
+        result = new Intersection('Outside');
       }
     }
     return result;
@@ -692,20 +712,20 @@ export class Intersection {
     var ua_t = (b2.x - b1.x) * (a1.y - b1.y) - (b2.y - b1.y) * (a1.x - b1.x);
     var ub_t = (a2.x - a1.x) * (a1.y - b1.y) - (a2.y - a1.y) * (a1.x - b1.x);
     var u_b = (b2.y - b1.y) * (a2.x - a1.x) - (b2.x - b1.x) * (a2.y - a1.y);
-    if (u_b != 0) {
+    if (u_b !== 0) {
       var ua = ua_t / u_b;
       var ub = ub_t / u_b;
       if (0 <= ua && ua <= 1 && 0 <= ub && ub <= 1) {
-        result = new Intersection("Intersection");
+        result = new Intersection('Intersection');
         result.points.push(new Vector2D(a1.x + ua * (a2.x - a1.x), a1.y + ua * (a2.y - a1.y)));
       } else {
         result = new Intersection();
       }
     } else {
-      if (ua_t == 0 || ub_t == 0) {
-        result = new Intersection("Coincident");
+      if (ua_t === 0 || ub_t === 0) {
+        result = new Intersection('Coincident');
       } else {
-        result = new Intersection("Parallel");
+        result = new Intersection('Parallel');
       }
     }
     return result;
@@ -774,15 +794,15 @@ export class Intersection {
     var ua_t = (b2.x - b1.x) * (a1.y - b1.y) - (b2.y - b1.y) * (a1.x - b1.x);
     var ub_t = (a2.x - a1.x) * (a1.y - b1.y) - (a2.y - a1.y) * (a1.x - b1.x);
     var u_b = (b2.y - b1.y) * (a2.x - a1.x) - (b2.x - b1.x) * (a2.y - a1.y);
-    if (u_b != 0) {
+    if (u_b !== 0) {
       var ua = ua_t / u_b;
-      result = new Intersection("Intersection");
+      result = new Intersection('Intersection');
       result.points.push(new Vector2D(a1.x + ua * (a2.x - a1.x), a1.y + ua * (a2.y - a1.y)));
     } else {
-      if (ua_t == 0 || ub_t == 0) {
-        result = new Intersection("Coincident");
+      if (ua_t === 0 || ub_t === 0) {
+        result = new Intersection('Coincident');
       } else {
-        result = new Intersection("Parallel");
+        result = new Intersection('Parallel');
       }
     }
     return result;
@@ -889,7 +909,7 @@ export class Vector2D {
   }
 
   eq(that : Vector2D) {
-    return (this.x == that.x && this.y == that.y);
+    return (this.x === that.x && this.y === that.y);
   }
 
   lt(that : Vector2D) {
@@ -927,7 +947,7 @@ export class Vector2D {
   }
 
   toString() {
-    return this.x + "," + this.y;
+    return this.x + ',' + this.y;
   }
 
   setXY(x: number, y: number) {
@@ -983,29 +1003,46 @@ class Polynomial {
   coefs:any[] = [];
 
   constructor(...coefs:number[]) {
-    for (var i = coefs.length - 1; i >= 0; i--)this.coefs.push(coefs[i]);
+    for (var i = coefs.length - 1; i >= 0; i--) {
+      this.coefs.push(coefs[i]);
+    }
   }
 
   eval(x) {
     var result = 0;
-    for (var i = this.coefs.length - 1; i >= 0; i--)result = result * x + this.coefs[i];
+    for (var i = this.coefs.length - 1; i >= 0; i--) {
+      result = result * x + this.coefs[i];
+    }
     return result;
   }
 
   multiply(that) {
     var result = new Polynomial();
-    for (var i = 0; i <= this.getDegree() + that.getDegree(); i++)result.coefs.push(0);
-    for (var i = 0; i <= this.getDegree(); i++)for (var j = 0; j <= that.getDegree(); j++)result.coefs[i + j] += this.coefs[i] * that.coefs[j];
+    var i;
+    for (i = 0; i <= this.getDegree() + that.getDegree(); i++) {
+      result.coefs.push(0);
+    }
+    for (i = 0; i <= this.getDegree(); i++) {
+      for (var j = 0; j <= that.getDegree(); j++) {
+        result.coefs[i + j] += this.coefs[i] * that.coefs[j];
+      }
+    }
     return result;
   }
 
   divide_scalar(scalar) {
-    for (var i = 0; i < this.coefs.length; i++)this.coefs[i] /= scalar;
+    for (var i = 0; i < this.coefs.length; i++) {
+      this.coefs[i] /= scalar;
+    }
   }
 
   simplify() {
     for (var i = this.getDegree(); i >= 0; i--) {
-      if (Math.abs(this.coefs[i]) <= Polynomial.TOLERANCE)this.coefs.pop(); else break;
+      if (Math.abs(this.coefs[i]) <= Polynomial.TOLERANCE) {
+        this.coefs.pop();
+      } else {
+        break;
+      }
     }
   }
 
@@ -1013,7 +1050,11 @@ class Polynomial {
     var minValue = this.eval(min);
     var maxValue = this.eval(max);
     var result;
-    if (Math.abs(minValue) <= Polynomial.TOLERANCE)result = min; else if (Math.abs(maxValue) <= Polynomial.TOLERANCE)result = max; else if (minValue * maxValue <= 0) {
+    if (Math.abs(minValue) <= Polynomial.TOLERANCE) {
+      result = min;
+    } else if (Math.abs(maxValue) <= Polynomial.TOLERANCE) {
+      result = max;
+    } else if (minValue * maxValue <= 0) {
       var tmp1 = Math.log(max - min);
       var tmp2 = Math.log(10) * Polynomial.ACCURACY;
       var iters = Math.ceil((tmp1 + tmp2) / Math.log(2));
@@ -1038,20 +1079,29 @@ class Polynomial {
   toString() {
     var coefs = new Array();
     var signs = new Array();
-    for (var i = this.coefs.length - 1; i >= 0; i--) {
+    var i;
+    for (i = this.coefs.length - 1; i >= 0; i--) {
       var value = this.coefs[i];
-      if (value != 0) {
-        var sign = (value < 0) ? " - " : " + ";
+      if (value !== 0) {
+        var sign = (value < 0) ? ' - ' : ' + ';
         value = Math.abs(value);
-        if (i > 0)if (value == 1)value = "x"; else value += "x";
-        if (i > 1)value += "^" + i;
+        if (i > 0 && value === 1) {
+          value = 'x';
+        } else {
+          value += 'x';
+        }
+        if (i > 1) {
+          value += '^' + i;
+        }
         signs.push(sign);
         coefs.push(value);
       }
     }
-    signs[0] = (signs[0] == " + ") ? "" : "-";
-    var result = "";
-    for (var i = 0; i < coefs.length; i++)result += signs[i] + coefs[i];
+    signs[0] = (signs[0] === ' + ') ? '' : '-';
+    var result = '';
+    for (i = 0; i < coefs.length; i++) {
+      result += signs[i] + coefs[i];
+    }
     return result;
   }
 
@@ -1095,24 +1145,34 @@ class Polynomial {
   getRootsInInterval(min, max) {
     var roots = new Array(), i;
     var root;
-    if (this.getDegree() == 1) {
+    if (this.getDegree() === 1) {
       root = this.bisection(min, max);
-      if (root != null)roots.push(root);
+      if (root != null) {
+        roots.push(root);
+      }
     } else {
       var deriv = this.getDerivative();
       var droots = deriv.getRootsInInterval(min, max);
       if (droots.length > 0) {
         root = this.bisection(min, droots[0]);
-        if (root != null)roots.push(root);
+        if (root != null) {
+          roots.push(root);
+        }
         for (i = 0; i <= droots.length - 2; i++) {
           root = this.bisection(droots[i], droots[i + 1]);
-          if (root != null)roots.push(root);
+          if (root != null) {
+            roots.push(root);
+          }
         }
         root = this.bisection(droots[droots.length - 1], max);
-        if (root != null)roots.push(root);
+        if (root != null) {
+          roots.push(root);
+        }
       } else {
         root = this.bisection(min, max);
-        if (root != null)roots.push(root);
+        if (root != null) {
+          roots.push(root);
+        }
       }
     }
     return roots;
@@ -1121,13 +1181,15 @@ class Polynomial {
   getLinearRoot() {
     var result = new Array();
     var a = this.coefs[1];
-    if (a != 0)result.push(-this.coefs[0] / a);
+    if (a !== 0) {
+      result.push(-this.coefs[0] / a);
+    }
     return result;
   }
 
   getQuadraticRoots() {
     var results = new Array();
-    if (this.getDegree() == 2) {
+    if (this.getDegree() === 2) {
       var a = this.coefs[2];
       var b = this.coefs[1] / a;
       var c = this.coefs[0] / a;
@@ -1136,7 +1198,7 @@ class Polynomial {
         var e = Math.sqrt(d);
         results.push(0.5 * (-b + e));
         results.push(0.5 * (-b - e));
-      } else if (d == 0) {
+      } else if (d === 0) {
         results.push(0.5 * -b);
       }
     }
@@ -1145,7 +1207,7 @@ class Polynomial {
 
   getCubicRoots() {
     var results = new Array(), disrim;
-    if (this.getDegree() == 3) {
+    if (this.getDegree() === 3) {
       var c3 = this.coefs[3];
       var c2 = this.coefs[2] / c3;
       var c1 = this.coefs[1] / c3;
@@ -1155,15 +1217,25 @@ class Polynomial {
       var offset = c2 / 3;
       var discrim = b * b / 4 + a * a * a / 27;
       var halfB = b / 2;
-      if (Math.abs(discrim) <= Polynomial.TOLERANCE)disrim = 0;
+      if (Math.abs(discrim) <= Polynomial.TOLERANCE) {
+        disrim = 0;
+      }
+      var tmp;
       if (discrim > 0) {
         var e = Math.sqrt(discrim);
-        var tmp;
         var root;
         tmp = -halfB + e;
-        if (tmp >= 0)root = Math.pow(tmp, 1 / 3); else root = -Math.pow(-tmp, 1 / 3);
+        if (tmp >= 0) {
+          root = Math.pow(tmp, 1 / 3);
+        } else {
+          root = -Math.pow(-tmp, 1 / 3);
+        }
         tmp = -halfB - e;
-        if (tmp >= 0)root += Math.pow(tmp, 1 / 3); else root -= Math.pow(-tmp, 1 / 3);
+        if (tmp >= 0) {
+          root += Math.pow(tmp, 1 / 3);
+        } else {
+          root -= Math.pow(-tmp, 1 / 3);
+        }
         results.push(root - offset);
       } else if (discrim < 0) {
         var distance = Math.sqrt(-a / 3);
@@ -1175,8 +1247,11 @@ class Polynomial {
         results.push(-distance * (cos + sqrt3 * sin) - offset);
         results.push(-distance * (cos - sqrt3 * sin) - offset);
       } else {
-        var tmp;
-        if (halfB >= 0)tmp = -Math.pow(halfB, 1 / 3); else tmp = Math.pow(-halfB, 1 / 3);
+        if (halfB >= 0) {
+          tmp = -Math.pow(halfB, 1 / 3);
+        } else {
+          tmp = Math.pow(-halfB, 1 / 3);
+        }
         results.push(2 * tmp - offset);
         results.push(-tmp - offset);
       }
@@ -1186,7 +1261,7 @@ class Polynomial {
 
   getQuarticRoots() {
     var results = new Array();
-    if (this.getDegree() == 4) {
+    if (this.getDegree() === 4) {
       var c4 = this.coefs[4];
       var c3 = this.coefs[3] / c4;
       var c2 = this.coefs[2] / c4;
@@ -1195,39 +1270,50 @@ class Polynomial {
       var resolveRoots = new Polynomial(1, -c2, c3 * c1 - 4 * c0, -c3 * c3 * c0 + 4 * c2 * c0 - c1 * c1).getCubicRoots();
       var y = resolveRoots[0];
       var discrim = c3 * c3 / 4 - c2 + y;
-      if (Math.abs(discrim) <= Polynomial.TOLERANCE)discrim = 0;
+      if (Math.abs(discrim) <= Polynomial.TOLERANCE) {
+        discrim = 0;
+      }
+
+      var t2;
+      var d : number;
       if (discrim > 0) {
         var e = Math.sqrt(discrim);
         var t1 = 3 * c3 * c3 / 4 - e * e - 2 * c2;
-        var t2 = (4 * c3 * c2 - 8 * c1 - c3 * c3 * c3) / (4 * e);
+        t2 = (4 * c3 * c2 - 8 * c1 - c3 * c3 * c3) / (4 * e);
         var plus = t1 + t2;
         var minus = t1 - t2;
-        if (Math.abs(plus) <= Polynomial.TOLERANCE)plus = 0;
-        if (Math.abs(minus) <= Polynomial.TOLERANCE)minus = 0;
+        var f : number;
+        if (Math.abs(plus) <= Polynomial.TOLERANCE) {
+          plus = 0;
+        }
+        if (Math.abs(minus) <= Polynomial.TOLERANCE) {
+          minus = 0;
+        }
         if (plus >= 0) {
-          var f = Math.sqrt(plus);
+          f = Math.sqrt(plus);
           results.push(-c3 / 4 + (e + f) / 2);
           results.push(-c3 / 4 + (e - f) / 2);
         }
         if (minus >= 0) {
-          var f = Math.sqrt(minus);
+          f = Math.sqrt(minus);
           results.push(-c3 / 4 + (f - e) / 2);
           results.push(-c3 / 4 - (f + e) / 2);
         }
-      } else if (discrim < 0) {
-      } else {
-        var t2 = y * y - 4 * c0;
+      } else if (discrim >= 0) {
+        t2 = y * y - 4 * c0;
         if (t2 >= -Polynomial.TOLERANCE) {
-          if (t2 < 0)t2 = 0;
+          if (t2 < 0) {
+            t2 = 0;
+          }
           t2 = 2 * Math.sqrt(t2);
           t1 = 3 * c3 * c3 / 4 - 2 * c2;
           if (t1 + t2 >= Polynomial.TOLERANCE) {
-            var d = Math.sqrt(t1 + t2);
+            d = Math.sqrt(t1 + t2);
             results.push(-c3 / 4 + d / 2);
             results.push(-c3 / 4 - d / 2);
           }
           if (t1 - t2 >= Polynomial.TOLERANCE) {
-            var d = Math.sqrt(t1 - t2);
+            d = Math.sqrt(t1 - t2);
             results.push(-c3 / 4 + d / 2);
             results.push(-c3 / 4 - d / 2);
           }
@@ -1381,8 +1467,12 @@ export class Path {
         this.segments.push(segment);
         index += param_length;
         token = tokens[index];
-        if (mode === 'M')mode = 'L';
-        if (mode === 'm')mode = 'l';
+        if (mode === 'M') {
+          mode = 'L';
+        }
+        if (mode === 'm') {
+          mode = 'l';
+        }
       } else {
         throw new Error('Path data ended before all parameters were found');
       }
@@ -1500,8 +1590,9 @@ class AbsoluteArcPath extends AbsolutePathSegment {
     var x1px1p = x1p * x1p;
     var y1py1p = y1p * y1p;
     var lambda = (x1px1p / (rx * rx) ) + ( y1py1p / (ry * ry));
+    var factor : number;
     if (lambda > 1) {
-      var factor = Math.sqrt(lambda);
+      factor = Math.sqrt(lambda);
       rx *= factor;
       ry *= factor;
     }
@@ -1509,10 +1600,14 @@ class AbsoluteArcPath extends AbsolutePathSegment {
     var ryry = ry * ry;
     var rxy1 = rxrx * y1py1p;
     var ryx1 = ryry * x1px1p;
-    var factor = (rxrx * ryry - rxy1 - ryx1) / (rxy1 + ryx1);
-    if (Math.abs(factor) < TOLERANCE)factor = 0;
+    factor = (rxrx * ryry - rxy1 - ryx1) / (rxy1 + ryx1);
+    if (Math.abs(factor) < TOLERANCE) {
+      factor = 0;
+    }
     var sq = Math.sqrt(factor);
-    if (this.arcFlag === this.sweepFlag)sq = -sq;
+    if (this.arcFlag === this.sweepFlag) {
+      sq = -sq;
+    }
     var mid = startPoint.add(endPoint).divide(2);
     var cxp = sq * rx * y1p / ry;
     var cyp = sq * -ry * x1p / rx;
@@ -1637,8 +1732,7 @@ class RelativePathSegment implements IPathSegment {
   points:Vector2D[] = [];
 
   constructor(public command:string, params, public owner:Path, public previous:IPathSegment) {
-    var lastPoint;
-    if (this.previous)lastPoint = this.previous.lastPoint; else lastPoint = new Vector2D(0, 0);
+    var lastPoint = this.previous ? this.previous.lastPoint : new Vector2D(0, 0);
     var index = 0;
     while (index < params.length) {
       var handle = new Vector2D(lastPoint.x + parseFloat(params[index]), lastPoint.y + parseFloat(params[index + 1]));
@@ -1650,8 +1744,7 @@ class RelativePathSegment implements IPathSegment {
   toString() {
     var points = new Array();
     var command = '';
-    var lastPoint;
-    if (this.previous)lastPoint = this.previous.lastPoint; else lastPoint = new Vector2D(0, 0);
+    var lastPoint = this.previous ? this.previous.lastPoint : new Vector2D(0, 0);
     if (this.previous == null || this.previous.command !== this.command) {
       command = this.command;
     }
@@ -1725,11 +1818,9 @@ class RelativeLineto extends RelativePathSegment {
   }
 
   toString() {
-    var lastPoint;
-    var point;
+    var lastPoint = this.previous ? this.previous.lastPoint : new Vector2D(0, 0);
+    var point = this.points[0].subtract(lastPoint);
     var command = '';
-    if (this.previous)lastPoint = this.previous.lastPoint; else lastPoint = new Vector2D(0, 0);
-    point = this.points[0].subtract(lastPoint);
     if (this.previous.command !== this.command &&this.previous.command !== 'm') {
       command = this.command;
     }
