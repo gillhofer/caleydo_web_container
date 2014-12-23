@@ -209,7 +209,7 @@ class Link {
     $g.select('path.rel-back').on('contextmenu', () => {
       this.nextMode($g);
       d3.event.preventDefault();
-    })
+    });
   }
 
   private createBand(aa: geom.Rect, bb: geom.Rect, ida: ranges.Range1D, idb: ranges.Range1D, union, id, clazz) {
@@ -296,7 +296,7 @@ class Link {
             g : g,
             len : g.length,
             loc : locs[i].aabb()
-          }; }
+          }; };
       }
       var groupa = data[0].groupa.map(more(data[1]));
       var groupb = data[0].groupb.map(more(data[2]));

@@ -173,7 +173,7 @@ export class SingleRangeElem implements IRangeElem {
     return new SingleRangeElem(this.from);
   }
 
-  contains(value: number, size?: number){
+  contains(value: number, size?: number) {
     return fix(this.from, size) === value;
   }
 
