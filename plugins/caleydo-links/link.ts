@@ -67,6 +67,9 @@ class VisWrapper implements vis.ILocateAble {
   locate(...range: ranges.Range[]): C.IPromise<any> {
     return this.v.locate.apply(this.vis, range);
   }
+  locateById(...range: ranges.Range[]): C.IPromise<any> {
+    return this.v.locateById.apply(this.vis, range);
+  }
 
   destroy() {
     this.dirtyEvents.forEach((event) => this.v.off(event, this.l));
@@ -140,6 +143,7 @@ class Link {
         break;
     }
     f.then((llinks) => {
+      console.log('render links');
       var r = [{
         clazz: 'rel-back',
         d: line.interpolate('linear-closed')([al.corner('ne'), bl.corner('nw'), bl.corner('sw'), al.corner('se')]),
@@ -208,54 +212,111 @@ class Link {
     })
   }
 
+  private createBand(aa: geom.Rect, bb: geom.Rect, ida: ranges.Range1D, idb: ranges.Range1D, union, id, clazz) {
+    var ul = union.length;
+
+    var l : _2D.Vector2D[] = [aa.corner('ne'), bb.corner('nw')];
+
+    var r = [];
+    function addBlock(ar, br, id, clazz, ashift, bshift) {
+      var ll = l.slice();
+      //compute the edge vector and scale it by the ratio
+      var a_dir = _2D.Vector2D.fromPoints(l[0], aa.corner('se'));
+      var b_dir = _2D.Vector2D.fromPoints(l[1], bb.corner('sw'));
+      ll.push(l[1].add(b_dir.multiply(br)));
+      ll.push(l[0].add(a_dir.multiply(ar)));
+      if (ashift > 0) {
+        ll[0].addEquals(a_dir.multiplyEquals(ashift));
+      }
+      if (bshift > 0) {
+        ll[1].addEquals(b_dir.multiplyEquals(bshift));
+      }
+      r.push({
+        clazz: clazz,
+        d: line.interpolate('linear-closed')(ll),
+        id: id
+      });
+    }
+
+    //create a selection overlay
+    var s = this.idtype.selections().dim(0);
+    var selected = 0;
+    if (!s.isNone) {
+      selected = union.intersect(s).length;
+    }
+    if (selected > 0) {
+      addBlock(selected / ida.length, selected / idb.length, id + '-sel', clazz + ' select-selected', 0, 0);
+    }
+    addBlock(ul / ida.length, ul / idb.length, id, clazz, selected / ida.length, selected / idb.length);
+    console.error('created band');
+    return r;
+  }
+
   private createBlockRep(a: VisWrapper, aa: geom.Rect, b: VisWrapper, bb: geom.Rect):C.IPromise<ILink[]> {
     var adim = a.dimOf(this.idtype),
       bdim = b.dimOf(this.idtype);
     return C.all([a.ids(), b.ids()]).then((ids) => {
       var ida:ranges.Range1D = ids[0].dim(adim);
       var idb:ranges.Range1D = ids[1].dim(bdim);
-      var union = ida.intersect(idb);
-      var ul = union.length;
-
-      var l : _2D.Vector2D[] = [aa.corner('ne'), bb.corner('nw')];
-
-      var r = [];
-      function addBlock(ar, br, id, clazz, ashift, bshift) {
-        var ll = l.slice();
-        //compute the edge vector and scale it by the ratio
-        var a_dir = _2D.Vector2D.fromPoints(l[0], aa.corner('se'));
-        var b_dir = _2D.Vector2D.fromPoints(l[1], bb.corner('sw'));
-        ll.push(l[1].add(b_dir.multiply(ar)));
-        ll.push(l[0].add(a_dir.multiply(br)));
-        if (ashift > 0) {
-          ll[0].addEquals(a_dir.multiplyEquals(ashift));
-        }
-        if (bshift > 0) {
-          ll[1].addEquals(b_dir.multiplyEquals(bshift));
-        }
-        r.push({
-          clazz: clazz,
-          d: line.interpolate('linear-closed')(ll),
-          id: id
-        });
-      }
-
-      //create a selection overlay
-      var s = this.idtype.selections().dim(0);
-      var selected = 0;
-      if (!s.isNone) {
-        selected = union.intersect(s).length;
-      }
-      if (selected > 0) {
-        addBlock(selected / ida.length, selected / idb.length, 'block-sel', 'rel-block select-selected', 0, 0);
-      }
-      addBlock(ul / ida.length, ul / idb.length, 'block', 'rel-block', selected / ida.length, selected / idb.length);
-      return r;
+      return this.createBand(aa, bb, ida, idb, ida.intersect(idb), 'block', 'rel-block');
     });
   }
 
   private createGroupRep(a: VisWrapper, aa: geom.Rect, b: VisWrapper, bb: geom.Rect):C.IPromise<ILink[]> {
-    return C.resolved([]);
+    var adim = a.dimOf(this.idtype),
+      bdim = b.dimOf(this.idtype);
+    function toGroups(ids) {
+      if (ids instanceof ranges.CompositeRange1D) {
+        return (<ranges.CompositeRange1D>ids).groups;
+      } else {
+        return [ranges.asUngrouped(ids)];
+      }
+    }
+    return C.all([a.ids(), b.ids()]).then((ids) => {
+      var groupa : ranges.Range1DGroup[] = toGroups(ids[0].dim(adim));
+      var groupb : ranges.Range1DGroup[] = toGroups(ids[1].dim(bdim));
+
+      var ars = groupa.map((group) => {
+        var r = ranges.all();
+        r.dims[adim] = group;
+        return r;
+      });
+      var brs = groupb.map((group) => {
+        var r = ranges.all();
+        r.dims[bdim] = group;
+        return r;
+      });
+      return C.all([C.resolved({
+        groupa : groupa,
+        groupb : groupb
+      }), a.locateById.apply(a, ars), b.locateById.apply(b, brs)]);
+    }).then((data) => {
+      function more(locs) {
+        return (g,i) => { return {
+            g : g,
+            len : g.length,
+            loc : locs[i].aabb()
+          }; }
+      }
+      var groupa = data[0].groupa.map(more(data[1]));
+      var groupb = data[0].groupb.map(more(data[2]));
+      var r = [];
+      groupa.forEach((ga) => {
+        groupb.forEach((gb) => {
+          var int = ga.g.intersect(gb.g);
+          var l = int.length;
+          if (l === 0) {
+            return;
+          }
+          var id = ga.g.name + '-' + gb.g.name;
+          r.push.apply(r, this.createBand(ga.loc, gb.loc, ga.g, gb.g, int, id, 'rel-group'));
+          //shift the location for attaching
+          ga.loc.y += ga.loc.h * (l / ga.len);
+          gb.loc.y += gb.loc.h * (l / gb.len);
+        });
+      });
+      return r;
+    });
   }
 
   private createItemRep(a: VisWrapper, aa: geom.Rect, b: VisWrapper, bb: geom.Rect):C.IPromise<ILink[]> {
@@ -285,7 +346,7 @@ class Link {
         r.dim(bdim).setList([index]);
         brs.push(r);
       });
-      return C.all([C.resolved(union), a.locate.apply(a, ars), b.locate.apply(b, brs)]);
+      return C.all([C.resolved(union), a.locateById.apply(a, ars), b.locateById.apply(b, brs)]);
     }).then((locations) => {
       var union = locations[0],
         loca = locations[1],
