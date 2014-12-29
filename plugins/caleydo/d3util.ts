@@ -126,7 +126,7 @@ export function defineVis(name: string, defaultOptions : any, initialSize : any,
     get: function() { return this.initialSize(this.data); },
     enumerable: true
   });
-  Object.keys(functions).forEach((f) => {
+  Object.keys(functions || {}).forEach((f) => {
     VisTechnique.prototype[f] = functions[f];
   });
   return VisTechnique;
