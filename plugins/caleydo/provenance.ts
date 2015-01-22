@@ -155,7 +155,7 @@ export class CommandQueue implements IPersistable {
         if (id.match(m)) {
           return cmdFactories[i].load().then((plugin) => {
             return plugin.factory(id, content);
-          })
+          });
         }
       }
       return null;

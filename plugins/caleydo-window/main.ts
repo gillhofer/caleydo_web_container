@@ -12,7 +12,6 @@ import behaviors = require('../caleydo/behavior');
 import geom = require('../caleydo/geom');
 import idtypes = require('../caleydo/idtype');
 import vis = require('../caleydo/vis');
-import datatypes = require('../caleydo/datatype');
 
 function makeDraggable($div, window) {
   var convertDrag = function (ui) {
@@ -34,7 +33,7 @@ function makeDraggable($div, window) {
 }
 
 function destroyDraggable($div) {
-  $div.draggable("destroy");
+  $div.draggable('destroy');
 }
 
 function makeResizeable($div, window, options = {}) {
@@ -65,7 +64,7 @@ function makeResizeable($div, window, options = {}) {
 }
 
 function destroyResizeable($div) {
-  $div.resizable("destroy");
+  $div.resizable('destroy');
 }
 
 function makeAnimatedHeader($div, $header) {
@@ -122,7 +121,7 @@ export class UIWindow extends events.EventHandler implements events.IDataBinding
       },
       mouseleave: () => {
         manager.select(idtypes.hoverSelectionType, [this.id], idtypes.SelectOperation.REMOVE);
-        this.fire('mouseleave', this)
+        this.fire('mouseleave', this);
       }
     });
     //title
@@ -187,7 +186,7 @@ export class UIWindow extends events.EventHandler implements events.IDataBinding
       size: this.size,
       pos: this.pos,
       options: this.options
-    }
+    };
   }
 
   restore(persisted:any) {
@@ -287,14 +286,14 @@ export class UIWindow extends events.EventHandler implements events.IDataBinding
   }
 }
 
-export interface ToolbarBuilder {
+export interface IToolbarBuilder {
   (window: UIWindow, node: Element) : void;
 }
 
 export class ToolBar {
   window : UIWindow;
   private $node : JQuery;
-  builder : ToolbarBuilder[] = [];
+  builder : IToolbarBuilder[] = [];
 
   constructor(parent: Element) {
     this.$node = $('<div class="toolbar" />').appendTo(parent);
@@ -333,7 +332,6 @@ export class ToolBar {
 }
 
 export class StaticToolBar extends ToolBar {
-  private windows : UIWindow[] = [];
   constructor(parent: Element) {
     super(parent);
   }
@@ -348,7 +346,7 @@ export class StaticToolBar extends ToolBar {
         this.bindTo(null);
       }
       //this.windows.splice(this.windows.indexOf(w),1);
-    })
+    });
   }
 }
 
@@ -466,7 +464,22 @@ export class VisWindow extends UIWindow {
           if (C.isArray(r)) {
             return r.map(function (loc) {
               return loc ? geom.wrap(loc).shift(p) : loc;
-            })
+            });
+          } else {
+            return r ? geom.wrap(r).shift(p) : r;
+          }
+        });
+      },
+      locateById: function () {
+        if (!C.isFunction(vis.locateById)) {
+          return C.resolved((arguments.length === 1 ? undefined : new Array(arguments.length)));
+        }
+        return vis.locateById.apply(vis, C.argList(arguments)).then(function (r) {
+          var p = that.contentPos;
+          if (C.isArray(r)) {
+            return r.map(function (loc) {
+              return loc ? geom.wrap(loc).shift(p) : loc;
+            });
           } else {
             return r ? geom.wrap(r).shift(p) : r;
           }

@@ -44,8 +44,9 @@ export class AIterator<T> {
   }
 
   forEach(callbackfn: (value: T) => void, thisArg?: any): void {
+    var i = 0;
     while (this.hasNext()) {
-      callbackfn.call(thisArg, this.next());
+      callbackfn.call(thisArg, this.next(), i++);
     }
   }
 
@@ -110,7 +111,7 @@ export class Iterator extends AIterator<number> implements IIterator<number>{
    */
   next() {
     if (!this.hasNext()) {
-      throw new RangeError("end of iterator");
+      throw new RangeError('end of iterator');
     }
     var r = this.act;
     this.act += this.step;
@@ -141,7 +142,7 @@ export class Iterator extends AIterator<number> implements IIterator<number>{
   get size() {
     if (this.byOne) {
       return Math.max(this.to - this.from,0);
-    } else if (this.byMinusOne){
+    } else if (this.byMinusOne) {
       return Math.max(this.from - this.to,0);
     }
     var d = this.isIncreasing ? (this.to - this.from+1) : (this.from - this.to+1);
@@ -173,7 +174,7 @@ export class ListIterator<T> extends AIterator<T> implements IIterator<T>{
    */
   next() {
     if (!this.hasNext()) {
-      throw new RangeError("end of iterator");
+      throw new RangeError('end of iterator');
     }
     return this.arr[this.it.next()];
   }
@@ -195,7 +196,7 @@ export class SingleIterator<T> extends AIterator<T> implements IIterator<T>{
 
   next() {
     if (!this.hasNext()) {
-      throw new RangeError("end of iterator");
+      throw new RangeError('end of iterator');
     }
     this.delivered = true;
     return this.value;
@@ -248,7 +249,7 @@ export class ConcatIterator<T> extends AIterator<T> implements IIterator<T>{
    */
   next() {
     if (!this.hasNext()) {
-      throw new RangeError("end of iterator");
+      throw new RangeError('end of iterator');
     }
     return this.act.next();
   }
@@ -299,8 +300,7 @@ export class EmptyIterator<T> extends AIterator<T> implements IIterator<T>{
    * returns the next item
    */
   next() : T {
-    throw new RangeError("end of iterator");
-    return null;
+    throw new RangeError('end of iterator');
   }
 
   /**
@@ -308,7 +308,7 @@ export class EmptyIterator<T> extends AIterator<T> implements IIterator<T>{
    * @returns {Array}
    */
   asList() {
-    return []
+    return [];
   }
 }
 
@@ -328,7 +328,7 @@ class TransformIterator<O,T> extends AIterator<T> implements IIterator<T>{
    */
   next() {
     if (!this.hasNext()) {
-      throw new RangeError("end of iterator");
+      throw new RangeError('end of iterator');
     }
     return this.f.call(this.thisArg, this.it.next());
   }

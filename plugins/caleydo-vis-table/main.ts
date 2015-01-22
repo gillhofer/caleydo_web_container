@@ -6,9 +6,6 @@
 /// <amd-dependency path='css!./style' />
 
 import d3 = require('d3');
-import matrix = require('../caleydo/matrix');
-import table = require('../caleydo/table');
-import vector = require('../caleydo/vector');
 import ranges = require('../caleydo/range');
 import vis = require('../caleydo/vis');
 import geom = require('../caleydo/geom');
@@ -42,7 +39,7 @@ export class Table extends vis.AVisInstance implements vis.IVisInstance {
 
   get rawSize() {
     var dim = this.data.dim;
-    return [(dim[1]||1) * 200, dim[0] * 22]
+    return [(dim[1]||1) * 200, dim[0] * 22];
   }
 
   get node() {

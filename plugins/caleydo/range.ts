@@ -9,7 +9,7 @@ import Iterator = require('./iterator');
 export interface IRangeElem {
   isAll : boolean;
   isSingle : boolean;
-  size(size:number):number;
+  size(size?:number):number;
   clone() : IRangeElem;
   invert(index:number, size?:number);
   iter(size?:number):Iterator.IIterator<number>;
@@ -18,6 +18,7 @@ export interface IRangeElem {
   step: number;
   to: number;
   reverse() : IRangeElem;
+  contains(value: number, size?:number);
 }
 
 
@@ -35,7 +36,7 @@ function fix(v:number, size:number) {
 export class RangeElem implements IRangeElem {
   constructor(public from:number, public to = -1, public step = 1) {
     if (step !== 1 && step !== -1) {
-      throw new Error("currently just +1 and -1 are valid steps");
+      throw new Error('currently just +1 and -1 are valid steps');
     }
   }
 
@@ -44,7 +45,7 @@ export class RangeElem implements IRangeElem {
   }
 
   get isSingle() {
-    return (this.from + this.step) === this.to
+    return (this.from + this.step) === this.to;
   }
 
   static all() {
@@ -66,7 +67,7 @@ export class RangeElem implements IRangeElem {
     return new RangeElem(from, to, step);
   }
 
-  size(size:number):number {
+  size(size?:number):number {
     var t = fix(this.to, size), f = fix(this.from, size);
     if (this.step === 1) {
       return Math.max(t - f, 0);
@@ -106,6 +107,16 @@ export class RangeElem implements IRangeElem {
     return Iterator.range(fix(this.from, size), fix(this.to, size), this.step);
   }
 
+  contains(value: number, size?:number) {
+    var f = fix(this.from, size);
+    var t = fix(this.to, size);
+    if (this.step === -1) {
+      return (value <= f) && (value > t);
+    } else { //+1
+      return (value >= f) && (value < t);
+    }
+  }
+
   toString() {
     if (this.isAll) {
       return '';
@@ -126,11 +137,11 @@ export class RangeElem implements IRangeElem {
     }
     var parts = code.split(':');
     if (parts.length === 1) {
-      return RangeElem.single(parseInt(parts[0]));
+      return RangeElem.single(parseFloat(parts[0]));
     } else if (parts.length === 2) {
-      return new RangeElem(parseInt(parts[0]), parseInt(parts[1]));
+      return new RangeElem(parseFloat(parts[0]), parseFloat(parts[1]));
     }
-    return new RangeElem(parseInt(parts[0]), parseInt(parts[1]), parseInt(parts[2]));
+    return new RangeElem(parseFloat(parts[0]), parseFloat(parts[1]), parseFloat(parts[2]));
   }
 }
 
@@ -154,12 +165,16 @@ export class SingleRangeElem implements IRangeElem {
     return true;
   }
 
-  size(size:number):number {
+  size(size?:number):number {
     return 1;
   }
 
   clone() {
     return new SingleRangeElem(this.from);
+  }
+
+  contains(value: number, size?: number) {
+    return fix(this.from, size) === value;
   }
 
   reverse() {
@@ -196,7 +211,7 @@ export class Range1D {
   }
 
   get length() {
-    return this.arr.length;
+    return this.size();
   }
 
   static all() {
@@ -222,7 +237,7 @@ export class Range1D {
       deltas = indices.slice(1).map((e, i) => e - indices[i]),
       start = 0, act = 1, i = 0;
     while (act < indices.length) {
-      while (deltas[start] == deltas[act - 1] && act < indices.length) { //while the same delta
+      while (deltas[start] === deltas[act - 1] && act < indices.length) { //while the same delta
         act++;
       }
       if (act === start + 1) { //just a single item used
@@ -306,7 +321,7 @@ export class Range1D {
     return this.arr[index];
   }
 
-  size(size:number) {
+  size(size?:number) {
     return this.arr.map((d) => d.size(size)).reduce((a, b) => a + b, 0);
   }
 
@@ -350,7 +365,7 @@ export class Range1D {
    * @param other
    * @returns {RangeDim}
    */
-  union(other:Range1D, size?:number) {
+  union(other:Range1D, size?:number): Range1D {
     if (this.isAll || other.isNone) {
       return this.clone();
     }
@@ -560,6 +575,10 @@ export class Range1D {
     return this.iter().forEach(callbackfn, thisArg);
   }
 
+  contains(value: number, size?:number) : boolean {
+    return this.arr.some((elem) => elem.contains(value, size));
+  }
+
   /**
    * sort
    * @param cmp
@@ -648,7 +667,7 @@ function toBase(groups: Range1DGroup[]) {
       if (r.indexOf(i) < 0) {
         r.push(i);
       }
-    })
+    });
   });
   return Range1D.from(r);
 }
@@ -659,23 +678,28 @@ export class CompositeRange1D extends Range1D {
   }
 
   preMultiply(sub:Range1D, size?:number):Range1D {
-    return new CompositeRange1D(this.name, this.groups.map((g) => <Range1DGroup>g.preMultiply(sub,size)));
+    var r = this.groups.length > 1 ? super.preMultiply(sub, size) : undefined;
+    return new CompositeRange1D(this.name, this.groups.map((g) => <Range1DGroup>g.preMultiply(sub,size)), r);
   }
 
   union(other:Range1D, size?:number) {
-    return new CompositeRange1D(this.name, this.groups.map((g) => <Range1DGroup>g.union(other,size)));
+    var r = this.groups.length > 1 ? super.union(other, size) : undefined;
+    return new CompositeRange1D(this.name, this.groups.map((g) => <Range1DGroup>g.union(other,size)), r);
   }
 
   intersect(other:Range1D, size?:number) {
-    return new CompositeRange1D(this.name, this.groups.map((g) => <Range1DGroup>g.intersect(other,size)));
+    var r = this.groups.length > 1 ? super.intersect(other, size) : undefined;
+    return new CompositeRange1D(this.name, this.groups.map((g) => <Range1DGroup>g.intersect(other,size)), r);
   }
 
   without(without:Range1D, size?:number) {
-    return new CompositeRange1D(this.name, this.groups.map((g) => <Range1DGroup>g.without(without,size)));
+    var r = this.groups.length > 1 ? super.without(without, size) : undefined;
+    return new CompositeRange1D(this.name, this.groups.map((g) => <Range1DGroup>g.without(without,size)), r);
   }
 
   clone() {
-    return new CompositeRange1D(name, this.groups.map((g) => <Range1DGroup>g.clone()));
+    var r = this.groups.length > 1 ? super.clone() : undefined;
+    return new CompositeRange1D(name, this.groups.map((g) => <Range1DGroup>g.clone()), r);
   }
 
   sort(cmp:(a:number, b:number) => number):Range1D {
@@ -979,10 +1003,10 @@ export function range() {
         return;
       }
       r.dim(i).setSlice(arr[0], arr[1], arr[2]);
-    })
+    });
   }
   if (typeof arguments[0] === 'number') { //single slice mode
-    r.dim(0).setSlice(arguments[0], arguments[1], arguments[2])
+    r.dim(0).setSlice(arguments[0], arguments[1], arguments[2]);
   }
   return r;
 }
@@ -1019,7 +1043,7 @@ export function list(): Range {
       } else {
         r.dim(i).setList(arr);
       }
-    })
+    });
   } else if (typeof arguments[0] === 'number') { //single slice mode
     r.dim(0).setList(C.argList(arguments));
   } else if (arguments[0] instanceof Range1D) {
@@ -1089,7 +1113,7 @@ function parseNamedRange1D(code:string, act:number) : { dim : Range1D; act: numb
     };
   case '{':
     var groups = [];
-    while (code.charAt(act) != '}') {
+    while (code.charAt(act) !== '}') {
       r = parseNamedRange1D(code,act+1);
       groups.push(r.dim);
       act = r.act;
@@ -1102,7 +1126,7 @@ function parseNamedRange1D(code:string, act:number) : { dim : Range1D; act: numb
     return {
       dim: Range1D.all(),
       act : act
-    }
+    };
   }
 }
 
@@ -1132,7 +1156,7 @@ function parseRange1D(code:string, act:number) {
   return {
     act : next,
     dim : r
-  }
+  };
 }
 /**
  * parses the given encoded string created by toString to a range object

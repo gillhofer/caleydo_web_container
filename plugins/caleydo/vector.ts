@@ -7,7 +7,6 @@ import C = require('./main');
 import ranges = require('./range');
 import idtypes = require('./idtype');
 import datatypes = require('./datatype');
-import events = require('./event');
 import math = require('./math');
 
 export interface IVector extends datatypes.IDataType {
@@ -177,9 +176,9 @@ export class VectorBase extends idtypes.SelectAble {
       return this.data().then((d) => {
         var options: any = {
           name: this._root.desc.id
-        }
+        };
         if (v.categories[0].color) {
-          options.colors = v.categories.map((d) => d.color)
+          options.colors = v.categories.map((d) => d.color);
         }
         return datatypes.categorical2paritioning(d, v.categories.map((d) => typeof d === 'string' ? d : d.name), options);
       });
@@ -258,7 +257,7 @@ function viaAPILoader() {
       _data = data; //store cache
       return data;
     });
-  }
+  };
 }
 
 function viaDataLoader(rows: string[], rowIds: number[], data: any[]) {
@@ -389,7 +388,7 @@ class VectorView extends VectorBase implements IVector {
     return {
       root: this._root.persist(),
       range: this.range.toString()
-    }
+    };
   }
 
   size() {

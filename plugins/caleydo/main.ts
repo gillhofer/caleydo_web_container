@@ -12,8 +12,6 @@ var config = module_.config();
  */
 export var version = '0.0.1-alpha';
 
-console.log("loading");
-
 export var server_url:string = config.apiUrl;
 export var server_json_suffix:string = config.apiJSONSuffix || '';
 
@@ -109,6 +107,7 @@ export function identity(d:any) {
  * a dummy function, which does exactly nothing, i.e. used as default
  */
 export function noop() {
+  //no op
 }
 
 /**
@@ -227,7 +226,7 @@ export function argSort<T>(arr:T[], compareFn?:(a:T, b:T) => number, thisArg?:an
   var indices = indexRange(arr.length);
   return indices.sort((a, b) => {
     return compareFn.call(thisArg, arr[a], arr[b]);
-  })
+  });
 }
 
 /**
@@ -240,7 +239,7 @@ export function argFilter<T>(arr:T[], callbackfn:(value:T, index:number) => bool
   var indices = indexRange(arr.length);
   return indices.filter((value, index) => {
     return callbackfn.call(thisArg, arr[value], index);
-  })
+  });
 }
 
 /**
@@ -320,10 +319,18 @@ export function uniqueString(domain : string = '_default') {
  * @param baseClass
  */
 export function extendClass(subClass, baseClass) {
-  for (var p in baseClass) if (baseClass.hasOwnProperty(p)) subClass[p] = baseClass[p];
-  function __() { this.constructor = subClass; }
+  for (var p in baseClass) {
+    if (baseClass.hasOwnProperty(p)) {
+      subClass[p] = baseClass[p];
+    }
+  }
+  /* tslint:disable:no-unused-variable */
+  function __() {
+    this.constructor = subClass;
+  }
   __.prototype = baseClass.prototype;
   subClass.prototype = new __();
+  /* tslint:enable:no-unused-variable */
 }
 
 /**

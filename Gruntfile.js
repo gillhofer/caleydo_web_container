@@ -94,6 +94,14 @@ module.exports = function (grunt) {
         '{plugins,external,server}/**/*.js'
       ]
     },
+    tslint: {
+      options: {
+        configuration: grunt.file.readJSON("tslint.json")
+      },
+      all: {
+        src: ['{plugins,external,server}/**/*.ts']
+      }
+    },
     mocha: {
       all: {
         options: {
@@ -297,6 +305,7 @@ module.exports = function (grunt) {
   ]);
 
   grunt.registerTask('default', [
+    'tslint',
     'jshint',
     'buildd'
   ]);

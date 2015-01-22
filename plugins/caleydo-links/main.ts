@@ -2,7 +2,7 @@
  * Created by Samuel Gratzl on 05.08.2014.
  */
 /* global define */
-"use strict"
+'use strict';
 /// <reference path="../../tsd.d.ts" />
 
 import d3 = require('d3');
@@ -148,7 +148,7 @@ export class LinksRenderer {
         $links.attr('d', (d) => {
           return line(d);
         });
-      })
+      });
     }
 
     function addLinks(entry) {

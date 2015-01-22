@@ -175,11 +175,9 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-too
       height: size[1],
       'class': 'mosaic'
     });
-    var $data = $svg.append('g');
-    var $highlight = $svg.append('g').style('pointer-events', 'none').classed('select-selected', true);
-
-    //using range bands with an ordinal scale for uniform distribution
-    var yscale = that.yscale = d3.scale.linear().range([0, size[1]]);
+    var $scale = $svg.append('g').attr('transform', 'scale(' + o.scale[0] + ',' + o.scale[1] + ')');
+    var $data = $scale.append('g');
+    var $highlight = $scale.append('g').style('pointer-events', 'none').classed('select-selected', true);
 
     var l = function (event, type, selected) {
       var highlights = that.hist_data.map(function (entry, i) {
@@ -196,10 +194,10 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-too
       $m.enter().append('rect').attr('width', '100%');
       $m.attr({
         y: function (d) {
-          return yscale(d.acc);
+          return d.acc;
         },
         height: function (d) {
-          return yscale(d.v);
+          return d.v;
         }
       });
       $m.exit().remove();
@@ -215,7 +213,6 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-too
 
     this.data.hist(o.nbins).then(function (hist) {
       that.hist = hist;
-      yscale.domain([0, hist.count]);
       var hist_data = that.hist_data = createHistData(hist, data.desc.value);
 
       var $m = $data.selectAll('rect').data(hist_data);
@@ -227,10 +224,10 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-too
         .on('click', onClick);
       $m.attr({
         y: function (d) {
-          return yscale(d.acc);
+          return d.acc;
         },
         height: function (d) {
-          return yscale(d.v);
+          return d.v;
         },
         fill: function (d) {
           return d.color;
@@ -257,11 +254,13 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-too
         });
         var h0 = that.hist_data[ex[0]];
         var h1 = that.hist_data[ex[1]];
+        var y = Math.min(h0.acc, h1.acc);
+        var y2 = Math.max(h0.acc + h0.v, h1.acc + h1.v);
         return C.resolved({
           x: 0,
-          width: this.rawSize[0],
-          height: that.yscale(Math.max(h0.v, h1.v)),
-          y: that.yscale(that.yscale.domain()[1] - Math.max(h0.v, h1.v))
+          width: that.rawSize[0],
+          height: y2 - y,
+          y: y
         });
       });
     }
