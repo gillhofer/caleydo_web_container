@@ -1,0 +1,23 @@
+{
+  "name" : "caleydo-vis-pathway",
+  "version": "0.0.1",
+  "dependencies": {
+    "d3": "~3.4.11"
+  },
+  "caleydo" : {
+    "plugins": [
+      {
+        "type": "vis",
+        "id": "caleydo-vis-pathway",
+        "name": "PathwayVis",
+        "icon": "icon.svg",
+        "size" : {
+          "size" : [500, 100],
+          "scale" : "free",
+          "minSize" : [50, 50]
+        },
+        "filter": ["vector","(real|int)"]
+      }
+    ]
+  }
+}
