@@ -18,6 +18,7 @@ var loader = C.getAPIJSON('/dataset').then(function (descs) {
     var r = {};
     datas.forEach((data) => {
       r[data.desc.id] = data;
+      r[data.desc.name] = data;
     });
     (<any>datas).byId = r;
     return datas;
