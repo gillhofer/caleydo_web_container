@@ -50,7 +50,7 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
   //});
 
   $(document).ready(function () {
-    $.get("/api/pathway", function (resp) {
+    $.get("/api/pathway/path", function (resp) {
      $('<h1>'+resp+'</h1>').appendTo('body');
     });
 
