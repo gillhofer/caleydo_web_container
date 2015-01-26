@@ -179,11 +179,7 @@ PluginConfig.prototype.addPlugin = function (plugindir, dir) {
 PluginConfig.prototype.dumpBower = function (that) {
   console.log('dump bower');
   var deferred = Q.defer();
-  fs.readFile(bower_file, function (err, data) {
-    if (err) {
-      deferred.reject(new Error(err));
-    }
-    var bower = JSON.parse(data);
+  function write(bower) {
     bower.dependencies = that.bower_dependencies;
     fs.writeFile(bower_file, JSON.stringify(bower, null, 2), function (err) {
       if (err) {
@@ -192,6 +188,22 @@ PluginConfig.prototype.dumpBower = function (that) {
       console.log(bower_file + ' saved');
       deferred.resolve(that);
     });
+  }
+  fs.exists(bower_file, function (exists) {
+    if (exists) {
+      fs.readFile(bower_file, function (err, data) {
+        if (err) {
+          deferred.reject(new Error(err));
+        }
+        var bower = JSON.parse(data);
+        write(bower);
+      });
+    } else {
+     write({
+       "name": "caleydo-web",
+       "version": "0.0.0"
+     });
+    }
   });
   return deferred.promise;
 };
