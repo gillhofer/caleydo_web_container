@@ -63,7 +63,7 @@ export function get(persisted: any) : C.IPromise<datatypes.IDataType>;
 export function get(persisted: any) : C.IPromise<datatypes.IDataType> {
   if (typeof persisted === 'string' || typeof persisted === 'number') {
     return list().then(function (data) {
-      return data.byId[persisted];
+      return (<any>data).byId[persisted];
     });
   }
   //resolve parent and then resolve it using restore item
