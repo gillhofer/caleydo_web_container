@@ -221,22 +221,22 @@ module.exports = function (grunt) {
     },
     bgShell: {
       _defaults: {
-        cmd: 'python api.py',
+        cmd: 'python server',
         bg: true,
         stdout: function (data) {
-          grunt.log.write('out: ' + data.length + ' ' + data);
+          grunt.log.write('server(' + data.length + '): ' + data);
         },
         fail: true
       },
       local: {
         execOpts: {
-          cwd: '../caleydo-web-server/flask/',
+          cwd: '../caleydo-web-server/',
           maxBuffer: false
         }
       },
       vagrant: {
         execOpts: {
-          cwd: '../vagrant/flask/',
+          cwd: '../vagrant/',
           maxBuffer: false
         }
       }
@@ -269,6 +269,14 @@ module.exports = function (grunt) {
     'watch'
   ]);
 
+  grunt.registerTask('pythonserver', [
+    'clean:server',
+    'ts:build',
+    'sass:dist',
+    'bgShell:vagrant',
+    'watch'
+  ]);
+
   grunt.registerTask('test', [
     'clean:server',
     'ts:build',
@@ -279,7 +287,7 @@ module.exports = function (grunt) {
 
   grunt.registerTask('build', [
     'clean:dist',
-    'tsd:refresh',
+    //'tsd:refresh',
     'ts:build',
     'sass:dist',
     'copy:plugins',
