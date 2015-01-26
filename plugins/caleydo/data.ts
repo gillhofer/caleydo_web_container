@@ -62,7 +62,7 @@ export function get(name : string) : C.IPromise<datatypes.IDataType>;
 export function get(persisted: any) : C.IPromise<datatypes.IDataType>;
 export function get(persisted: any) : C.IPromise<datatypes.IDataType> {
   if (typeof persisted === 'string' || typeof persisted === 'number') {
-    return this.list().then(function (data) {
+    return list().then(function (data) {
       return data.byId[persisted];
     });
   }
