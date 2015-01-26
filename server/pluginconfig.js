@@ -381,6 +381,13 @@ module.exports.findApps = function (config) {
   }).reduce(Q.when, Q.resolve([]));
 };
 
+module.exports.dumpDependencies = function (config) {
+  var c = {};
+  extend(c, defaultConfig, config || {});
+  var cc = new PluginConfig(c);
+  return cc.parseDirs(c.pluginDirs).then(PluginConfig.prototype.dumpBower);
+};
+
 
 if (require.main === module) {
   var program = require('commander').version('0.0.1')
