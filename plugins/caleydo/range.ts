@@ -263,11 +263,11 @@ export class Range1D {
   }
 
   get isAll() {
-    return this.length === 1 && this.at(0).isAll;
+    return this.arr.length === 1 && this.at(0).isAll;
   }
 
   get isNone() {
-    return this.length === 0;
+    return this.arr.length === 0;
   }
 
   private get isList() {
@@ -322,7 +322,8 @@ export class Range1D {
   }
 
   size(size?:number) {
-    return this.arr.map((d) => d.size(size)).reduce((a, b) => a + b, 0);
+    var t = this.arr.map((d) => d.size(size));
+    return t.reduce((a, b) => a + b, 0);
   }
 
   /**
