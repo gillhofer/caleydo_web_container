@@ -104,7 +104,7 @@ export function getter(...index: number[]);
 export function getter(...attr: string[]);
 export function getter(...attr: any[]) {
   if (attr.length === 1) {
-    return (obj) => obj[attr];
+    return (obj) => obj[attr[0]];
   }
   return (obj) => attr.map((a) => obj[a]);
 }
