@@ -97,6 +97,19 @@ export function isUndefined(obj:any) {
 }
 
 /**
+ * getter generator by name or index
+ * @param attr
+ */
+export function getter(...index: number[]);
+export function getter(...attr: string[]);
+export function getter(...attr: any[]) {
+  if (attr.length === 1) {
+    return (obj) => obj[attr];
+  }
+  return (obj) => attr.map((a) => obj[a]);
+}
+
+/**
  * identity function
  */
 export function identity(d:any) {
