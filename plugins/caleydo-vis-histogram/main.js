@@ -110,7 +110,7 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-too
 
     this.data.hist(o.nbins).then(function (hist) {
       that.hist = hist;
-      xscale.domain(Array.apply(null, {length: hist.bins}).map(Number.call, Number));
+      xscale.domain(d3.range(hist.bins));
       yscale.domain([0, o.totalHeight ? hist.count : hist.largestFrequency]);
       var hist_data = that.hist_data = createHistData(hist, that.data.desc.value);
 

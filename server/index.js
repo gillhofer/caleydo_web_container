@@ -74,10 +74,9 @@ app.use(/\/(.*)/, function (req, res, next) { //serve and check all files at two
 
 module.exports = app;
 
-var main = function () {
+var main = function (port) {
   //process.env.PORT set by heroku
-  var port = process.env.PORT || 9000;
-  console.log('port: ', process.env.PORT, 9000, port);
+  port = port || process.env.PORT || 9000;
   var server = app.listen(port, function () {
     console.log('Listening on port %d', server.address().port);
   });
@@ -85,8 +84,16 @@ var main = function () {
 
 //is is the main module similar to python __main__
 if (require.main === module) {
-  console.log('running as main');
-  main();
+  var program = require('commander').version('0.0.1')
+    .option('--dependencyOnly', 'run just bower')
+    .option('--port <port>', 'specify port [9000]', 9000)
+    .parse(process.argv);
+  if (program.dependencyOnly) {
+    require('./pluginconfig').dumpDependencies()
+  } else {
+    console.log('running as main');
+    main();
+  }
 } else {
   console.log('running as slave');
 }
