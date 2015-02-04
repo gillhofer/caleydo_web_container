@@ -15,7 +15,7 @@ export interface IDataVis extends events.IEventHandler, vis.ILocateAble {
   id: number;
   location : geom.AShape;
   range: ranges.Range;
-  ids() : ranges.Range;
+  ids() : C.IPromise<ranges.Range>;
 }
 
 class VisWrapper implements vis.ILocateAble {
@@ -105,7 +105,7 @@ function toId(a,b) {
 
 class Link {
   id : string;
-  constructor(public a : VisWrapper, public b: VisWrapper, private idtype : idtypes.IDType, private all: VisWrapper[]) {
+  constructor(public a : VisWrapper, public b: VisWrapper, private idtype : idtypes.IDType, private all: VisWrapper[], private options : any) {
     this.id = toId(a, b);
   }
 
@@ -143,7 +143,6 @@ class Link {
         break;
     }
     f.then((llinks) => {
-      console.log('render links');
       var r = [{
         clazz: 'rel-back',
         d: line.interpolate('linear-closed')([al.corner('ne'), bl.corner('nw'), bl.corner('sw'), al.corner('se')]),
@@ -173,7 +172,7 @@ class Link {
   }
 
   mode($g: D3.Selection) : string {
-    return $g.attr('data-mode') || 'block';
+    return $g.attr('data-mode') || this.options.mode || 'block';
   }
 
   setMode($g: D3.Selection, value: string) {
@@ -206,10 +205,12 @@ class Link {
       'class' : (d) => d.clazz,
       d: (d) => d.d
     });
-    $g.select('path.rel-back').on('contextmenu', () => {
-      this.nextMode($g);
-      d3.event.preventDefault();
-    });
+    if (this.options.interactive !== false) {
+      $g.select('path.rel-back').on('contextmenu', () => {
+        this.nextMode($g);
+        d3.event.preventDefault();
+      });
+    }
   }
 
   private createBand(aa: geom.Rect, bb: geom.Rect, ida: ranges.Range1D, idb: ranges.Range1D, union, id, clazz) {
@@ -248,7 +249,7 @@ class Link {
       addBlock(selected / ida.length, selected / idb.length, id + '-sel', clazz + ' select-selected', 0, 0);
     }
     addBlock(ul / ida.length, ul / idb.length, id, clazz, selected / ida.length, selected / idb.length);
-    console.error('created band');
+    //console.error('created band');
     return r;
   }
 
@@ -376,7 +377,7 @@ class LinkIDTypeContainer {
   private arr : VisWrapper[] = [];
   private $node : D3.Selection;
 
-  constructor(public idtype: idtypes.IDType, private parent: Element) {
+  constructor(public idtype: idtypes.IDType, private parent: Element, private options: any = {}) {
     idtype.on('select', this.listener);
     this.$node = d3.select(parent).append('svg');
     this.$node.style({
@@ -433,12 +434,15 @@ class LinkIDTypeContainer {
   private prepareCombinations() {
     var $root = this.$node.select('g');
     var combinations = [];
-    var l = this.arr.length, i, j, a,b;
+    var l = this.arr.length, i, j, a,b,
+      filter = this.options.filter || C.constantTrue;
     for (i = 0; i < l; ++i) {
       a = this.arr[i];
       for (j = 0; j < i; ++j) {
         b = this.arr[j];
-        combinations.push(new Link(a, b, this.idtype, this.arr));
+        if (filter(a.vis, b.vis)) {
+          combinations.push(new Link(a, b, this.idtype, this.arr, this.options));
+        }
       }
     }
     var $combi = $root.selectAll('g').data(combinations, (l) => l.id);
@@ -512,7 +516,7 @@ export class LinkContainer {
 
   private links : LinkIDTypeContainer[] = [];
 
-  constructor(private parent: Element, private dirtyEvents: string[]) {
+  constructor(private parent: Element, private dirtyEvents: string[], private options : any = {}) {
     parent.appendChild(this.node);
     this.node.classList.add('link-container');
     C.onDOMNodeRemoved(this.node, this.destroy, this);
@@ -533,7 +537,7 @@ export class LinkContainer {
       });
       //add missing idtypes
       idtypes.forEach((idtype) => {
-        var n = new LinkIDTypeContainer(idtype,  this.node);
+        var n = new LinkIDTypeContainer(idtype,  this.node, this.options);
         n.push(w);
         this.links.push(n);
       });

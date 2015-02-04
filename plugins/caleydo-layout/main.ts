@@ -4,12 +4,12 @@
 import C = require('../caleydo/main');
 import _2D = require('../caleydo/2D');
 import plugins = require('../caleydo/plugin');
+import geom = require('../caleydo/geom');
 
 export interface ILayoutElem {
   setBounds(x:number, y:number, w:number, h:number);
 
-  getLocation(): _2D.Vector2D;
-  getSize(): _2D.Vector2D;
+  getBounds(): geom.Rect;
 
   option<T>(name:string) : T;
   option<T>(name:string, default_:T) : T;
@@ -20,17 +20,16 @@ export class ALayoutElem {
 
   }
 
-  getBounds() {
-    return {x: 0, y: 0, w: 0, h: 0};
+  getBounds(): geom.Rect {
+    return geom.rect(0,0,0,0);
   }
 
   getLocation() {
-    return _2D.vec(this.getBounds());
+    return this.getBounds().xy;
   }
 
   getSize() {
-    var b = this.getBounds();
-    return _2D.vec(b.w, b.h);
+    return this.getBounds().size;
   }
 
   option<T>(name:string, default_:T = null):T {
@@ -65,12 +64,7 @@ class HTMLLayoutElem extends ALayoutElem implements ILayoutElem {
       }
       return 0;
     }
-    return {
-      x : v(style.left),
-      y : v(style.top),
-      w : v(style.width),
-      h: v(style.height)
-    };
+    return geom.rect(v(style.left),v(style.top), v(style.width),v(style.height));
   }
 }
 
@@ -108,7 +102,7 @@ export function layers(elems:ILayoutElem[], w:number, h:number, parent:ILayoutEl
 
 export function flowLayout(horizontal:boolean, gap:number, padding = {top: 0, left: 0, right: 0, bottom: 0}) {
   function setSize(w:number, h:number, child:ILayoutElem, value:number) {
-    var loc = child.getLocation();
+    var loc = child.getBounds().xy;
     if (horizontal)
       child.setBounds(loc.x, loc.y, value, grab(child.option('prefHeight', Number.NaN), h));
     else
@@ -154,7 +148,7 @@ export function flowLayout(horizontal:boolean, gap:number, padding = {top: 0, le
     var x_acc = padding.left;
     var y_acc = padding.top;
     elems.forEach((elem) => {
-      var s = elem.getSize();
+      var s = elem.getBounds().size;
       elem.setBounds(x_acc, y_acc, s.x, s.y);
       if (horizontal) {
         x_acc += s.x + gap;

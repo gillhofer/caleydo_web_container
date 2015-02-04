@@ -17,6 +17,12 @@ CORNER.SW = CORNER[5] = 'sw';
 CORNER.W = CORNER[6] = 'w';
 CORNER.NW = CORNER[7] = 'nw';
 
+export function vec(x : number, y: number): _2D.Vector2D;
+export function vec(vec: { x: number; y: number}): _2D.Vector2D;
+export function vec(x: any, y: number = Number.NaN): _2D.Vector2D {
+  return _2D.vec(x,y);
+}
+
 /**
  * a simple basic shape
  */
@@ -116,14 +122,18 @@ export class Rect extends AShape {
   }
 
   get xy() {
-    return new _2D.Vector2D(this.x, this.y);
+    return _2D.vec(this.x, this.y);
   }
 
   get x2y2() {
-    return new _2D.Vector2D(this.x2, this.y2);
+    return _2D.vec(this.x2, this.y2);
   }
 
-  get cx() {
+  get size() {
+    return _2D.vec(this.w, this.h);
+  }
+
+  get cx() : number {
     return this.x + this.w / 2;
   }
 
@@ -139,7 +149,7 @@ export class Rect extends AShape {
     this.y = val - this.y / 2;
   }
 
-  get x2() {
+  get x2() : number {
     return this.x + this.w;
   }
 
@@ -188,7 +198,7 @@ export class Circle extends AShape {
   }
 
   get xy() {
-    return new _2D.Vector2D(this.x, this.y);
+    return _2D.vec(this.x, this.y);
   }
 
   toString() {
@@ -227,7 +237,7 @@ export class Ellipse extends AShape {
   }
 
   get xy() {
-    return new _2D.Vector2D(this.x, this.y);
+    return _2D.vec(this.x, this.y);
   }
 
   toString() {
@@ -266,7 +276,7 @@ export class Line extends AShape {
   }
 
   get xy() {
-    return new _2D.Vector2D(this.x1, this.y1);
+    return _2D.vec(this.x1, this.y1);
   }
 
   get x1y1() {
@@ -274,7 +284,7 @@ export class Line extends AShape {
   }
 
   get x2y2() {
-    return new _2D.Vector2D(this.x2, this.y2);
+    return _2D.vec(this.x2, this.y2);
   }
 
   toString() {
@@ -478,7 +488,7 @@ export class Polygon extends AShape {
 }
 
 export function vec2(x:number, y:number):_2D.Vector2D {
-  return new _2D.Vector2D(x, y);
+  return _2D.vec(x, y);
 }
 
 export function rect(x:number, y:number, w:number, h:number):Rect {

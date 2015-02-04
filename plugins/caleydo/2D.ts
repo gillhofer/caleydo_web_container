@@ -852,9 +852,9 @@ export class Intersection {
   }
 }
 
-export function vec(x : number, y: number);
-export function vec(vec: { x: number; y: number});
-export function vec(x: any, y: number = Number.NaN) {
+export function vec(x : number, y: number): Vector2D;
+export function vec(vec: { x: number; y: number}): Vector2D;
+export function vec(x: any, y: number = Number.NaN): Vector2D {
   if (typeof x === 'number') {
     return new Vector2D(<number>x,y);
   } else {
