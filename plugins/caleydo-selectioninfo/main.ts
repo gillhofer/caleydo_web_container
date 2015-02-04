@@ -20,16 +20,17 @@ export class SelectionIDType {
     this.$div = parent.append('div');
     this.$div.append('span').text(idType.name);
     this.$ul = this.$div.append('ul');
-    this.update(idtypes.defaultSelectionType, idType.selections());
+    this.update(idtypes.defaultSelectionType, idType.selections(idtypes.defaultSelectionType));
+    this.update(idtypes.hoverSelectionType, idType.selections(idtypes.hoverSelectionType));
   }
 
   private update(type: string, selection: ranges.Range) {
-    this.$div.classed('no-selection', selection.isNone);
+    this.$div.classed('no-selection-' + type, selection.isNone);
     if (selection.isNone) {
-      this.$ul.selectAll('*').remove();
+      this.$ul.selectAll('li.select-'+type).remove();
       return;
     }
-    var $li = this.$ul.selectAll('li').data(selection.dim(0).iter().asList());
+    var $li = this.$ul.selectAll('li.select-'+type).data(selection.dim(0).asList());
     $li.enter().append('li').classed('select-' + type, true);
     $li.exit().remove();
     $li.text(C.identity);
