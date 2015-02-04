@@ -79,11 +79,11 @@ class Command {
 
   static restore(start : string, container : any, toCmd : (id: string, content: any) => C.IPromise<IPersistableCommand>) : C.IPromise<Command> {
     if (!start) {
-      return C.resolved(null);
+      return C.resolved(<Command>null);
     }
     var p = container[start];
     if (p instanceof Command) {
-      return C.resolved(p);
+      return C.resolved(<Command>p);
     }
     //1. load the cmd
     return toCmd(p.id, p.content).then((cmd) => {
