@@ -852,6 +852,16 @@ export class Intersection {
   }
 }
 
+export function vec(x : number, y: number);
+export function vec(vec: { x: number; y: number});
+export function vec(x: any, y: number = Number.NaN) {
+  if (typeof x === 'number') {
+    return new Vector2D(<number>x,y);
+  } else {
+    return new Vector2D(x.x, x.y);
+  }
+}
+
 export class Vector2D {
   constructor(public x = 0, public y = 0) {
 
