@@ -337,7 +337,7 @@ export class SelectAble extends events.EventHandler {
   }
 
   on(events, handler) {
-    if (events === 'select') {
+    if (events === 'select' || events.match('^select-')[0] === 'select-') {
       this.numSelectListeners ++;
       if (this.numSelectListeners === 1) {
         var idt = this.idtypes;
@@ -357,7 +357,7 @@ export class SelectAble extends events.EventHandler {
   }
 
   off(events, handler) {
-    if (events === 'select') {
+    if (events === 'select' || events.match('^select-') === 'select-') {
       this.numSelectListeners --;
       if (this.numSelectListeners === 0) {
         this.idtypes.forEach((idtype, i) => idtype.off('select', this.selectionListeners[i]));
