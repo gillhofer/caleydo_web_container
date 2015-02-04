@@ -4,7 +4,7 @@
 /* global define */
 "use strict";
 
-define(['exports', 'd3', '../caleydo/main', 'lineupjs', '../caleydo/d3util', 'css!./style'], function (exports, d3, C, LineUpJS, d3utils) {
+define(['exports', 'd3', '../caleydo/main', 'lineupjs', '../caleydo/d3util', 'font-awesome', 'css!./style'], function (exports, d3, C, LineUpJS, d3utils) {
   function deriveColumns(columns) {
     return columns.map(function (col) {
       var r = {
@@ -39,15 +39,33 @@ define(['exports', 'd3', '../caleydo/main', 'lineupjs', '../caleydo/d3util', 'cs
 
     var columns = deriveColumns(this.data.cols());
     // bind data to chart
-    C.all([this.data.objects(), this.data.rows()]).then(function (promise) {
+    C.all([this.data.objects(), this.data.rowIds()]).then(function (promise) {
       var arr = promise[0];
-      var rowNames = promise[1];
+      var rowIds = promise[1].dim(0).asList();
       var data = arr.map(function (obj, i) {
         return C.mixin({
-          _id : rowNames[i]
+          _id : rowIds[i]
         }, obj);
       });
-      that.lineup = LineUpJS.create(LineUpJS.createLocalStorage(data, columns, null, '_id'), $div);
+      that.lineup = LineUpJS.create(LineUpJS.createLocalStorage(data, columns, null, '_id'), $div, that.option('lineup'));
+      that.lineup.on('hover', function(row) {
+        var id = row ? row._id : null;
+        if (row) {
+          that.data.select('hovered', [id]);
+        } else {
+          that.data.clear('hovered');
+        }
+        that.fire('hovered', row ? row._id : null);
+      });
+      that.lineup.on('selected', function(row) {
+        var id = row ? row._id : null;
+        if (row) {
+          that.data.select('selected', [id]);
+        } else {
+          that.data.clear('selected');
+        }
+        that.fire('selected', row ? row._id : null);
+      });
       that.lineup.startVis();
     });
     return $div;
@@ -73,6 +91,6 @@ define(['exports', 'd3', '../caleydo/main', 'lineupjs', '../caleydo/d3util', 'cs
   });
 
   exports.create = function (data, parent, options) {
-    return exports.LineUp(data, parent, options);
+    return new exports.LineUp(data, parent, options);
   };
 });
