@@ -74,7 +74,7 @@ class HTMLLayoutElem extends ALayoutElem implements ILayoutElem {
   }
 }
 
-function wrapDom(node:HTMLElement,options:any = {}) {
+export function wrapDOM(node:HTMLElement,options:any = {}) {
   return new HTMLLayoutElem(node, options);
 }
 
@@ -166,5 +166,50 @@ export function flowLayout(horizontal:boolean, gap:number, padding = {top: 0, le
   }
 
   return FlowLayout;
+}
+
+export function distributeLayout(horizontal:boolean, defaultValue:number, padding = {top: 0, left: 0, right: 0, bottom: 0}) {
+  function setBounds(x, y, w:number, h:number, child:ILayoutElem, value:number) {
+    if (horizontal)
+      child.setBounds(x, y, value, grab(child.option('prefHeight', Number.NaN), h));
+    else
+      child.setBounds(x, y, grab(child.option('prefWidth', Number.NaN), w), value);
+  }
+
+  function DistributeLayout(elems:ILayoutElem[], w:number, h:number, parent:ILayoutElem) {
+    w -= padding.left + padding.right;
+    h -= padding.top + padding.bottom;
+    var freeSpace = (horizontal ? w : h);
+    var fixUsed = 0;
+
+    // count statistics
+    elems.forEach((elem) => {
+      var fix = elem.option(horizontal ? 'prefWidth' : 'prefHeight', Number.NaN);
+      if (isDefault(fix)) {
+        fix = defaultValue;
+      }
+      fixUsed += fix;
+    });
+
+    var gap = (freeSpace - fixUsed) / (elems.length-1);
+
+    var x_acc = padding.left;
+    var y_acc = padding.top;
+    elems.forEach((elem) => {
+      var fix = elem.option(horizontal ? 'prefWidth' : 'prefHeight', Number.NaN);
+      if (isDefault(fix)) {
+        fix = defaultValue;
+      }
+      setBounds(x_acc, y_acc, w, h, elem, fix);
+      if (horizontal) {
+        x_acc += fix + gap;
+      } else {
+        y_acc += fix + gap;
+      }
+    });
+    return false;
+  }
+
+  return DistributeLayout;
 }
 

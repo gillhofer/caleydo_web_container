@@ -30,6 +30,13 @@ export class ZoomLogic extends events.EventHandler {
     return this.zoomSet(old.scale[0] + deltaX, old.scale[1] + deltaY);
   }
 
+  get isWidthFixed() {
+    return (this.meta && this.meta.scaling === 'height-only')
+  }
+  get isHeightFixed() {
+    return (this.meta && this.meta.scaling === 'width-only')
+  }
+
   zoomSet(zoomX : number, zoomY : number) {
     if (!this.v) {
       return null;
