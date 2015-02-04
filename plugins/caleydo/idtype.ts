@@ -89,7 +89,7 @@ export class IDType extends events.EventHandler implements provenance.IPersistab
   }
 
   toString() {
-    return name;
+    return this.name;
   }
 
   selectionTypes() {

@@ -15,14 +15,18 @@ export var version = '0.0.1-alpha';
 export var server_url:string = config.apiUrl;
 export var server_json_suffix:string = config.apiJSONSuffix || '';
 
-  /**
-   * wraps the given resolver function to be a promise
-   * @param resolver
-   * @param {function(resolve, reject)} resolver - the promise resolver
-   * @returns {Promise} a promise object
-   */
-    export
-function promised<T>(f) {
+
+export interface IPromise<T> extends JQueryPromise<T> {
+
+}
+
+/**
+ * wraps the given resolver function to be a promise
+ * @param resolver
+ * @param {function(resolve, reject)} resolver - the promise resolver
+ * @returns {Promise} a promise object
+ */
+export function promised<T>(f) : IPromise<T> {
   var d = $.Deferred<T>();
   f((r) => {
     d.resolve(r);
@@ -36,7 +40,7 @@ function promised<T>(f) {
  * @param result - the result of the promise
  * @returns {Promise} a promise object
  */
-export function resolved(result) {
+export function resolved(result) : IPromise<any> {
   return $.Deferred().resolve(result).promise();
 }
 
@@ -49,9 +53,6 @@ export function all(promises:any[]):IPromise<Array<any>> {
   return $.when.apply($, promises).then(() => argList(arguments));
 }
 
-export interface IPromise<T> extends JQueryPromise<T> {
-
-}
 /**
  * async JSON loading
  * @see {@link http://api.jquery.com/jQuery.getJSON/}

@@ -4,24 +4,26 @@
 import C = require('./main');
 import plugins = require('./plugin');
 import datatypes = require('./datatype');
+import tables = require('./table');
+
 'use strict';
 
 //find all datatype plugins
 var available = plugins.list('datatype');
 /**
  * load all descriptions and store them in a promise
- * @type {JQueryPromise<any>|JQueryGenericPromise<JQueryPromise<{}>>|JQueryGenericPromise<U>|JQueryPromise<JQueryPromise<{}>>|JQueryPromise<U>}
+ * @type {C.IPromise<datatypes.IDataType[]>}
  */
-var loader = C.getAPIJSON('/dataset').then(function (descs) {
+var loader : C.IPromise<datatypes.IDataType[]> = C.getAPIJSON('/dataset').then(function (descs) {
   //load descriptions and create data out of them
-  return C.all(descs.map((desc) => transformEntry(desc))).then((datas) => {
+  return <any> C.all(descs.map((desc) => transformEntry(desc))).then((datas) => {
     var r = {};
     datas.forEach((data) => {
       r[data.desc.id] = data;
       r[data.desc.name] = data;
     });
     (<any>datas).byId = r;
-    return datas;
+    return C.resolved(datas);
   });
 });
 
@@ -79,4 +81,64 @@ export function get(persisted: any) : C.IPromise<datatypes.IDataType> {
 
 export function create(desc: any) : C.IPromise<datatypes.IDataType> {
   return transformEntry(desc);
+}
+
+export function convertToTable(list : datatypes.IDataType[]) {
+  return tables.wrapObjects({
+    id : '_data',
+    name: 'data',
+    type: 'table',
+    rowtype: '_data',
+    size: [list.length, 4],
+    columns: [
+      {
+        name: 'Name',
+        value: {
+          type: 'string'
+        },
+        getter: (d) => d.desc.name
+      },
+      {
+        name: 'Type',
+        value: {
+          type: 'string'
+        },
+        getter: (d) => d.desc.type
+      },
+      {
+        name: 'Dimensions',
+        value: {
+          type: 'string'
+        },
+        getter: (d) => d.dim.join(' x ')
+      },
+      {
+        name: 'ID Types',
+        value: {
+          type: 'string'
+        },
+        getter: (d) => d.idtypes.join(' x ')
+      },
+    ]
+  }, list, (d : datatypes.IDataType) => d.desc.name);
+}
+
+export function convertTableToVectors(list: datatypes.IDataType[]) {
+  var r = new Array<datatypes.IDataType>();
+  list.forEach((d) => {
+    if (d.desc.type === 'table') {
+      r.push.apply(r, (<tables.ITable>d).cols());
+    } else {
+      r.push(d);
+    }
+  });
+  return r;
+}
+
+export function listAsTable(tablesAsVectors = false) {
+  var l = list();
+  if (tablesAsVectors) {
+    l = l.then(convertTableToVectors);
+  }
+  return l.then(convertToTable);
 }

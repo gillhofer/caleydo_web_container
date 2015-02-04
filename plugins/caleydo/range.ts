@@ -567,6 +567,10 @@ export class Range1D {
     return Iterator.concat.apply(Iterator, this.arr.map((d) => d.iter(size)));
   }
 
+  asList(size?:number): number[] {
+    return this.iter(size).asList();
+  }
+
   /**
    * for each element
    * @param callbackfn

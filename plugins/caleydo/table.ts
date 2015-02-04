@@ -147,17 +147,32 @@ function viaAPILoader() {
   };
 }
 
-function viaDataLoader(data: any[], idProperty: string, nameProperty: string) {
-  var _data = undefined;
+function viaDataLoader(data: any[], nameProperty: any) {
+  var _data : any = undefined;
   return (desc) => {
     if (_data) { //in the cache
       return C.resolved(_data);
     }
+    var name : (any) => string = C.isFunction(nameProperty)? nameProperty : C.getter(nameProperty.toString());
+    function toGetter(col) {
+      if (col.getter) {
+        return col.getter;
+      }
+      return (d) => d[col.name];
+    }
+    var getters = desc.columns.map(toGetter);
+    var objs = data.map((row) => {
+      var r = { _ : row };
+      desc.columns.forEach((col, i) => {
+        r[col.name] =  getters[i](row);
+      });
+      return r;
+    });
     _data = {
-      rowIds : data.map((d) => d[idProperty]),
-      rows : data.map((d) => d[nameProperty]),
-      objs : data,
-      data : desc.columns.map((name) => data.map((d) => d[name]))
+      rowIds : ranges.range(0,data.length),
+      rows : data.map(name),
+      objs : objs,
+      data : getters.map((getter) => data.map(getter))
     };
     return C.resolved(_data);
   };
@@ -552,6 +567,8 @@ export function create(desc: datatypes.IDataDescription): ITable {
   return new Table(desc, viaAPILoader());
 }
 
-export function wrapObjects(desc: datatypes.IDataDescription, data: any[], idProperty: string, nameProperty: string) {
-  return new Table(desc, viaDataLoader(data, idProperty, nameProperty));
+export function wrapObjects(desc: datatypes.IDataDescription, data: any[], nameProperty: string);
+export function wrapObjects(desc: datatypes.IDataDescription, data: any[], nameProperty: (obj: any) => string);
+export function wrapObjects(desc: datatypes.IDataDescription, data: any[], nameProperty: any) {
+  return new Table(desc, viaDataLoader(data, nameProperty));
 }
