@@ -12,7 +12,20 @@
         "name": "HeatMap",
         "icon": "icon.svg",
         "sizeDependsOnDataDimension" : true,
-        "filter": "(matrix|vector)"
+        "filter": "matrix"
+      },
+      {
+        "type": "vis",
+        "id": "caleydo-vis-heatmap1d",
+        "folder": "caleydo-vis-heatmap",
+        "name": "HeatMap 1D",
+        "icon": "icon.svg",
+        "sizeDependsOnDataDimension": [
+          false,
+          true
+        ],
+        "scaling" : "height-only",
+        "filter": "vector"
       }
     ]
   }

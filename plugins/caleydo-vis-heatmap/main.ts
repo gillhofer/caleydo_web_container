@@ -267,7 +267,7 @@ export class HeatMap1D extends vis.AVisInstance implements vis.IVisInstance {
       return bak;
     }
     var dims = this.data.dim;
-    var width = dims[1], height = dims[0];
+    var width = 20, height = dims[0];
     this.$node.attr({
       width: width * scale[0],
       height: height * scale[1]
