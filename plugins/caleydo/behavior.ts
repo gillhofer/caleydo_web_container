@@ -31,10 +31,15 @@ export class ZoomLogic extends events.EventHandler {
   }
 
   get isWidthFixed() {
-    return (this.meta && this.meta.scaling === 'height-only')
+    return (this.meta && this.meta.scaling === 'height-only');
   }
+
   get isHeightFixed() {
-    return (this.meta && this.meta.scaling === 'width-only')
+    return (this.meta && this.meta.scaling === 'width-only');
+  }
+
+  get isFixedAspectRatio() {
+    return (this.meta && this.meta.scaling === 'aspect');
   }
 
   zoomSet(zoomX : number, zoomY : number) {
@@ -56,6 +61,9 @@ export class ZoomLogic extends events.EventHandler {
     }
     if (s[1] <= 0) {
       s[1] = 0.001;
+    }
+    if ((this.meta && this.meta.scaling === 'aspect')) { //same aspect ratio use min scale
+      s[0] = s[1] = Math.min.apply(Math,s);
     }
     this.fire('zoom', {
       scale : s,

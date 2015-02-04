@@ -195,6 +195,15 @@ export function distributeLayout(horizontal:boolean, defaultValue:number, paddin
 
     var x_acc = padding.left;
     var y_acc = padding.top;
+
+    if (elems.length === 1) { //center the single one
+      if (horizontal) {
+        x_acc += (freeSpace-fixUsed) / 2;
+      } else {
+        y_acc += (freeSpace-fixUsed) / 2;
+      }
+    }
+
     elems.forEach((elem) => {
       var fix = elem.option(horizontal ? 'prefWidth' : 'prefHeight', Number.NaN);
       if (isDefault(fix)) {
