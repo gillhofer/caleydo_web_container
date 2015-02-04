@@ -5,22 +5,9 @@
 import vis = require('./vis');
 import events = require('./event');
 
-export class ZoomBehavior extends events.EventHandler {
-  constructor(private node: Element, public v: vis.IVisInstance, public meta : vis.IVisMetaData) {
+export class ZoomLogic extends events.EventHandler {
+  constructor(public v: vis.IVisInstance, public meta: vis.IVisMetaData) {
     super();
-    node.addEventListener('mousewheel', (event : any) => {
-      if (!this.v) {
-        return;
-      }
-      var ctrlKey = event.ctrlKey;
-      var shiftKey = event.shiftKey;
-      var altKey = event.altKey;
-      var m = event.wheelDelta;
-      this.zoom(m * (ctrlKey || altKey ? 1: 0), m * (ctrlKey || shiftKey ? 1 : 0));
-      if (ctrlKey || shiftKey || altKey) {
-        event.preventDefault();
-      }
-    });
   }
 
   zoomIn() {
@@ -76,5 +63,24 @@ export class ZoomBehavior extends events.EventHandler {
     }
     var ori = this.v.rawSize;
     return this.zoomSet(w / ori[0], h/ori[1]);
+  }
+}
+
+export class ZoomBehavior extends ZoomLogic {
+  constructor(private node: Element, v: vis.IVisInstance, meta : vis.IVisMetaData) {
+    super(v, meta);
+    node.addEventListener('mousewheel', (event : any) => {
+      if (!this.v) {
+        return;
+      }
+      var ctrlKey = event.ctrlKey;
+      var shiftKey = event.shiftKey;
+      var altKey = event.altKey;
+      var m = event.wheelDelta;
+      this.zoom(m * (ctrlKey || altKey ? 1: 0), m * (ctrlKey || shiftKey ? 1 : 0));
+      if (ctrlKey || shiftKey || altKey) {
+        event.preventDefault();
+      }
+    });
   }
 }

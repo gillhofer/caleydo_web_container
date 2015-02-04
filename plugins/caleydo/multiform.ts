@@ -178,6 +178,10 @@ export class MultiForm extends vis.AVisInstance implements vis.IVisInstance, IMu
     return this.actDesc;
   }
 
+  Loader() {
+    return this.actVisPromise;
+  }
+
   get size() {
     if (this.actVis) {
       return this.actVis.size;
@@ -448,12 +452,12 @@ export class MultiFormGrid extends vis.AVisInstance implements vis.IVisInstance,
     return null;
   }
 
-    private locateGroup(range : ranges.Range) {
+  private locateGroup(range:ranges.Range) {
 
-      return C.resolved(undefined);
-    }
+    return C.resolved(undefined);
+  }
 
-  private locateGroupById(range : ranges.Range) {
+  private locateGroupById(range:ranges.Range) {
 
     return C.resolved(undefined);
   }
@@ -503,6 +507,12 @@ export class MultiFormGrid extends vis.AVisInstance implements vis.IVisInstance,
   get act() {
     return this.actDesc;
   }
+
+  get actLoader() {
+    return this.actVisPromise;
+  }
+
+
 
   gridSize(raw = false) : { cols: number[]; rows: number[]; grid: number[][][]} {
     var sizes = this.grid.map(raw ? (elem) => elem.rawSize : (elem) => elem.size);
