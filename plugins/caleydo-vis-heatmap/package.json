@@ -12,7 +12,7 @@
         "name": "HeatMap",
         "icon": "icon.svg",
         "sizeDependsOnDataDimension" : true,
-        "filter": "matrix"
+        "filter": "(matrix|vector)"
       }
     ]
   }
