@@ -446,9 +446,8 @@ class LinkIDTypeContainer {
       }
     }
     var $combi = $root.selectAll('g').data(combinations, (l) => l.id);
-    $combi.enter().append('g');
+    $combi.enter().append('g').attr('data-id', (l) => l.id);
     $combi.exit().remove();
-    $combi.attr('data-id', (l) => l.id);
   }
 
   private renderAll() {
@@ -485,7 +484,6 @@ class LinkIDTypeContainer {
 
   private destroy() {
     this.idtype.off('select', this.listener);
-    this.$node.remove();
   }
 
   push(elem: VisWrapper) {
@@ -505,7 +503,10 @@ class LinkIDTypeContainer {
       elem.callbacks.splice(elem.callbacks.indexOf(this.change), 1);
       this.prepareCombinations();
     }
-    return this.arr.length === 0;
+    if (this.arr.length === 0) { //destroy myself if nothing left
+      this.$node.remove();
+    }
+    return this.arr.length > 0;
   }
 
 }
@@ -537,7 +538,7 @@ export class LinkContainer {
       });
       //add missing idtypes
       idtypes.forEach((idtype) => {
-        var n = new LinkIDTypeContainer(idtype,  this.node, this.options);
+        var n = new LinkIDTypeContainer(idtype, this.node, this.options);
         n.push(w);
         this.links.push(n);
       });
