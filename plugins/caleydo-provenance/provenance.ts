@@ -3,7 +3,6 @@
  */
 import C = require('../caleydo/main');
 import plugins = require('../caleydo/plugin');
-import idtypes = require('../caleydo/idtype');
 
 export interface IPersistable {
   /**
@@ -185,22 +184,53 @@ class Cmd {
 }
 
 class CmdNode {
-  result : CmdResult;
   next : CmdNode[] = [];
-  in_references : CmdIDNode[] = [];
-  out_references = Cmd
+
+  requires : CmdIDNode[] = [];
+  produces : CmdIDNode[] = [];
+
+  inverse: Cmd;
 
   constructor(public cmd: Cmd, public previous : CmdNode) {
     if (this.previous) {
       this.previous.next.push(this);
     }
   }
+
+  get isRoot() {
+    return this.previous === this;
+  }
+
+  execute():CmdResult {
+    this.cmd.inputs = this.requires.map((r) => r.id);
+    var r = this.cmd.execute();
+    this.cmd.inputs = null; //reset
+    return r;
+  }
+
+  get path() {
+    var r = [],
+      act = this;
+    while (!act.isRoot) {
+      r.push(act);
+      act = act.previous;
+    }
+    r = r.reverse();
+    return r;
+  }
 }
 
 class CmdIDNode {
-  usedBy : CmdNode[] = [];
+  usedBy : { node: CmdNode; index: number; }[] = [];
+  removedBy : CmdNode;
 
-  constructor(public id : CmdID, public createdBy : CmdNode, public index : number) {
+  constructor(public id : CmdID, public createdBy : CmdNode) {
+
+  }
+}
+
+class StateNode {
+  constructor(public name: string, public resultOf: CmdNode, public consistsOf : CmdID[]) {
 
   }
 }
@@ -226,72 +256,157 @@ class RootNode extends CmdNode {
   }
 }
 
+function remAll<T>(arr: T[], toremove: T[]) {
+  toremove.forEach((r) => {
+    var i = arr.indexOf(r);
+    if (i >= 0) {
+      arr.splice(i, 1);
+    }
+  });
+}
+
 class CmdStack {
-  private activeIDs : CmdIDNode[];
-  private act : CmdNode = new RootNode();
+  private nodes : CmdNode[] = [];
+  private ids : CmdIDNode[] = [];
+  private states : StateNode[] = [];
+  private act = new StateNode('main', new RootNode(), []);
+
+  constructor() {
+    this.nodes.push(this.act.resultOf);
+    this.states.push(this.act);
+  }
 
   execute(meta: ICmdMetaData, f : ICmdFunction, inputs:CmdID[], parameter: any) {
     return this.push(new Cmd(meta, f, inputs, parameter));
   }
 
   push(cmd: Cmd) {
-    var node = new CmdNode(cmd, this.act);
-    node.references = this.scanInputs(cmd.inputs, node);
-    node.result = cmd.execute();
-    this.integrateResult(node.result, node);
-    this.act = node;
-    return node.result;
+    var toId =(id) => this.byID(id);
+    var node = new CmdNode(cmd, this.act.resultOf);
+    this.nodes.push(node);
+    node.requires = cmd.inputs.map(toId);
+
+    var result = cmd.execute();
+
+    //TODO check for similar ones
+    node.produces = result.created.map((id) => new CmdIDNode(id, node));
+
+    this.ids.push.apply(this.ids, node.produces);
+
+    this.walkImpl(node, result);
+    return result;
   }
 
-  private scanInputs(inputs : CmdID[], node: CmdNode) {
-    return inputs.map((input) => {
-      var id = this.byID(input);
-      id.usedBy.push(node);
-      return id;
+  private walkImpl(node: CmdNode, result: CmdResult) {
+    var toId =(id) => this.byID(id);
+
+    node.inverse = result.inverse;
+
+    node.produces.forEach((n, i) => n.id = result.created[i]);
+
+    this.act.consistsOf.push.apply(this.act.consistsOf, node.produces);
+
+    var rem = result.removed.map(toId);
+    rem.forEach((r) => {
+      r.id = null; //free the id itself
+      r.removedBy = node;
     });
+    remAll(this.act.consistsOf, rem);
+
+    this.act.resultOf = node;
   }
 
-  private byID(id : CmdID) {
-    return C.search(this.activeIDs, (active) => active.id == id);
+  redo(node: CmdNode) {
+    //assert this.last.next.indexOf(node) >= 0
+    var r = node.execute();
+    //update with the new values
+    this.walkImpl(node, r);
+    return r;
+  }
+
+  redoAll(path: CmdNode[]) {
+    //TODO optimize code
+    path.forEach((todo) => this.redo(todo));
   }
 
   undo() {
-    if (!this.act) { //nothing to undo
+    if (this.act.resultOf.isRoot) { //nothing to undo
       return;
     }
-    var node = this.act;
-    this.push(node.result.inverse);
+    var toUndo = this.last;
+    this.push(toUndo.inverse);
+    var undoed = this.last;
     //change the root to its grandparent and create a cycle
-    var grand = node.previous.previous;
+    var grand = toUndo.previous;
 
-    //clear the result and optimize the graph
-    this.deleteResult(this.act);
-    this.deleteResult(node);
+    //free result
 
-    this.act.next.push(grand);
-    this.act = grand; //back at the grand parent
+    undoed.inverse = toUndo.cmd;
+
+    undoed.next.push(grand);
+    undoed = grand; //back at the grand parent
   }
 
-  private deleteResult(n : CmdNode) {
-
-    n.result = null;
+  undoAll(path: CmdNode[]) {
+    path.forEach(() => this.undo());
   }
 
-  private integrateResult(r : CmdResult, node: CmdNode) {
-    var ids = this.activeIDs;
-    //integrate new ones
-    ids.push.apply(this.activeIDs, r.created.map((id, i) => new CmdIDNode(id, node, i)));
+  get activeIDs() {
+    return this.act.consistsOf;
+  }
 
-    //delete old ones and update references
-    if (r.removed.length > 0) {
-      r.removed.forEach(function(rem) {
-        var i = C.indexOf(ids, (active) => active.id == rem);
-        var elem = ids[i];
-        elem.usedBy.forEach((usedBy) =>  {
-          elem.createdBy.references
-        });
-        ids.splice(i, 1);
-      })
+  takeSnapshot(name: string) {
+    this.states.push(new StateNode(name,  this.act.resultOf, this.act.consistsOf.slice()));
+  }
+
+  private byID(id : CmdID) {
+    return C.search(this.ids, (active) => active.id == id);
+  }
+
+  get last(): CmdNode {
+    return this.act.resultOf;
+  }
+
+  set last(cmd: CmdNode) {
+    this.act.resultOf = cmd;
+  }
+
+  get allNodes() {
+    return this.nodes;
+  }
+
+  get root() {
+    return this.nodes[0];
+  }
+
+  get allStates() {
+    return this.states;
+  }
+
+  jumpTo(node: CmdNode) {
+    var target = node.path,
+      l = this.last,
+      i: number,
+      current: CmdNode[];
+    if (node == l) {
+      return;
+    }
+    if ( (i = target.indexOf(l)) >= 0) { //go forward multiple steps
+      this.redoAll(target.slice(i+1));
+    }
+    current = l.path;
+    if ((i = current.indexOf(node)) >= 0) { //go back multiple steps
+      this.undoAll(current.slice(i+1).reverse());
+      return;
+    }
+
+    //some other branch find common ancestor undo to it and then find
+    for(i = 0; i < target.length; ++i) {
+      if (target[i] !== current[i]) { //found different branch point
+        this.undoAll(current.slice(i+1).reverse()); //jump to common one
+        this.redoAll(target.slice(i+1)); //jump to real target
+        return;
+      }
     }
   }
 }
