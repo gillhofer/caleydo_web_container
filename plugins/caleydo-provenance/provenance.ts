@@ -50,59 +50,14 @@ var categories = {
   }
 };
 
-export interface Edge {
-  type: string; //dependency,
-  s: CommandNode;
-  t: CommandNode;
-}
-
-
-/**
- * a basic command interface
- */
-export interface IPersistableCommand extends idtypes.IHasUniqueId {
-
-  category: string;
-
-  type: string;
-
-  dependencies : IPersistableCommand[];
-
-  /**
-   * persists this cmd to a JSON compatible format
-   */
-  persist(): any;
-
-  /**
-   * runs this cmd
-   */
-  execute() : void;
-
-  /**
-   * inverse cmd to revert this one
-   */
-  inverse : IPersistableCommand;
-}
-
-interface CommandNode {
-  cmd: IPersistableCommand;
-
-  //graph
-  previous: CommandNode;
-  next : CommandNode[];
-
-  dependencies : CommandNode[];
-
-}
-
-enum CmdCategory {
+export enum CmdCategory {
   data, selection, visual, logic, note, custom
 }
-enum CmdOperation {
+export enum CmdOperation {
   create, update, remove
 }
 
-function inverseOperation(op:CmdOperation) {
+export function inverseOperation(op:CmdOperation) {
   switch (op) {
     case CmdOperation.create:
       return CmdOperation.remove;
@@ -116,7 +71,7 @@ function inverseOperation(op:CmdOperation) {
 /**
  * id by category
  */
-interface CmdID {
+export interface CmdID {
   /**
    * category for simpler visualization
    */
@@ -131,7 +86,7 @@ interface CmdID {
   value: any;
 }
 
-interface CmdResult {
+export interface CmdResult {
   inverse : Cmd;
   created : CmdID[];
   removed : CmdID[];
@@ -139,7 +94,7 @@ interface CmdResult {
 
 //how to find the corresponding inputs -- attach it to the object
 
-interface ICmdMetaData {
+export interface ICmdMetaData {
   category: CmdCategory;
   operation: CmdOperation;
   name: string;
@@ -147,19 +102,19 @@ interface ICmdMetaData {
   user: string;
 }
 
-class CmdMetaData implements ICmdMetaData {
+export class CmdMetaData implements ICmdMetaData {
   constructor(public category: CmdCategory, public operation: CmdOperation, public name: string, public timestamp: number, public user: string) {
 
   }
 }
 
-interface ICmdFunction {
+export interface ICmdFunction {
   id: string;
   (inputs: CmdID[], parameters: any) : CmdResult
 }
 
-interface ICmdFunctionFactory {
-  create(id: string): ICmdFunction;
+export interface ICmdFunctionFactory {
+  (id: string): ICmdFunction;
 }
 
 class Cmd {
@@ -181,9 +136,39 @@ class Cmd {
     //TODO check parameters if they are the same
     return true;
   }
+
+  persist(): any {
+    var r = {
+      meta: this.meta,
+      f : this.f.id,
+      parameter: this.parameter
+    }
+    return r;
+  }
+
+  static restore(data: any, factory: ICmdFunctionFactory) {
+    return new Cmd(data.meta, factory(data.id), [], data.parameter);
+  }
 }
 
-class CmdNode {
+class ProvenanceNode {
+  pid : number = -1;
+  persist(id: number) : any {
+    this.pid = id;
+    return {
+
+    }
+  }
+  persistLinks(p: any): void {
+
+  }
+}
+
+function toPid(n : ProvenanceNode) {
+  return n ? n.pid : -1;
+}
+
+class CmdNode extends ProvenanceNode {
   next : CmdNode[] = [];
 
   requires : CmdIDNode[] = [];
@@ -192,6 +177,7 @@ class CmdNode {
   inverse: Cmd;
 
   constructor(public cmd: Cmd, public previous : CmdNode) {
+    super();
     if (this.previous) {
       this.previous.next.push(this);
     }
@@ -218,20 +204,57 @@ class CmdNode {
     r = r.reverse();
     return r;
   }
+
+  persist(id: number) {
+    var r = super.persist(id);
+    r.cmd = this.cmd.persist();
+    return r;
+  }
+
+  persistLinks(p: any) {
+    p.previous = toPid(this.previous);
+    p.next = this.next.map(toPid);
+    p.requires = this.requires.map(toPid);
+    p.produces = this.produces.map(toPid);
+  }
+
 }
 
-class CmdIDNode {
+class CmdIDNode extends ProvenanceNode {
   usedBy : { node: CmdNode; index: number; }[] = [];
   removedBy : CmdNode;
 
   constructor(public id : CmdID, public createdBy : CmdNode) {
+    super();
+  }
 
+  persist(id: number) {
+    var r = super.persist(id);
+    r.id = this.id;
+    return r;
+  }
+
+  persistLinks(p: any) {
+    p.createdBy = toPid(this.createdBy);
+    p.usedBy = this.usedBy.map((n) => { return { node: toPid(n.node), index: n.index} });
+    p.removedBy = toPid(this.removedBy);
   }
 }
 
-class StateNode {
-  constructor(public name: string, public resultOf: CmdNode, public consistsOf : CmdID[]) {
+class StateNode extends ProvenanceNode {
+  constructor(public name: string, public resultOf: CmdNode, public consistsOf : CmdIDNode[]) {
+    super();
+  }
 
+  persist(id: number) {
+    var r = super.persist(id);
+    r.name = this.name;
+    return r;
+  }
+
+  persistLinks(p: any) {
+    p.resultOf = toPid(this.resultOf);
+    p.consistsOf = this.consistsOf.map(toPid);
   }
 }
 
@@ -325,7 +348,7 @@ class CmdStack {
   }
 
   redoAll(path: CmdNode[]) {
-    //TODO optimize code
+    //TODO optimize path by removing redudancies
     path.forEach((todo) => this.redo(todo));
   }
 
@@ -348,6 +371,7 @@ class CmdStack {
   }
 
   undoAll(path: CmdNode[]) {
+    //TODO optimize path by removing redudancies
     path.forEach(() => this.undo());
   }
 
@@ -408,5 +432,19 @@ class CmdStack {
         return;
       }
     }
+  }
+
+  persist() {
+    var r = {
+      nodes: this.nodes.map((n, i) => n.persist(i)),
+      states: this.states.map((n, i) => n.persist(i)),
+      ids: this.ids.map((n, i) => n.persist(i)),
+      act: this.act.pid
+    };
+    this.nodes.forEach((n, i) => n.persistLinks(r.nodes[i]));
+    this.states.forEach((n, i) => n.persistLinks(r.states[i]));
+    this.states.forEach((n, i) => n.persistLinks(r.states[i]));
+
+    return r;
   }
 }
