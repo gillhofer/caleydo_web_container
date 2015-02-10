@@ -9,6 +9,17 @@ body, html {
   height: 100%;
 }
 
+#sidebar {
+  display: inline-block;
+  width: 20%;
+  height: 100%;
+}
+main {
+  display: inline-block;
+  width: 79%;
+  height: 100%;
+}
+
 .window.ui-widget-content {
   position: absolute;
   background-color: transparent !important;

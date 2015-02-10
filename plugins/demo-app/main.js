@@ -13,15 +13,28 @@ function autoload(plugins, container) {
   return autoload;
 }
 
-require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugin', '../caleydo-window/main', '../caleydo/multiform', '../caleydo/idtype', '../caleydo/range' ], function ($, d3, C, data, plugins, window, multiform, idtypes, ranges) {
+require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugin', '../caleydo-window/main', '../caleydo/multiform', '../caleydo/idtype', '../caleydo/range', '../caleydo-provenance/selection', '../caleydo/vis'], function ($, d3, C, data, plugins, window, multiform, idtypes, ranges, prov_sel, vis) {
   'use strict';
-  var windows = $('<div>').css('position', 'absolute').appendTo('body')[0];
-  var singletons = autoload(plugins, $('body')[0]);
-  var menu = $('<div>').css('position', 'fixed').appendTo('body')[0];
-  var toolbar = new window.StaticToolBar($('body')[0]);
+  var windows = $('<div>').css('position', 'absolute').appendTo('#main')[0];
+  var singletons = autoload(plugins, $('#main')[0]);
+  var menu = $('<div>').css('position', 'fixed').prependTo('body')[0];
+  /*var toolbar = new window.StaticToolBar($('#main')[0]);
   toolbar.builder.push(function (window, node) {
     multiform.addIconVisChooser(node, window.data('vis'));
-  })
+  })*/
+
+  var graph, graphvis;
+  data.create({
+    type: 'provenance_graph',
+    name: 'Demo App',
+    id: 'demo'
+  }).then(function (graph_) {
+    graph = graph_;
+    var s = prov_sel.create(graph_, 'selected');
+    vis.list(graph)[0].load().then(function (plugin) {
+      graphvis = plugin.factory(graph_, document.getElementById('provenancegraph'));
+    })
+  });
 
   var canvas = [];
   // use app here
@@ -83,7 +96,7 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
       zcontrols: true,
       zoomAble: true
     });
-    toolbar.push(mw);
+    //toolbar.push(mw);
     var multiP;
     if (m.desc.type === 'vector' && m.valuetype.type === 'categorical') {
       multiP = m.groups().then(function (g) {

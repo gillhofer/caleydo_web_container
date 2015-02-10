@@ -357,7 +357,6 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
   push(cmd: Cmd) {
     var toId =(id) => this.byID(id);
     var node = new CmdNode(cmd, this.act.resultOf);
-    console.log('add node', node);
     this.fire('add_node', node);
     this.cmds.push(node);
     node.requires = cmd.inputs.map(toId);

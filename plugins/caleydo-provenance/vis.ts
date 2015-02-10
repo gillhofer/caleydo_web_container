@@ -25,6 +25,16 @@ export class ProvenanceVis extends vis.AVisInstance implements vis.IVisInstance 
   private links = [];
   private line = d3.svg.line().interpolate('linear-closed').x(C.getter(0)).y(C.getter(1));
 
+  private node_drag = d3.behavior.drag()
+  .on("dragstart", (d) => this.force.stop())
+  .on("drag", (d) => {
+    d.px += d3.event.dx;
+    d.py += d3.event.dy;
+    d.x += d3.event.dx;
+    d.y += d3.event.dy;
+    this.tick();
+  })
+  .on("dragend", () => this.force.resume());
 
   constructor(public data:provenance.ProvenanceGraph, public parent:Element, private options:any) {
     super();
@@ -205,20 +215,25 @@ export class ProvenanceVis extends vis.AVisInstance implements vis.IVisInstance 
       }
     });
 
+
     this.force
       .stop()
       .nodes(this.nodes)
       .links(links)
       .size(s);
+
+
+
+
     var nodes = this.$node.select('g.nodes').selectAll('g').data(this.nodes);
     nodes.enter().append('g').attr({
       'class': (d) => 'node ' + d._.type
     }).call((sel) => {
       sel.append('path').attr('d', (d) => shapes[d._.type]).append('title').text((d) => d._.name);
-      sel.filter((d) => d._.type === 'cmd').on('click', (d) => {
+      sel.filter((d) => d._.type === 'cmd').on('dblclick', (d) => {
         this.data.jumpTo(d._);
       })
-    });
+    }).call(this.node_drag);
     nodes.filter((d) => d._.type === 'cmd')
       .classed('root', (d) => d._.isRoot)
       .classed('last', (d) => this.data.last === d._)
