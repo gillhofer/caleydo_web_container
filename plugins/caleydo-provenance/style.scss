@@ -4,6 +4,15 @@
 
 //by convention create a namespace for your own plugin
 .provenance-graph-vis {
+  text.action {
+    cursor: pointer;
+    text-decoration: underline;
+
+    &:hover {
+      fill: orange;
+    }
+  }
+
   .node {
     &.state {
       fill: black;

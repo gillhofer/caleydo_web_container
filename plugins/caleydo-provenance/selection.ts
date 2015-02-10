@@ -22,11 +22,11 @@ function select(inputs: provenance.CmdID[], parameter : any) : provenance.ICmdRe
 var selectCmd : provenance.ICmdFunction = <provenance.ICmdFunction>select;
 selectCmd.id = 'select';
 
-function meta() {
+function meta(idtype: idtypes.IDType, type: string, range: ranges.Range) {
   return {
     category: provenance.CmdCategory.selection,
     operation: provenance.CmdOperation.update,
-    name: 'Select',
+    name: range.toString()+' '+idtype.names+' '+type,
     timestamp: Date.now(),
     user: 'test'
   };
@@ -41,7 +41,7 @@ function meta() {
  * @returns {Cmd}
  */
 export function createSelection(idtype: idtypes.IDType, type: string, range: ranges.Range, old: ranges.Range = null) {
-  return new provenance.Cmd(meta(), selectCmd, [], {
+  return new provenance.Cmd(meta(idtype, type, range), selectCmd, [], {
     idtype: idtype,
     range: range,
     type: type,

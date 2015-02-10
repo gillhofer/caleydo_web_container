@@ -15,6 +15,7 @@ export class ProvenanceVis extends vis.AVisInstance implements vis.IVisInstance 
   private $node:D3.Selection;
   private rebind = (event, added) => {
     this.add(added);
+    this.update();
   };
   private trigger = (event) => {
     this.update();
@@ -110,8 +111,27 @@ export class ProvenanceVis extends vis.AVisInstance implements vis.IVisInstance 
       height: size[1],
       'class' : 'provenance-graph-vis'
     }).style('transform', 'rotate(' + this.options.rotate + 'deg)');
+
+    $svg.append('defs').append('marker')
+      .attr('id', 'marker')
+      .attr({
+        'viewBox' : '0 -5 10 10',
+        'refX' : 15,
+        'refY' : -1.5,
+        'markerWidth' : 6,
+        'markerHeight' : 6,
+        'orient' : 'auto'
+      }).append('path').attr('d', 'M0,-5L10,0L0,5');
     var $g = $svg.append('g').attr('transform', 'scale(' + scale[0] + ',' + scale[1] + ')');
 
+    $g.append('text').attr({
+      x : 10,
+      y: 20,
+      'class' : 'action'
+    }).text('Add Snapshot').on('click', () => {
+      var name = prompt('Enter state name','NoName');
+      this.data.takeSnapshot(name);
+    });
     $g.append('g').attr('class', 'nodes');
     $g.append('g').attr('class', 'links');
 
@@ -193,16 +213,22 @@ export class ProvenanceVis extends vis.AVisInstance implements vis.IVisInstance 
     var nodes = this.$node.select('g.nodes').selectAll('g').data(this.nodes);
     nodes.enter().append('g').attr({
       'class': (d) => 'node ' + d._.type
-    }).append('path').attr('d', (d) => shapes[d._.type]);
+    }).call((sel) => {
+      sel.append('path').attr('d', (d) => shapes[d._.type]).append('title').text((d) => d._.name);
+      sel.filter((d) => d._.type === 'cmd').on('click', (d) => {
+        this.data.jumpTo(d._);
+      })
+    });
     nodes.filter((d) => d._.type === 'cmd')
-      .classed('root', (d) => d._.isRoot);
-    nodes.filter((d) => d._.type === 'cmd')
-      .classed('root', (d) => d._.isRoot);  
-    nodes.classed('last', (d) => d._.type === 'cmd' && this.data.last === d._);
+      .classed('root', (d) => d._.isRoot)
+      .classed('last', (d) => this.data.last === d._);
+    nodes.filter((d) => d._.type === 'state')
+      .classed('last', (d) => d._ === this.data.actState);
+
     nodes.exit().remove();
 
     var link = this.$node.select('g.links').selectAll('line').data(links);
-    link.enter().append('line');
+    link.enter().append('line').attr('marker-end','url(#marker)');
     link.attr({
       'class': (d) => 'link ' + d.type
     });

@@ -186,6 +186,10 @@ export class CmdNode extends ProvenanceNode {
     }
   }
 
+  get name() {
+    return this.cmd.meta.name;
+  }
+
   static restore(p: any, factory: ICmdFunctionFactory) {
     if (p.cmd.meta.name === 'root') {
       return new RootNode();
@@ -243,6 +247,10 @@ export class CmdIDNode extends ProvenanceNode {
 
   constructor(public id : CmdID, public createdBy : CmdNode) {
     super('id');
+  }
+
+  get name() {
+    return this.id.name;
   }
 
   static restore(p: any) {
@@ -438,11 +446,15 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
   takeSnapshot(name: string) {
     var s = new StateNode(name,  this.act.resultOf, this.act.consistsOf.slice());
     this.states.push(s);
-    this.fire('add-state', s);
+    this.fire('add_state', s);
   }
 
   private byID(id : CmdID) {
     return C.search(this.cmdids, (active) => active.id == id);
+  }
+
+  get actState() {
+    return this.act;
   }
 
   get last(): CmdNode {
