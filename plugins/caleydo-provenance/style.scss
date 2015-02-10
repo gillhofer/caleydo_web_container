@@ -18,14 +18,35 @@
       fill: black;
     }
     &.cmd {
-      fill: blue;
 
       &.root {
-        fill: darkblue;
+        stroke: gray;
+        stroke-width: 2;
       }
       &.last {
         stroke: black;
         stroke-width: 2;
+      }
+
+      path {
+        &.data {
+          fill: green;
+        }
+        &.selection {
+          fill: orange;
+        }
+        &.visual {
+          fill: yellow;
+        }
+        &.layout {
+          fill: blue;
+        }
+        &.logic {
+          fill: gray;
+        }
+        &.custom {
+          fill: white;
+        }
       }
     }
     &.cmdid {

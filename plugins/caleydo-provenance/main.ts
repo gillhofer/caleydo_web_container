@@ -190,6 +190,10 @@ export class CmdNode extends ProvenanceNode {
     return this.cmd.meta.name;
   }
 
+  get category() {
+    return CmdCategory[this.cmd.meta.category];
+  }
+
   static restore(p: any, factory: ICmdFunctionFactory) {
     if (p.cmd.meta.name === 'root') {
       return new RootNode();

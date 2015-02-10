@@ -132,8 +132,8 @@ export class ProvenanceVis extends vis.AVisInstance implements vis.IVisInstance 
       var name = prompt('Enter state name','NoName');
       this.data.takeSnapshot(name);
     });
-    $g.append('g').attr('class', 'nodes');
     $g.append('g').attr('class', 'links');
+    $g.append('g').attr('class', 'nodes');
 
     this.data.allCmds.map((f) => this.add(f));
     this.data.allStates.map((f) => this.add(f));
@@ -221,7 +221,8 @@ export class ProvenanceVis extends vis.AVisInstance implements vis.IVisInstance 
     });
     nodes.filter((d) => d._.type === 'cmd')
       .classed('root', (d) => d._.isRoot)
-      .classed('last', (d) => this.data.last === d._);
+      .classed('last', (d) => this.data.last === d._)
+    .select('path').attr('class', (d) => d._.category);
     nodes.filter((d) => d._.type === 'state')
       .classed('last', (d) => d._ === this.data.actState);
 
