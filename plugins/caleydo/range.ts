@@ -996,7 +996,7 @@ export function is(obj:any) {
 }
 
 export function range(from:number, to?:number, step?:number)
-export function range(...ranges:number[]);
+export function range(...ranges:number[][]);
 export function range() {
   if (arguments.length === 0) {
     return all();

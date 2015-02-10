@@ -180,7 +180,7 @@ export class VectorBase extends idtypes.SelectAble {
         if (v.categories[0].color) {
           options.colors = v.categories.map((d) => d.color);
         }
-        return datatypes.categorical2paritioning(d, v.categories.map((d) => typeof d === 'string' ? d : d.name), options);
+        return datatypes.categorical2partitioning(d, v.categories.map((d) => typeof d === 'string' ? d : d.name), options);
       });
     } else {
       return C.resolved(ranges.composite(this._root.desc.id, [ ranges.asUngrouped(this.indices.dim(0))]));

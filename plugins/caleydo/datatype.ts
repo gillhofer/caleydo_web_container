@@ -6,7 +6,6 @@
 import C = require('./main');
 import idtypes = require('./idtype');
 import ranges = require('./range');
-import provenance = require('./provenance')
 import d3 = require('d3');
 
 /**
@@ -17,10 +16,11 @@ export interface IDataDescription {
   id: string;
   type: string;
 }
+
 /**
  * basic data type interface
  */
-export interface IDataType extends idtypes.SelectAble, provenance.IPersistable {
+export interface IDataType extends idtypes.SelectAble, C.IPersistable {
   desc: IDataDescription;
   /**
    * dimensions of this datatype
@@ -88,7 +88,7 @@ export function transpose(m: any[][]) {
  * @param options
  * @return {any}
  */
-export function categorical2paritioning(data: string[], categories: string[], options = {}) {
+export function categorical2partitioning(data: string[], categories: string[], options = {}) {
   var m = C.mixin({
     skipEmptyCategories : true,
     colors: (categories.length < 10 ? d3.scale.category10() : d3.scale.category20()).range().slice(0, categories.length),

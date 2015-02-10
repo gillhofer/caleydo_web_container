@@ -3,19 +3,10 @@
  */
 import C = require('../caleydo/main');
 import plugins = require('../caleydo/plugin');
-
-export interface IPersistable {
-  /**
-   * persist the current configuration and return
-   */
-  persist(): any;
-  /**
-   * restores from stored persisted state
-   * @param persisted a result of a previous persist call
-   * @return the restored view or null if it could be in place restored
-   */
-  restore(persisted:any) : IPersistable;
-}
+import events = require('../caleydo/event');
+import datatypes = require('../caleydo/datatype');
+import idtypes = require('../caleydo/idtype');
+import ranges = require('../caleydo/range');
 
 var categories = {
   data: {
@@ -162,10 +153,17 @@ class ProvenanceNode {
   persistLinks(p: any): void {
 
   }
+
+  restoreLinks(p: any, nodes: CmdNode[], states: StateNode[], cmdids: CmdIDNode[]) {
+
+  }
 }
 
 function toPid(n : ProvenanceNode) {
   return n ? n.pid : -1;
+}
+function byIndex<T>(arr: T[]) {
+  return (i) => arr[i];
 }
 
 class CmdNode extends ProvenanceNode {
@@ -181,6 +179,13 @@ class CmdNode extends ProvenanceNode {
     if (this.previous) {
       this.previous.next.push(this);
     }
+  }
+
+  static restore(p: any, factory: ICmdFunctionFactory) {
+    if (p.cmd.meta.name === 'root') {
+      return new RootNode();
+    }
+    return new CmdNode(Cmd.restore(p.cmd, factory), null)
   }
 
   get isRoot() {
@@ -218,6 +223,13 @@ class CmdNode extends ProvenanceNode {
     p.produces = this.produces.map(toPid);
   }
 
+  restoreLinks(p: any, nodes: CmdNode[], states: StateNode[], cmdids: CmdIDNode[]) {
+    this.previous = nodes[p.previous];
+    this.next = p.next.map(byIndex(nodes));
+    this.requires = p.requires.map(byIndex(cmdids));
+    this.produces = p.produces.map(byIndex(cmdids));
+  }
+
 }
 
 class CmdIDNode extends ProvenanceNode {
@@ -226,6 +238,10 @@ class CmdIDNode extends ProvenanceNode {
 
   constructor(public id : CmdID, public createdBy : CmdNode) {
     super();
+  }
+
+  static restore(p: any) {
+    return new CmdIDNode(p.id, null);
   }
 
   persist(id: number) {
@@ -244,6 +260,10 @@ class CmdIDNode extends ProvenanceNode {
 class StateNode extends ProvenanceNode {
   constructor(public name: string, public resultOf: CmdNode, public consistsOf : CmdIDNode[]) {
     super();
+  }
+
+  static restore(p: any) {
+    return new StateNode(p.name, null, []);
   }
 
   persist(id: number) {
@@ -288,15 +308,29 @@ function remAll<T>(arr: T[], toremove: T[]) {
   });
 }
 
-class CmdStack {
+class ProvenanceGraph extends datatypes.DataTypeBase {
   private nodes : CmdNode[] = [];
-  private ids : CmdIDNode[] = [];
+  private cmdids : CmdIDNode[] = [];
   private states : StateNode[] = [];
-  private act = new StateNode('main', new RootNode(), []);
+  private act = null;
 
-  constructor() {
+  constructor(desc: datatypes.IDataDescription) {
+    super(desc);
+    this.act = new StateNode('main', new RootNode(), []);
     this.nodes.push(this.act.resultOf);
     this.states.push(this.act);
+  }
+
+  get dim() {
+    return [this.nodes.length, this.cmdids.length, this.states.length];
+  }
+
+  ids(range: ranges.Range = ranges.all()) {
+    return C.resolved(ranges.range([0,this.nodes.length], [0, this.cmdids.length], [0, this.states.length]));
+  }
+
+  get idtypes() {
+    return ['_provenance_nodes', '_provenance_cmdids', '_provenance_states'].map(idtypes.resolve);
   }
 
   execute(meta: ICmdMetaData, f : ICmdFunction, inputs:CmdID[], parameter: any) {
@@ -306,17 +340,24 @@ class CmdStack {
   push(cmd: Cmd) {
     var toId =(id) => this.byID(id);
     var node = new CmdNode(cmd, this.act.resultOf);
+    this.fire('add_node', node);
     this.nodes.push(node);
     node.requires = cmd.inputs.map(toId);
 
+    this.fire('execute', cmd);
     var result = cmd.execute();
-
+    this.fire('executed', cmd, result);
     //TODO check for similar ones
-    node.produces = result.created.map((id) => new CmdIDNode(id, node));
+    node.produces = result.created.map((id) => {
+      var c = new CmdIDNode(id, node);
+      this.fire('add_id', c);
+      return c;
+    });
 
-    this.ids.push.apply(this.ids, node.produces);
+    this.cmdids.push.apply(this.cmdids, node.produces);
 
     this.walkImpl(node, result);
+
     return result;
   }
 
@@ -331,25 +372,30 @@ class CmdStack {
 
     var rem = result.removed.map(toId);
     rem.forEach((r) => {
-      r.id = null; //free the id itself
       r.removedBy = node;
+      this.fire('remove_id', r);
+      r.id = null; //free the id itself
     });
     remAll(this.act.consistsOf, rem);
 
-    this.act.resultOf = node;
+    this.last = node;
   }
 
   redo(node: CmdNode) {
     //assert this.last.next.indexOf(node) >= 0
-    var r = node.execute();
+    this.fire('execute', node.cmd);
+    var r = node.cmd.execute();
+    this.fire('executed', node.cmd, r);
     //update with the new values
     this.walkImpl(node, r);
     return r;
   }
 
   redoAll(path: CmdNode[]) {
-    //TODO optimize path by removing redudancies
+    //TODO optimize path by removing redundancies
+    this.fire('redoAll', path);
     path.forEach((todo) => this.redo(todo));
+    this.fire('redoAlled', path);
   }
 
   undo() {
@@ -357,6 +403,7 @@ class CmdStack {
       return;
     }
     var toUndo = this.last;
+    this.fire('undo', toUndo);
     this.push(toUndo.inverse);
     var undoed = this.last;
     //change the root to its grandparent and create a cycle
@@ -367,24 +414,29 @@ class CmdStack {
     undoed.inverse = toUndo.cmd;
 
     undoed.next.push(grand);
-    undoed = grand; //back at the grand parent
+    this.last = grand; //back at the grand parent
+    this.fire('undoed', toUndo);
   }
 
   undoAll(path: CmdNode[]) {
-    //TODO optimize path by removing redudancies
+    //TODO optimize path by removing redundancies
+    this.fire('undoAll', path);
     path.forEach(() => this.undo());
+    this.fire('undoAlled', path);
   }
 
-  get activeIDs() {
+  get activeCmdIds() {
     return this.act.consistsOf;
   }
 
   takeSnapshot(name: string) {
-    this.states.push(new StateNode(name,  this.act.resultOf, this.act.consistsOf.slice()));
+    var s = new StateNode(name,  this.act.resultOf, this.act.consistsOf.slice());
+    this.states.push(s);
+    this.fire('add-state', s);
   }
 
   private byID(id : CmdID) {
-    return C.search(this.ids, (active) => active.id == id);
+    return C.search(this.cmdids, (active) => active.id == id);
   }
 
   get last(): CmdNode {
@@ -393,6 +445,7 @@ class CmdStack {
 
   set last(cmd: CmdNode) {
     this.act.resultOf = cmd;
+    this.fire('switch', cmd, this.last);
   }
 
   get allNodes() {
@@ -412,6 +465,7 @@ class CmdStack {
       l = this.last,
       i: number,
       current: CmdNode[];
+    this.fire('jumpTo', node);
     if (node == l) {
       return;
     }
@@ -432,13 +486,14 @@ class CmdStack {
         return;
       }
     }
+    //error not a common sub path
   }
 
-  persist() {
+  persist(): any {
     var r = {
       nodes: this.nodes.map((n, i) => n.persist(i)),
       states: this.states.map((n, i) => n.persist(i)),
-      ids: this.ids.map((n, i) => n.persist(i)),
+      cmdids: this.cmdids.map((n, i) => n.persist(i)),
       act: this.act.pid
     };
     this.nodes.forEach((n, i) => n.persistLinks(r.nodes[i]));
@@ -446,5 +501,27 @@ class CmdStack {
     this.states.forEach((n, i) => n.persistLinks(r.states[i]));
 
     return r;
+  }
+
+  restore(p : any) {
+    var factories = plugins.list('cmdFactory');
+    var factory = (id) => {
+      var i, r;
+      for(i = 0; i < factories.length; ++i) {
+        if ((r = factories[i](id))) {
+          return r;
+        }
+      }
+      return null;
+    };
+    this.nodes = p.nodes.map((n) => CmdNode.restore(n, factory));
+    this.states = p.states.map((n) => StateNode.restore(n));
+    this.cmdids = p.cmdids.map((n) => CmdIDNode.restore(n));
+    this.act = this.states[p.act];
+
+    this.nodes.forEach((n, i) => n.restoreLinks(p.nodes[i], this.nodes, this.states, this.cmdids));
+    this.states.forEach((n, i) => n.restoreLinks(p.states[i], this.nodes, this.states, this.cmdids));
+    this.cmdids.forEach((n, i) => n.restoreLinks(p.cmdids[i], this.nodes, this.states, this.cmdids));
+    return this;
   }
 }

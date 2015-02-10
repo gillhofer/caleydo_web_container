@@ -8,7 +8,6 @@ import ranges = require('./range');
 import idtypes = require('./idtype');
 import datatypes = require('./datatype');
 import vector = require('./vector');
-import provenance = require('./provenance');
 
 export interface IMatrix extends datatypes.IDataType {
   /**
@@ -127,7 +126,7 @@ export class MatrixBase extends idtypes.SelectAble {
     return new ProjectedVector(<IMatrix>(<any>this), f, this_f, valuetype, idtype);
   }
 
-  restore(persisted: any) : provenance.IPersistable {
+  restore(persisted: any) : C.IPersistable {
     if (persisted && persisted.f) {
       /* tslint:disable:no-eval */
       return this.reduce(eval(persisted.f), this, persisted.valuetype, persisted.idtype ? idtypes.resolve(persisted.idtype) : undefined);
@@ -137,7 +136,7 @@ export class MatrixBase extends idtypes.SelectAble {
     } else if (persisted && persisted.transposed) {
       return (<IMatrix>(<any>this)).t;
     } else {
-      return <provenance.IPersistable>(<any>this);
+      return <C.IPersistable>(<any>this);
     }
   }
 }
