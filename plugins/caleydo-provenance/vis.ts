@@ -1,6 +1,7 @@
 /**
  * Created by sam on 09.02.2015.
  */
+/// <amd-dependency path="css!./style" />
 import C = require('../caleydo/main');
 import ranges = require('../caleydo/range');
 import geom = require('../caleydo/geom');
@@ -10,22 +11,51 @@ import d3util = require('../caleydo/d3util')
 import vis = require('../caleydo/vis');
 
 
-
 export class ProvenanceVis extends vis.AVisInstance implements vis.IVisInstance {
   private $node:D3.Selection;
+  private rebind = (event, added) => {
+    this.add(added);
+  };
+  private trigger = (event) => {
+    this.update();
+  };
+  private force = d3.layout.force();
+  private nodes = [];
+  private links = [];
+  private line = d3.svg.line().interpolate('linear-closed').x(C.getter(0)).y(C.getter(1));
+
 
   constructor(public data:provenance.ProvenanceGraph, public parent:Element, private options:any) {
     super();
-    this.options = C.mixin({
-
-    }, options);
+    this.options = C.mixin({}, options);
     this.options.scale = [1, 1];
     this.options.rotate = 0;
     this.$node = this.build(d3.select(parent));
+    C.onDOMNodeRemoved(this.node, this.destroy, this);
+
+    this.bind();
+    this.update();
+    this.force.on('tick', () => this.tick());
+  }
+
+  private bind() {
+    this.data.on('add_node', this.rebind);
+    this.data.on('add_id', this.rebind);
+    this.data.on('add_state', this.rebind);
+    this.data.on('switch', this.trigger);
+  }
+
+  destroy() {
+    super.destroy();
+    this.force().stop();
+    this.data.off('add_node', this.rebind);
+    this.data.off('add_id', this.rebind);
+    this.data.off('add_state', this.rebind);
+    this.data.off('switch', this.trigger);
   }
 
   get rawSize() {
-    return [800, 400];
+    return [130, 400];
   }
 
   get node() {
@@ -43,19 +73,7 @@ export class ProvenanceVis extends vis.AVisInstance implements vis.IVisInstance 
   }
 
   locateImpl(range:ranges.Range) {
-    var dims = this.data.dim;
-    var height = dims[0], width=20, o = this.options;
-
-    function l(r, max, s) {
-      if (r.isAll || r.isNone) {
-        return [0, max * s];
-      }
-      var ex:any = d3.extent(r.iter().asList());
-      return [ex[0] * s, (ex[1] - ex[0] + 1) * s];
-    }
-
-    var yh = l(range.dim(0), height, o.scale[1]);
-    return C.resolved(geom.rect(0, yh[0], 20, yh[1]));
+    return C.resolved(null);
   }
 
   transform(scale?:number[], rotate:number = 0) {
@@ -89,14 +107,108 @@ export class ProvenanceVis extends vis.AVisInstance implements vis.IVisInstance 
       scale = this.options.scale;
     var $svg = $parent.append('svg').attr({
       width: size[0],
-      height: size[1]
+      height: size[1],
+      'class' : 'provenance-graph-vis'
     }).style('transform', 'rotate(' + this.options.rotate + 'deg)');
     var $g = $svg.append('g').attr('transform', 'scale(' + scale[0] + ',' + scale[1] + ')');
 
-    var data = this.data;
+    $g.append('g').attr('class', 'nodes');
+    $g.append('g').attr('class', 'links');
 
+    this.data.allCmds.map((f) => this.add(f));
+    this.data.allStates.map((f) => this.add(f));
+    this.data.allCmdIds.map((f) => this.add(f));
 
     return $svg;
+  }
+
+  private add(elem) {
+    if (!elem) {
+      return;
+    }
+    var n = {
+      _: elem
+    };
+    this.nodes.push(n);
+  }
+
+  private getNode(elem) {
+    return C.search(this.nodes, (n) => n._ === elem);
+  }
+
+  private tick() {
+    this.$node.select('g.nodes').selectAll('.node').attr('transform', (d) => 'translate(' + d.x + ',' + d.y + ')');
+    this.$node.select('g.links').selectAll('.link').attr({
+      x1: (d) => d.source.x,
+      y1: (d) => d.source.y,
+      x2: (d) => d.target.x,
+      y2: (d) => d.target.y
+    });
+  }
+
+  private update() {
+    var s = this.rawSize;
+    var shapes = {
+      id: this.line([[0, -5], [5, 5], [-5, 5]]),
+      state: this.line([[-5, -5], [5, -5], [5, 5], [-5, 5]]),
+      cmd: this.line([[0, -5], [5, 0], [0, 5], [-5, 0]])
+    };
+
+    var links = [];
+    this.nodes.forEach((node) => {
+      var _ = node._;
+      switch(_.type) {
+      case 'cmd':
+        _.next.forEach((u) => {
+          links.push({ source : node, target: this.getNode(u), type: 'next'});
+        });
+        break;
+      case 'cmdid':
+        if (_.createdBy) {
+          links.push({ source : node, target: this.getNode(_.createdBy), type: 'createdBy'});
+        }
+        if (_.removedBy) {
+          links.push({ source : node, target: this.getNode(_.removedBy), type: 'removedBy'});
+        }
+        _.usedBy.forEach((u) => {
+          links.push({ source : node, target: this.getNode(u), type: 'usedBy'});
+        });
+        break;
+      case 'state':
+        if (_.resultOf) {
+          links.push({ source : node, target: this.getNode(_.resultOf), type: 'resultOf'});
+        }
+        _.consistsOf.forEach((u) => {
+          links.push({ source : node, target: this.getNode(u), type: 'consistsOf'});
+        });
+        break;
+      }
+    });
+
+    this.force
+      .stop()
+      .nodes(this.nodes)
+      .links(links)
+      .size(s);
+    var nodes = this.$node.select('g.nodes').selectAll('g').data(this.nodes);
+    nodes.enter().append('g').attr({
+      'class': (d) => 'node ' + d._.type
+    }).append('path').attr('d', (d) => shapes[d._.type]);
+    nodes.filter((d) => d._.type === 'cmd')
+      .classed('root', (d) => d._.isRoot);
+    nodes.filter((d) => d._.type === 'cmd')
+      .classed('root', (d) => d._.isRoot);  
+    nodes.classed('last', (d) => d._.type === 'cmd' && this.data.last === d._);
+    nodes.exit().remove();
+
+    var link = this.$node.select('g.links').selectAll('line').data(links);
+    link.enter().append('line');
+    link.attr({
+      'class': (d) => 'link ' + d.type
+    });
+    link.exit().remove();
+
+    this.force.start();
   }
 }
 

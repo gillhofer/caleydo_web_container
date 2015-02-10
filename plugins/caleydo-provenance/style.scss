@@ -1,0 +1,46 @@
+/**
+ * Created by Samuel Gratzl on 01.09.2014.
+ */
+
+//by convention create a namespace for your own plugin
+.provenance-graph-vis {
+  .node {
+    &.state {
+      fill: black;
+    }
+    &.cmd {
+      fill: blue;
+
+      &.root {
+        fill: darkblue;
+      }
+      &.last {
+        stroke: black;
+        stroke-width: 2;
+      }
+    }
+    &.cmdid {
+      fill: gray;
+    }
+  }
+  .link {
+    &.next {
+      stroke: black;
+    }
+    &.createdBy {
+      stroke: green;
+    }
+    &.removedBy {
+      stroke: red;
+    }
+    &.usedBy {
+      stroke: gray;
+    }
+    &.resultOf {
+      stroke: black;
+    }
+    &.consistsOf {
+      stroke: blue;
+    }
+  }
+}

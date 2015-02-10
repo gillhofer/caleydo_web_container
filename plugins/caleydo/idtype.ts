@@ -153,8 +153,8 @@ export class IDType extends events.EventHandler implements C.IPersistable {
     this.sel[type] = new_;
     var added = op !== SelectOperation.REMOVE ? range : ranges.none();
     var removed = (op === SelectOperation.ADD ? ranges.none() : (op === SelectOperation.SET ? b : range));
-    this.fire('select', type, new_, added, removed);
-    this.fire('select-' + type, new_, added, removed);
+    this.fire('select', type, new_, added, removed, b);
+    this.fire('select-' + type, new_, added, removed, b);
     return b;
   }
 
@@ -336,7 +336,7 @@ export class SelectAble extends events.EventHandler {
   }
 
   on(events, handler) {
-    if (events === 'select' || events.match('^select-')[0] === 'select-') {
+    if (events === 'select' || events.slice(0, 'select-'.length) === 'select-') {
       this.numSelectListeners ++;
       if (this.numSelectListeners === 1) {
         var idt = this.idtypes;
