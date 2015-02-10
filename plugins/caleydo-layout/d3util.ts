@@ -4,6 +4,7 @@
 
 import d3 = require('d3');
 import layout = require('./main');
+import geom = require('../caleydo/geom');
 'use strict';
 
 class SVGTransformLayoutElem extends layout.ALayoutElem implements layout.ILayoutElem {
@@ -22,12 +23,7 @@ class SVGTransformLayoutElem extends layout.ALayoutElem implements layout.ILayou
 
   getBounds() {
     var t = d3.transform(this.$elem.attr('transform'));
-    return {
-      x : t.translate.x,
-      y : t.translate.y,
-      w : this.rawWidth * t.scale.x,
-      h: this.rawHeight * t.scale.y
-    };
+    return geom.rect(t.translate.x, t.translate.y, this.rawWidth * t.scale.x, this.rawHeight * t.scale.y);
   }
 }
 
@@ -46,12 +42,7 @@ class SVGRectLayoutElem extends layout.ALayoutElem implements layout.ILayoutElem
   }
 
   getBounds() {
-    return {
-      x : parseFloat(this.$elem.attr('x')),
-      y : parseFloat(this.$elem.attr('y')),
-      w : parseFloat(this.$elem.attr('width')),
-      h: parseFloat(this.$elem.attr('height'))
-    };
+    return geom.rect(parseFloat(this.$elem.attr('x')), parseFloat(this.$elem.attr('y')), parseFloat(this.$elem.attr('width')), parseFloat(this.$elem.attr('height')));
   }
 }
 

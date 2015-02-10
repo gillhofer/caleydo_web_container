@@ -8,7 +8,6 @@ import C = require('./main');
 import vis = require('./vis');
 import ranges = require('./range');
 import datatypes = require('./datatype');
-import provenance = require('./provenance');
 
 class ProxyMetaData implements vis.IVisMetaData {
   constructor(private proxy : () => vis.IVisMetaData) {
@@ -248,7 +247,7 @@ export class MultiForm extends vis.AVisInstance implements vis.IVisInstance, IMu
   }
 }
 
-class GridElem implements provenance.IPersistable {
+class GridElem implements C.IPersistable {
   private actVis : vis.IVisInstance;
   $content : D3.Selection;
 

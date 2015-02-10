@@ -5,5 +5,19 @@
     "cytoscape": "~2.3.8"
   },
   "caleydo" : {
+    "plugins": [
+      {
+        "type": "datatype",
+        "id": "provenance_graph"
+      },
+      {
+        "type": "vis",
+        "id": "caleydo-vis-provenance",
+        "name": "Provenance Force Graph",
+        "filter": "provenance_graph",
+        "folder" : "caleydo-provenance",
+        "module" : "caleydo-provenance/vis"
+      }
+    ]
   }
 }

@@ -108,7 +108,7 @@ export interface ICmdFunctionFactory {
   (id: string): ICmdFunction;
 }
 
-class Cmd {
+export class Cmd {
   constructor(public meta: ICmdMetaData, private f : ICmdFunction, public inputs:CmdID[] = [], private parameter: any = {}) {
 
   }
@@ -166,7 +166,7 @@ function byIndex<T>(arr: T[]) {
   return (i) => arr[i];
 }
 
-class CmdNode extends ProvenanceNode {
+export class CmdNode extends ProvenanceNode {
   next : CmdNode[] = [];
 
   requires : CmdIDNode[] = [];
@@ -232,7 +232,7 @@ class CmdNode extends ProvenanceNode {
 
 }
 
-class CmdIDNode extends ProvenanceNode {
+export class CmdIDNode extends ProvenanceNode {
   usedBy : { node: CmdNode; index: number; }[] = [];
   removedBy : CmdNode;
 
@@ -257,7 +257,7 @@ class CmdIDNode extends ProvenanceNode {
   }
 }
 
-class StateNode extends ProvenanceNode {
+export class StateNode extends ProvenanceNode {
   constructor(public name: string, public resultOf: CmdNode, public consistsOf : CmdIDNode[]) {
     super();
   }
@@ -308,7 +308,7 @@ function remAll<T>(arr: T[], toremove: T[]) {
   });
 }
 
-class ProvenanceGraph extends datatypes.DataTypeBase {
+export class ProvenanceGraph extends datatypes.DataTypeBase {
   private nodes : CmdNode[] = [];
   private cmdids : CmdIDNode[] = [];
   private states : StateNode[] = [];
@@ -525,3 +525,14 @@ class ProvenanceGraph extends datatypes.DataTypeBase {
     return this;
   }
 }
+
+
+/**
+ * module entry point for creating a datatype
+ * @param desc
+ * @returns {IMatrix}
+ */
+export function create(desc: datatypes.IDataDescription): ProvenanceGraph {
+  return new ProvenanceGraph(desc);
+}
+

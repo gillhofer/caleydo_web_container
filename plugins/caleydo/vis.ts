@@ -5,7 +5,6 @@ import C = require('./main');
 import plugins = require('./plugin');
 import datatypes = require('./datatype');
 import ranges = require('./range');
-import provenance = require('./provenance');
 import events = require('./event');
 
 
@@ -92,7 +91,7 @@ export interface IVisPluginDesc extends plugins.IPluginDesc, IVisMetaData {
 /**
  * basic interface of an visualization instance
  */
-export interface IVisInstance extends provenance.IPersistable, events.IEventHandler, ILocateAble {
+export interface IVisInstance extends C.IPersistable, events.IEventHandler, ILocateAble {
   /**
    * the unique id of this vis instance
    */
