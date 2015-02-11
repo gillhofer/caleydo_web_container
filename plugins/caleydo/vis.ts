@@ -157,6 +157,9 @@ export class AVisInstance extends events.EventHandler {
 
   option(name: string, value?: any) {
     //dummy
+    //if (value) {
+    //  this.fire('option', name, value, null);
+    //}
     return null;
   }
 

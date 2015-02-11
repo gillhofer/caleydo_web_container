@@ -68,6 +68,7 @@ export class HeatMap extends vis.AVisInstance implements vis.IVisInstance {
     if (arguments.length === 1) {
       return this.options[name];
     } else {
+      this.fire('option', name, val, this.options[name]);
       this.fire('option.'+name, val, this.options[name]);
       this.options[name] = val;
       switch(name) {
@@ -231,6 +232,7 @@ export class HeatMap1D extends vis.AVisInstance implements vis.IVisInstance {
     if (arguments.length === 1) {
       return this.options[name];
     } else {
+      this.fire('option', name, val, this.options[name]);
       this.fire('option.' + name, val, this.options[name]);
       this.options[name] = val;
       switch (name) {

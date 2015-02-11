@@ -18,6 +18,22 @@
         "filter": "provenance_graph",
         "folder" : "caleydo-provenance",
         "module" : "caleydo-provenance/vis"
+      },
+      {
+        "type" : "cmdFactory",
+        "id" : "idtype-selection",
+        "folder" : "caleydo-provenance",
+        "module" : "caleydo-provenance/selection",
+        "factory" : "createCmd",
+        "creates" : "select"
+      },
+      {
+        "type" : "cmdFactory",
+        "id" : "multiform",
+        "folder" : "caleydo-provenance",
+        "module" : "caleydo-provenance/multiform",
+        "factory" : "createCmd",
+        "creates" : "(transform|changeVis|setOption)"
       }
     ]
   }

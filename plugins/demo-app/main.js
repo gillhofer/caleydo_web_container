@@ -13,7 +13,7 @@ function autoload(plugins, container) {
   return autoload;
 }
 
-require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugin', '../caleydo-window/main', '../caleydo/multiform', '../caleydo/idtype', '../caleydo/range', '../caleydo-provenance/selection', '../caleydo/vis'], function ($, d3, C, data, plugins, window, multiform, idtypes, ranges, prov_sel, vis) {
+require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugin', '../caleydo-window/main', '../caleydo/multiform', '../caleydo/idtype', '../caleydo/range', '../caleydo-provenance/selection', '../caleydo/vis', '../caleydo-provenance/multiform'], function ($, d3, C, data, plugins, window, multiform, idtypes, ranges, prov_sel, vis, prov_multi) {
   'use strict';
   var windows = $('<div>').css('position', 'absolute').appendTo('#main')[0];
   var singletons = autoload(plugins, $('#main')[0]);
@@ -31,6 +31,11 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
   }).then(function (graph_) {
     graph = graph_;
     var s = prov_sel.create(graph_, 'selected');
+
+    canvas.forEach(function(entry) {
+      prov_multi.attach(entry.multi, graph);
+    });
+
     vis.list(graph)[0].load().then(function (plugin) {
       graphvis = plugin.factory(graph_, document.getElementById('provenancegraph'));
     })
@@ -117,6 +122,7 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
         canvas.splice(C.indexOf(canvas, function (c) {
           return c.mw === mw;
         }), 1);
+
       });
       mw.on('drag_stop', updateLinks);
       mw.on('zoom', updateLinks);
@@ -125,6 +131,9 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
         mw: mw,
         multi: multi
       };
+      if (graph) {
+        prov_multi.attach(entry.multi, graph);
+      }
       canvas.push(entry);
       return entry;
     });

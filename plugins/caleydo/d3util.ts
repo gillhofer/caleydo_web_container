@@ -71,6 +71,10 @@ export function defineVis(name: string, defaultOptions : any, initialSize : any,
       return this.options[name];
     } else {
       var b = this.options[name];
+      if (b === value) { // no change
+        return b;
+      }
+      this.fire('option', name, value, b);
       this.fire('option.'+name,value, b);
       this.options[name] = value;
       this.updatedOption(name, value);

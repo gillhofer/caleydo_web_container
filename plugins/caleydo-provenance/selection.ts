@@ -7,11 +7,11 @@ import events = require('../caleydo/event');
 import provenance = require('./main');
 import ranges = require('../caleydo/range');
 
-function select(inputs: provenance.CmdID[], parameter : any) : provenance.ICmdResult{
+function select(inputs: provenance.CmdID<any>[], parameter : any) : provenance.ICmdResult{
   var idtype = parameter.idtype,
-    range = parameter.range,
+    range = ranges.parse(parameter.range),
     type = parameter.type;
-  var bak = parameter.old || idtype.selections(type);
+  var bak = parameter.old ? ranges.parse(parameter.old) : idtype.selections(type);
   idtype.select(type, range);
   return {
     created: [],
@@ -23,13 +23,7 @@ var selectCmd : provenance.ICmdFunction = <provenance.ICmdFunction>select;
 selectCmd.id = 'select';
 
 function meta(idtype: idtypes.IDType, type: string, range: ranges.Range) {
-  return {
-    category: provenance.CmdCategory.selection,
-    operation: provenance.CmdOperation.update,
-    name: range.toString()+' '+idtype.names+' '+type,
-    timestamp: Date.now(),
-    user: 'test'
-  };
+  return provenance.meta(range.toString()+' '+idtype.names+' '+type, provenance.CmdCategory.selection);
 }
 
 /**
@@ -99,6 +93,14 @@ export class SelectionRecorder {
     this.handler.length = 0;
   }
 }
+
+export function createCmd(id: string) {
+  switch(id) {
+    case 'select': return selectCmd;
+  }
+  return null;
+}
+
 
 export function create(graph : provenance.ProvenanceGraph, type?: string) {
   return new SelectionRecorder(graph, type);

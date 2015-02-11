@@ -7,6 +7,8 @@ import events = require('../caleydo/event');
 import datatypes = require('../caleydo/datatype');
 import idtypes = require('../caleydo/idtype');
 import ranges = require('../caleydo/range');
+import session = require('../caleydo/session');
+
 
 var categories = {
   data: {
@@ -62,7 +64,7 @@ export function inverseOperation(op:CmdOperation) {
 /**
  * id by category
  */
-export interface CmdID {
+export interface CmdID<T> {
   /**
    * category for simpler visualization
    */
@@ -74,13 +76,21 @@ export interface CmdID {
   /**
    * the actual value
    */
-  value: any;
+  value: T;
+}
+
+export function createID<T>(value: T, name="Unknown", category = CmdCategory.data) : CmdID<T> {
+  return {
+    category: category,
+    name: name,
+    value: value
+  };
 }
 
 export interface ICmdResult {
   inverse : Cmd;
-  created : CmdID[];
-  removed : CmdID[];
+  created : CmdID<any>[];
+  removed : CmdID<any>[];
 }
 
 //how to find the corresponding inputs -- attach it to the object
@@ -99,9 +109,13 @@ export class CmdMetaData implements ICmdMetaData {
   }
 }
 
+export function meta(name: string, category: CmdCategory = CmdCategory.data, operation: CmdOperation = CmdOperation.update, user: string = session.retrieve('user','Unknown'), timestamp: number = Date.now()) {
+  return new CmdMetaData(category, operation, name, timestamp, user);
+}
+
 export interface ICmdFunction {
   id: string;
-  (inputs: CmdID[], parameters: any) : ICmdResult
+  (inputs: CmdID<any>[], parameters: any) : ICmdResult
 }
 
 export interface ICmdFunctionFactory {
@@ -109,7 +123,7 @@ export interface ICmdFunctionFactory {
 }
 
 export class Cmd {
-  constructor(public meta: ICmdMetaData, private f : ICmdFunction, public inputs:CmdID[] = [], private parameter: any = {}) {
+  constructor(public meta: ICmdMetaData, private f : ICmdFunction, public inputs:CmdID<any>[] = [], private parameter: any = {}) {
 
   }
 
@@ -249,7 +263,7 @@ export class CmdIDNode extends ProvenanceNode {
   usedBy : { node: CmdNode; index: number; }[] = [];
   removedBy : CmdNode;
 
-  constructor(public id : CmdID, public createdBy : CmdNode) {
+  constructor(public id : CmdID<any>, public createdBy : CmdNode) {
     super('id');
   }
 
@@ -350,7 +364,7 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
     return ['_provenance_nodes', '_provenance_cmdids', '_provenance_states'].map(idtypes.resolve);
   }
 
-  execute(meta: ICmdMetaData, f : ICmdFunction, inputs:CmdID[], parameter: any) {
+  execute(meta: ICmdMetaData, f : ICmdFunction, inputs:CmdID<any>[], parameter: any) {
     return this.push(new Cmd(meta, f, inputs, parameter));
   }
 
@@ -359,7 +373,17 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
     var node = new CmdNode(cmd, this.act.resultOf);
     this.fire('add_node', node);
     this.cmds.push(node);
-    node.requires = cmd.inputs.map(toId);
+    node.requires = cmd.inputs.map((id, i) => {
+      var r = this.byID(id);
+      if (!r) {
+        r = new CmdIDNode(id, this.root);
+        this.cmdids.push(r);
+        this.fire('add_id', r);
+      }
+      //create one on the fly and associate it with the root
+      r.usedBy.push({node: node, index: i});
+      return r;
+    });
 
     this.fire('execute', cmd);
     var result = cmd.execute();
@@ -367,6 +391,7 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
     //TODO check for similar ones
     node.produces = result.created.map((id) => {
       var c = new CmdIDNode(id, node);
+      this.cmdids.push(c);
       this.fire('add_id', c);
       return c;
     });
@@ -416,7 +441,7 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
   }
 
   undo() {
-    if (this.act.resultOf.isRoot) { //nothing to undo
+    if (this.last.isRoot) { //nothing to undo
       return;
     }
     var toUndo = this.last;
@@ -452,7 +477,7 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
     this.fire('add_state', s);
   }
 
-  private byID(id : CmdID) {
+  private byID(id : CmdID<any>) {
     return C.search(this.cmdids, (active) => active.id == id);
   }
 
@@ -530,6 +555,9 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
 
   restore(p : any) {
     var factories = plugins.list('cmdFactory');
+    var toLoad = [];
+
+    //FIXME since async load first all needed plugins and then do the magic
     var factory = (id) => {
       var i, r;
       for(i = 0; i < factories.length; ++i) {

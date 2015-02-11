@@ -8,6 +8,7 @@ import C = require('./main');
 import vis = require('./vis');
 import ranges = require('./range');
 import datatypes = require('./datatype');
+import events = require('./event');
 
 class ProxyMetaData implements vis.IVisMetaData {
   constructor(private proxy : () => vis.IVisMetaData) {
@@ -30,21 +31,23 @@ class ProxyMetaData implements vis.IVisMetaData {
   }
 }
 
-interface IMultiForm {
+export interface IMultiForm extends vis.IVisInstance {
+  act: vis.IVisPluginDesc;
   visses: vis.IVisPluginDesc[];
+  switchTo(id: string)  : C.IPromise<any>;
   switchTo(index: number)  : C.IPromise<any>;
   switchTo(vis:vis.IVisPluginDesc) : C.IPromise<any>;
 }
 
 
-function toInitialVis(initial: any, visses: vis.IVisPluginDesc[]) {
+function selectVis(initial: any, visses: vis.IVisPluginDesc[]) {
   switch(typeof initial) {
   case 'number':
-    return Math.max(0, Math.min(initial, visses.length - 1));
+    return visses[Math.max(0, Math.min(initial, visses.length - 1))];
   case 'string':
-    return Math.max(0, C.indexOf(visses, (v) => v.id === initial));
+    return visses[Math.max(0, C.indexOf(visses, (v) => v.id === initial))];
   default:
-    return Math.max(0, visses.indexOf(initial));
+    return visses[Math.max(0, visses.indexOf(initial))];
   }
 }
 
@@ -96,8 +99,7 @@ export class MultiForm extends vis.AVisInstance implements vis.IVisInstance, IMu
     //create content
     this.$content = p.append('div').attr('class', 'content');
     //switch to first
-    var initial = toInitialVis(this.options.initialVis, this.visses);
-    this.switchTo(this.visses[initial]);
+    this.switchTo(this.options.initialVis);
   }
 
   destroy() {
@@ -201,16 +203,9 @@ export class MultiForm extends vis.AVisInstance implements vis.IVisInstance, IMu
    */
   switchTo(index: number)  : C.IPromise<any>;
   switchTo(vis:vis.IVisPluginDesc) : C.IPromise<any>;
+  switchTo(id: string) : C.IPromise<any>;
   switchTo(param : any) : C.IPromise<any> {
-    var vis: vis.IVisPluginDesc = null;
-    if (typeof param === 'number') {
-      if (param < 0 || param >= this.visses.length) {
-        throw new RangeError('index ' + param + ' out of range: [0,' + this.visses.length + ']');
-      }
-      vis = this.visses[<number>param];
-    } else {
-      vis = <vis.IVisPluginDesc>param;
-    }
+    var vis: vis.IVisPluginDesc = selectVis(param, this.visses);
 
     if (vis === this.actDesc) {
       return this.actVisPromise; //already selected
@@ -401,8 +396,7 @@ export class MultiFormGrid extends vis.AVisInstance implements vis.IVisInstance,
     //TODO how to layout as a grid
     this.grid.forEach((elem) => elem.$content = p.append('div').attr('class', 'content'));
     //switch to first
-    var initial = toInitialVis(this.options.initialVis, this.visses);
-    this.switchTo(this.visses[initial]);
+    this.switchTo(<any>this.options.initialVis);
   }
 
   destroy() {
@@ -550,16 +544,9 @@ export class MultiFormGrid extends vis.AVisInstance implements vis.IVisInstance,
    */
   switchTo(index: number)  : C.IPromise<any>;
   switchTo(vis:vis.IVisPluginDesc) : C.IPromise<any>;
+  switchTo(id: string) : C.IPromise<any>;
   switchTo(param : any) : C.IPromise<any> {
-    var vis: vis.IVisPluginDesc = null;
-    if (typeof param === 'number') {
-      if (param < 0 || param >= this.visses.length) {
-        throw new RangeError('index '+param+ ' out of range: [0,'+this.visses.length+']');
-      }
-      vis = this.visses[<number>param];
-    } else {
-      vis = <vis.IVisPluginDesc>param;
-    }
+    var vis: vis.IVisPluginDesc = selectVis(param, this.visses);
 
     if (vis === this.actDesc) {
       return this.actVisPromise; //already selected

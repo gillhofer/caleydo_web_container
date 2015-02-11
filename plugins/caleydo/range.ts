@@ -1168,9 +1168,15 @@ function parseRange1D(code:string, act:number) {
  * @param encoded
  * @returns {Range}
  */
-export function parse(...encoded:string[]) {
-  if (encoded.length === 0) {
+export function parse(range: Range);
+export function parse(...encoded:string[]);
+export function parse(...args: any[]){
+
+  if (args.length === 0) {
     return all();
   }
-  return parseRange(encoded.join(','));
+  if (args.length === 1 && args[0] instanceof Range) {
+    return <Range>args[0];
+  }
+  return parseRange(args.map(String).join(','));
 }
