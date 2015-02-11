@@ -99,8 +99,12 @@ export interface ICmdFunctionFactory {
 }
 
 export class Cmd {
-  constructor(public meta: ICmdMetaData, private f_id : string, private f : (inputs: IObjectRef<any>[], parameters: any, graph: ProvenanceGraph) => ICmdResult, public inputs:IObjectRef<any>[] = [], private parameter: any = {}) {
+  constructor(public meta: ICmdMetaData, private f_id : string, private f : (inputs: IObjectRef<any>[], parameters: any, graph: ProvenanceGraph) => ICmdResult, public inputs:IObjectRef<any>[] = [], public parameter: any = {}) {
 
+  }
+
+  get id() {
+    return this.f_id;
   }
 
   execute(graph: ProvenanceGraph):C.IPromise<ICmdResult> {
@@ -323,6 +327,64 @@ function remAll<T>(arr: T[], toremove: T[]) {
       arr.splice(i, 1);
     }
   });
+}
+
+export interface ICmdCompressor {
+  matches(id: string) : boolean;
+  toKey(cmd: Cmd) : string;
+  select(cmds: Cmd[]) : Cmd;
+}
+
+class CompositeCmdCompressor implements  ICmdCompressor {
+  constructor(private c : ICmdCompressor[]) {
+
+  }
+  private choose(id: string) {
+    return C.search(this.c, (ci) => ci.matches(id));
+  }
+  matches(id: string) : boolean {
+    return this.choose(id) !== null;
+  }
+  toKey(cmd: Cmd) : string {
+    return this.choose(cmd.id).toKey(cmd);
+  }
+  select(cmds: Cmd[]) : Cmd {
+    return this.choose(cmds[0].id).select(cmds);
+  }
+}
+
+/**
+ * returns a compressed version of the paths where just the last selection operation remains
+ * @param path
+ */
+export function compress(path: CmdNode[], compressor : ICmdCompressor) {
+  var group = {};
+  path.forEach((cmd) => {
+    var key;
+    if (compressor.matches(cmd.cmd.id)) {
+      key = compressor.toKey(cmd.cmd);
+      if (!group.hasOwnProperty(key)) {
+        group[key] = [cmd];
+      } else {
+        group[key].push(cmd);
+      }
+    }
+  });
+  var toremove = [];
+  Object.keys(group).forEach((g) => {
+    var gs = group[g];
+    if (gs.length <= 1) { //nothing to compress
+      return;
+    }
+    var last = compressor.select(gs.map((d) => d.cmd));
+    toremove.push.apply(toremove, gs.filter((gi) => gi.cmd !== last)); //mark all others to remove
+  });
+  if (toremove.length <= 0) {
+    return path;
+  }
+  //filter all to remove ones
+  path = path.filter((cmd) => toremove.indexOf(cmd) < 0);
+  return path;
 }
 
 export class ProvenanceGraph extends datatypes.DataTypeBase {

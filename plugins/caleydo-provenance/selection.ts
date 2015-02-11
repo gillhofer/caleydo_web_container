@@ -41,6 +41,17 @@ export function createSelection(idtype:idtypes.IDType, type:string, range:ranges
   });
 }
 
+export function createCompressor() : provenance.ICmdCompressor {
+  return {
+    matches : (id) => id === 'select',
+    toKey : (cmd) => { //by idtype and type
+      var para = cmd.parameter;
+      return 'select:'+para.idtype + '@' + para.type;
+    },
+    select : (cmds) => cmds[cmds.length-1] //last survive
+  }
+}
+
 /**
  * utility class to record all the selections within the provenance graph for a specific idtype
  */
