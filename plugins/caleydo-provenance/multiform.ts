@@ -8,7 +8,7 @@ import vis = require('../caleydo/vis');
 import session = require('../caleydo/session');
 import C = require('../caleydo/main');
 
-function transform(inputs:provenance.CmdID<any>[], parameter:any):provenance.ICmdResult {
+function transform(inputs:provenance.ObjectRef<any>[], parameter:any):provenance.ICmdResult {
   var v:vis.IVisInstance = inputs[0].value,
     transform = parameter.transform,
     bak = parameter.old || v.transform();
@@ -22,14 +22,14 @@ function transform(inputs:provenance.CmdID<any>[], parameter:any):provenance.ICm
 var transformCmd:provenance.ICmdFunction = <provenance.ICmdFunction>transform;
 transformCmd.id = 'transform';
 
-export function createTransform(v:provenance.CmdID<vis.IVisInstance>, transform:vis.ITransform, old:vis.ITransform = null) {
+export function createTransform(v:provenance.ObjectRef<vis.IVisInstance>, transform:vis.ITransform, old:vis.ITransform = null) {
   return new provenance.Cmd(provenance.meta('transform ' + v.toString(), provenance.CmdCategory.visual), transformCmd, [v], {
     transform: transform,
     old: old
   });
 }
 
-function changeVis(inputs:provenance.CmdID<any>[], parameter:any):provenance.ICmdResult {
+function changeVis(inputs:provenance.ObjectRef<any>[], parameter:any):provenance.ICmdResult {
   var v:multiform.IMultiForm = inputs[0].value,
     to:string = parameter.to,
     from = parameter.from || v.act.id;
@@ -43,14 +43,14 @@ function changeVis(inputs:provenance.CmdID<any>[], parameter:any):provenance.ICm
 var changeVisCmd:provenance.ICmdFunction = <provenance.ICmdFunction>changeVis;
 changeVisCmd.id = 'changeVis';
 
-export function createChangeVis(v:provenance.CmdID<multiform.IMultiForm>, to:string, from:string = null) {
+export function createChangeVis(v:provenance.ObjectRef<multiform.IMultiForm>, to:string, from:string = null) {
   return new provenance.Cmd(provenance.meta('transform ' + v.toString(), provenance.CmdCategory.visual), changeVisCmd, [v], {
     to: to,
     from: from
   });
 }
 
-function setOption(inputs:provenance.CmdID<any>[], parameter:any):provenance.ICmdResult {
+function setOption(inputs:provenance.ObjectRef<any>[], parameter:any):provenance.ICmdResult {
   var v:vis.IVisInstance = inputs[0].value,
     name = parameter.name,
     value = parameter.value,
@@ -65,7 +65,7 @@ function setOption(inputs:provenance.CmdID<any>[], parameter:any):provenance.ICm
 var setOptionCmd:provenance.ICmdFunction = <provenance.ICmdFunction>setOption;
 setOptionCmd.id = 'setOption';
 
-export function createSetOption(v:provenance.CmdID<vis.IVisInstance>, name:string, value:any, old:any = null) {
+export function createSetOption(v:provenance.ObjectRef<vis.IVisInstance>, name:string, value:any, old:any = null) {
   return new provenance.Cmd(provenance.meta('set option "' + name + +'" of "' + v.toString() + ' to "' + value + '"', provenance.CmdCategory.visual), setOptionCmd, [v], {
     name: name,
     value: value,
@@ -73,11 +73,11 @@ export function createSetOption(v:provenance.CmdID<vis.IVisInstance>, name:strin
   });
 }
 
-export function attach(graph:provenance.ProvenanceGraph, v:provenance.CmdID<vis.IVisInstance>) {
+export function attach(graph:provenance.ProvenanceGraph, v:provenance.ObjectRef<vis.IVisInstance>) {
   var m = v.value;
   if (C.isFunction((<any>m).switchTo)) {
     m.on('changed', (event, new_, old) => {
-      graph.push(createChangeVis(<provenance.CmdID<multiform.IMultiForm>>v, new_.id, old ? old.id : null));
+      graph.push(createChangeVis(<provenance.ObjectRef<multiform.IMultiForm>>v, new_.id, old ? old.id : null));
     });
   }
   m.on('transform', (event, new_, old) => {

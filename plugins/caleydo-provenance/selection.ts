@@ -7,7 +7,7 @@ import events = require('../caleydo/event');
 import provenance = require('./main');
 import ranges = require('../caleydo/range');
 
-function select(inputs: provenance.CmdID<any>[], parameter : any) : provenance.ICmdResult{
+function select(inputs: provenance.ObjectRef<any>[], parameter : any) : provenance.ICmdResult{
   var idtype = parameter.idtype,
     range = ranges.parse(parameter.range),
     type = parameter.type;

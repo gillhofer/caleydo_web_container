@@ -64,7 +64,7 @@ export function inverseOperation(op:CmdOperation) {
 /**
  * id by category
  */
-export interface CmdID<T> {
+export interface ObjectRef<T> {
   /**
    * category for simpler visualization
    */
@@ -79,7 +79,7 @@ export interface CmdID<T> {
   value: T;
 }
 
-export function createID<T>(value: T, name="Unknown", category = CmdCategory.data) : CmdID<T> {
+export function createRef<T>(value: T, name="Unknown", category = CmdCategory.data) : ObjectRef<T> {
   return {
     category: category,
     name: name,
@@ -89,8 +89,8 @@ export function createID<T>(value: T, name="Unknown", category = CmdCategory.dat
 
 export interface ICmdResult {
   inverse : Cmd;
-  created : CmdID<any>[];
-  removed : CmdID<any>[];
+  created : ObjectRef<any>[];
+  removed : ObjectRef<any>[];
 }
 
 //how to find the corresponding inputs -- attach it to the object
@@ -115,7 +115,7 @@ export function meta(name: string, category: CmdCategory = CmdCategory.data, ope
 
 export interface ICmdFunction {
   id: string;
-  (inputs: CmdID<any>[], parameters: any) : ICmdResult
+  (inputs: ObjectRef<any>[], parameters: any) : ICmdResult
 }
 
 export interface ICmdFunctionFactory {
@@ -123,7 +123,7 @@ export interface ICmdFunctionFactory {
 }
 
 export class Cmd {
-  constructor(public meta: ICmdMetaData, private f : ICmdFunction, public inputs:CmdID<any>[] = [], private parameter: any = {}) {
+  constructor(public meta: ICmdMetaData, private f : ICmdFunction, public inputs:ObjectRef<any>[] = [], private parameter: any = {}) {
 
   }
 
@@ -173,7 +173,7 @@ class ProvenanceNode {
 
   }
 
-  restoreLinks(p: any, nodes: CmdNode[], states: StateNode[], cmdids: CmdIDNode[]) {
+  restoreLinks(p: any, nodes: CmdNode[], states: StateNode[], objects: ObjectNode[]) {
 
   }
 }
@@ -188,8 +188,8 @@ function byIndex<T>(arr: T[]) {
 export class CmdNode extends ProvenanceNode {
   next : CmdNode[] = [];
 
-  requires : CmdIDNode[] = [];
-  produces : CmdIDNode[] = [];
+  requires : ObjectNode[] = [];
+  produces : ObjectNode[] = [];
 
   inverse: Cmd;
 
@@ -250,21 +250,21 @@ export class CmdNode extends ProvenanceNode {
     p.produces = this.produces.map(toPid);
   }
 
-  restoreLinks(p: any, nodes: CmdNode[], states: StateNode[], cmdids: CmdIDNode[]) {
+  restoreLinks(p: any, nodes: CmdNode[], states: StateNode[], objects: ObjectNode[]) {
     this.previous = nodes[p.previous];
     this.next = p.next.map(byIndex(nodes));
-    this.requires = p.requires.map(byIndex(cmdids));
-    this.produces = p.produces.map(byIndex(cmdids));
+    this.requires = p.requires.map(byIndex(objects));
+    this.produces = p.produces.map(byIndex(objects));
   }
 
 }
 
-export class CmdIDNode extends ProvenanceNode {
+export class ObjectNode extends ProvenanceNode {
   usedBy : { node: CmdNode; index: number; }[] = [];
   removedBy : CmdNode;
 
-  constructor(public id : CmdID<any>, public createdBy : CmdNode) {
-    super('id');
+  constructor(public id : ObjectRef<any>, public createdBy : CmdNode) {
+    super('object');
   }
 
   get name() {
@@ -272,7 +272,7 @@ export class CmdIDNode extends ProvenanceNode {
   }
 
   static restore(p: any) {
-    return new CmdIDNode(p.id, null);
+    return new ObjectNode(p.id, null);
   }
 
   persist(id: number) {
@@ -289,7 +289,7 @@ export class CmdIDNode extends ProvenanceNode {
 }
 
 export class StateNode extends ProvenanceNode {
-  constructor(public name: string, public resultOf: CmdNode, public consistsOf : CmdIDNode[]) {
+  constructor(public name: string, public resultOf: CmdNode, public consistsOf : ObjectNode[]) {
     super('state');
   }
 
@@ -341,7 +341,7 @@ function remAll<T>(arr: T[], toremove: T[]) {
 
 export class ProvenanceGraph extends datatypes.DataTypeBase {
   private cmds : CmdNode[] = [];
-  private cmdids : CmdIDNode[] = [];
+  private objects : ObjectNode[] = [];
   private states : StateNode[] = [];
   private act = null;
 
@@ -353,19 +353,26 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
   }
 
   get dim() {
-    return [this.cmds.length, this.cmdids.length, this.states.length];
+    return [this.cmds.length, this.objects.length, this.states.length];
   }
 
   ids(range: ranges.Range = ranges.all()) {
-    return C.resolved(ranges.range([0,this.cmds.length], [0, this.cmdids.length], [0, this.states.length]));
+    return C.resolved(ranges.range([0,this.cmds.length], [0, this.objects.length], [0, this.states.length]));
   }
 
   get idtypes() {
-    return ['_provenance_nodes', '_provenance_cmdids', '_provenance_states'].map(idtypes.resolve);
+    return ['_provenance_nodes', '_provenance_objects', '_provenance_states'].map(idtypes.resolve);
   }
 
-  execute(meta: ICmdMetaData, f : ICmdFunction, inputs:CmdID<any>[], parameter: any) {
+  execute(meta: ICmdMetaData, f : ICmdFunction, inputs:ObjectRef<any>[], parameter: any) {
     return this.push(new Cmd(meta, f, inputs, parameter));
+  }
+
+  pushObject<T>(value: T, name: string, category = CmdCategory.data, creator = this.root) {
+    var r = new ObjectNode(createRef(value, name, category), this.root);
+    this.objects.push(r);
+    this.fire('add_object', r);
+    return r.id;
   }
 
   push(cmd: Cmd) {
@@ -376,9 +383,9 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
     node.requires = cmd.inputs.map((id, i) => {
       var r = this.byID(id);
       if (!r) {
-        r = new CmdIDNode(id, this.root);
-        this.cmdids.push(r);
-        this.fire('add_id', r);
+        r = new ObjectNode(id, this.root);
+        this.objects.push(r);
+        this.fire('add_object', r);
       }
       //create one on the fly and associate it with the root
       r.usedBy.push({node: node, index: i});
@@ -390,13 +397,13 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
     this.fire('executed', cmd, result);
     //TODO check for similar ones
     node.produces = result.created.map((id) => {
-      var c = new CmdIDNode(id, node);
-      this.cmdids.push(c);
-      this.fire('add_id', c);
+      var c = new ObjectNode(id, node);
+      this.objects.push(c);
+      this.fire('add_object', c);
       return c;
     });
 
-    this.cmdids.push.apply(this.cmdids, node.produces);
+    this.objects.push.apply(this.objects, node.produces);
 
     this.walkImpl(node, result);
 
@@ -415,7 +422,7 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
     var rem = result.removed.map(toId);
     rem.forEach((r) => {
       r.removedBy = node;
-      this.fire('remove_id', r);
+      this.fire('remove_object', r);
       r.id = null; //free the id itself
     });
     remAll(this.act.consistsOf, rem);
@@ -477,8 +484,8 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
     this.fire('add_state', s);
   }
 
-  private byID(id : CmdID<any>) {
-    return C.search(this.cmdids, (active) => active.id == id);
+  private byID(id : ObjectRef<any>) {
+    return C.search(this.objects, (active) => active.id == id);
   }
 
   get actState() {
@@ -506,8 +513,8 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
     return this.states;
   }
 
-  get allCmdIds() {
-    return this.cmdids;
+  get allObjects() {
+    return this.objects;
   }
 
   jumpTo(node: CmdNode) {
@@ -543,12 +550,12 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
     var r = {
       nodes: this.cmds.map((n, i) => n.persist(i)),
       states: this.states.map((n, i) => n.persist(i)),
-      cmdids: this.cmdids.map((n, i) => n.persist(i)),
+      objects: this.objects.map((n, i) => n.persist(i)),
       act: this.act.pid
     };
     this.cmds.forEach((n, i) => n.persistLinks(r.nodes[i]));
     this.states.forEach((n, i) => n.persistLinks(r.states[i]));
-    this.states.forEach((n, i) => n.persistLinks(r.states[i]));
+    this.objects.forEach((n, i) => n.persistLinks(r.states[i]));
 
     return r;
   }
@@ -569,12 +576,12 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
     };
     this.cmds = p.cmds.map((n) => CmdNode.restore(n, factory));
     this.states = p.states.map((n) => StateNode.restore(n));
-    this.cmdids = p.cmdids.map((n) => CmdIDNode.restore(n));
+    this.objects = p.objects.map((n) => ObjectNode.restore(n));
     this.act = this.states[p.act];
 
-    this.cmds.forEach((n, i) => n.restoreLinks(p.cmds[i], this.cmds, this.states, this.cmdids));
-    this.states.forEach((n, i) => n.restoreLinks(p.states[i], this.cmds, this.states, this.cmdids));
-    this.cmdids.forEach((n, i) => n.restoreLinks(p.cmdids[i], this.cmds, this.states, this.cmdids));
+    this.cmds.forEach((n, i) => n.restoreLinks(p.cmds[i], this.cmds, this.states, this.objects));
+    this.states.forEach((n, i) => n.restoreLinks(p.states[i], this.cmds, this.states, this.objects));
+    this.objects.forEach((n, i) => n.restoreLinks(p.objects[i], this.cmds, this.states, this.objects));
     return this;
   }
 }

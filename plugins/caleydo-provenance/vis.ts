@@ -51,7 +51,7 @@ export class ProvenanceVis extends vis.AVisInstance implements vis.IVisInstance 
 
   private bind() {
     this.data.on('add_node', this.rebind);
-    this.data.on('add_id', this.rebind);
+    this.data.on('add_object', this.rebind);
     this.data.on('add_state', this.rebind);
     this.data.on('switch', this.trigger);
   }
@@ -60,7 +60,7 @@ export class ProvenanceVis extends vis.AVisInstance implements vis.IVisInstance 
     super.destroy();
     this.force().stop();
     this.data.off('add_node', this.rebind);
-    this.data.off('add_id', this.rebind);
+    this.data.off('add_object', this.rebind);
     this.data.off('add_state', this.rebind);
     this.data.off('switch', this.trigger);
   }
@@ -147,7 +147,7 @@ export class ProvenanceVis extends vis.AVisInstance implements vis.IVisInstance 
 
     this.data.allCmds.map((f) => this.add(f));
     this.data.allStates.map((f) => this.add(f));
-    this.data.allCmdIds.map((f) => this.add(f));
+    this.data.allObjects.map((f) => this.add(f));
 
     return $svg;
   }
@@ -193,7 +193,7 @@ export class ProvenanceVis extends vis.AVisInstance implements vis.IVisInstance 
           links.push({ source : node, target: this.getNode(u), type: 'next'});
         });
         break;
-      case 'cmdid':
+      case 'object':
         if (_.createdBy) {
           links.push({ source : node, target: this.getNode(_.createdBy), type: 'createdBy'});
         }
