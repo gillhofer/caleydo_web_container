@@ -12,6 +12,13 @@ g.node {
   }
 }
 
+g.node.fixed {
+  rect {
+    fill: rgb(200, 100, 50);
+    stroke: rgb(30, 10, 2);
+  }
+}
+
 g.edge {
   line {
     stroke: rgb(80,80,80);
