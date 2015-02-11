@@ -1,9 +1,6 @@
 /**
  * Created by Samuel Gratzl on 15.12.2014.
  */
-import C = require('../caleydo/main');
-import _2D = require('../caleydo/2D');
-import plugins = require('../caleydo/plugin');
 import geom = require('../caleydo/geom');
 
 export interface ILayoutElem {
@@ -103,10 +100,11 @@ export function layers(elems:ILayoutElem[], w:number, h:number, parent:ILayoutEl
 export function flowLayout(horizontal:boolean, gap:number, padding = {top: 0, left: 0, right: 0, bottom: 0}) {
   function setSize(w:number, h:number, child:ILayoutElem, value:number) {
     var loc = child.getBounds().xy;
-    if (horizontal)
+    if (horizontal) {
       child.setBounds(loc.x, loc.y, value, grab(child.option('prefHeight', Number.NaN), h));
-    else
+    } else {
       child.setBounds(loc.x, loc.y, grab(child.option('prefWidth', Number.NaN), w), value);
+    }
   }
 
   function FlowLayout(elems:ILayoutElem[], w:number, h:number, parent:ILayoutElem) {
@@ -164,10 +162,11 @@ export function flowLayout(horizontal:boolean, gap:number, padding = {top: 0, le
 
 export function distributeLayout(horizontal:boolean, defaultValue:number, padding = {top: 0, left: 0, right: 0, bottom: 0}) {
   function setBounds(x, y, w:number, h:number, child:ILayoutElem, value:number) {
-    if (horizontal)
+    if (horizontal) {
       child.setBounds(x, y, value, grab(child.option('prefHeight', Number.NaN), h));
-    else
+    } else {
       child.setBounds(x, y, grab(child.option('prefWidth', Number.NaN), w), value);
+    }
   }
 
   function DistributeLayout(elems:ILayoutElem[], w:number, h:number, parent:ILayoutElem) {

@@ -18,9 +18,8 @@ export interface IRangeElem {
   step: number;
   to: number;
   reverse() : IRangeElem;
-  contains(value: number, size?:number);
+  contains(value:number, size?:number);
 }
-
 
 
 /**
@@ -89,7 +88,7 @@ export class RangeElem implements IRangeElem {
   reverse() {
     var t = this.from < 0 ? this.from : this.from + 1;
     var f = this.to < 0 ? this.to : this.to - 1;
-    return new RangeElem(f, t,  - this.step);
+    return new RangeElem(f, t, -this.step);
   }
 
   invert(index:number, size?:number) {
@@ -107,7 +106,7 @@ export class RangeElem implements IRangeElem {
     return Iterator.range(fix(this.from, size), fix(this.to, size), this.step);
   }
 
-  contains(value: number, size?:number) {
+  contains(value:number, size?:number) {
     var f = fix(this.from, size);
     var t = fix(this.to, size);
     if (this.step === -1) {
@@ -146,7 +145,7 @@ export class RangeElem implements IRangeElem {
 }
 
 export class SingleRangeElem implements IRangeElem {
-  constructor(public from: number) {
+  constructor(public from:number) {
   }
 
   get step() {
@@ -173,7 +172,7 @@ export class SingleRangeElem implements IRangeElem {
     return new SingleRangeElem(this.from);
   }
 
-  contains(value: number, size?: number) {
+  contains(value:number, size?:number) {
     return fix(this.from, size) === value;
   }
 
@@ -366,7 +365,7 @@ export class Range1D {
    * @param other
    * @returns {RangeDim}
    */
-  union(other:Range1D, size?:number): Range1D {
+  union(other:Range1D, size?:number):Range1D {
     if (this.isAll || other.isNone) {
       return this.clone();
     }
@@ -567,7 +566,7 @@ export class Range1D {
     return Iterator.concat.apply(Iterator, this.arr.map((d) => d.iter(size)));
   }
 
-  asList(size?:number): number[] {
+  asList(size?:number):number[] {
     return this.iter(size).asList();
   }
 
@@ -580,7 +579,7 @@ export class Range1D {
     return this.iter().forEach(callbackfn, thisArg);
   }
 
-  contains(value: number, size?:number) : boolean {
+  contains(value:number, size?:number):boolean {
     return this.arr.some((elem) => elem.contains(value, size));
   }
 
@@ -589,7 +588,7 @@ export class Range1D {
    * @param cmp
    * @return {Range1D}
    */
-  sort(cmp : (a: number, b: number) => number): Range1D {
+  sort(cmp:(a:number, b:number) => number):Range1D {
     var arr = this.iter().asList();
     var r = arr.sort(cmp);
     return Range1D.from(r);
@@ -598,7 +597,7 @@ export class Range1D {
   /**
    * reverts the order of this range
    */
-  reverse(): Range1D {
+  reverse():Range1D {
     var a = this.arr.map((r) => r.reverse());
     a.reverse();
     return new Range1D(a);
@@ -654,15 +653,15 @@ export class Range1DGroup extends Range1D {
   }
 }
 
-export function asUngrouped( range : Range1D) {
+export function asUngrouped(range:Range1D) {
   return new Range1DGroup('unnamed', 'gray', range);
 }
 
-export function composite(name: string, groups: Range1DGroup[]) {
+export function composite(name:string, groups:Range1DGroup[]) {
   return new CompositeRange1D(name, groups);
 }
 
-function toBase(groups: Range1DGroup[]) {
+function toBase(groups:Range1DGroup[]) {
   if (groups.length === 1) {
     return groups[0];
   }
@@ -678,28 +677,28 @@ function toBase(groups: Range1DGroup[]) {
 }
 
 export class CompositeRange1D extends Range1D {
-  constructor(public name:string, public groups:Range1DGroup[], base? : Range1D) {
+  constructor(public name:string, public groups:Range1DGroup[], base?:Range1D) {
     super(base ? base : toBase(groups));
   }
 
   preMultiply(sub:Range1D, size?:number):Range1D {
     var r = this.groups.length > 1 ? super.preMultiply(sub, size) : undefined;
-    return new CompositeRange1D(this.name, this.groups.map((g) => <Range1DGroup>g.preMultiply(sub,size)), r);
+    return new CompositeRange1D(this.name, this.groups.map((g) => <Range1DGroup>g.preMultiply(sub, size)), r);
   }
 
   union(other:Range1D, size?:number) {
     var r = this.groups.length > 1 ? super.union(other, size) : undefined;
-    return new CompositeRange1D(this.name, this.groups.map((g) => <Range1DGroup>g.union(other,size)), r);
+    return new CompositeRange1D(this.name, this.groups.map((g) => <Range1DGroup>g.union(other, size)), r);
   }
 
   intersect(other:Range1D, size?:number) {
     var r = this.groups.length > 1 ? super.intersect(other, size) : undefined;
-    return new CompositeRange1D(this.name, this.groups.map((g) => <Range1DGroup>g.intersect(other,size)), r);
+    return new CompositeRange1D(this.name, this.groups.map((g) => <Range1DGroup>g.intersect(other, size)), r);
   }
 
   without(without:Range1D, size?:number) {
     var r = this.groups.length > 1 ? super.without(without, size) : undefined;
-    return new CompositeRange1D(this.name, this.groups.map((g) => <Range1DGroup>g.without(without,size)), r);
+    return new CompositeRange1D(this.name, this.groups.map((g) => <Range1DGroup>g.without(without, size)), r);
   }
 
   clone() {
@@ -1030,11 +1029,11 @@ export function join() {
   return r;
 }
 
-export function list(...indices:number[]): Range;
-export function list(...indexarrays:number[][]): Range;
-export function list(...dims:Range1D[]): Range;
-export function list(dims:Range1D[]): Range;
-export function list(): Range {
+export function list(...indices:number[]):Range;
+export function list(...indexarrays:number[][]):Range;
+export function list(...dims:Range1D[]):Range;
+export function list(dims:Range1D[]):Range;
+export function list():Range {
   if (arguments.length === 0) {
     return all();
   }
@@ -1069,7 +1068,6 @@ export function list(): Range {
 //CDim= Name '{' GDim { ',' GDim } '}'
 
 
-
 /**
  * parse the give code created toString
  * @param code
@@ -1077,21 +1075,21 @@ export function list(): Range {
  */
 function parseRange(code:string) {
   var act = 0, c:string;
-  var dims = new Array<Range1D>(),t;
+  var dims = new Array<Range1D>(), t;
   code = code.trim();
   while (act < code.length) {
     c = code.charAt(act);
-    switch(c) {
-    case '"' :
-      t = parseNamedRange1D(code, act);
-      act = t.act + 1; //skip ,
-      dims.push(t.dim);
-      break;
-    case ',' :
-      act ++;
-      dims.push(Range1D.all());
+    switch (c) {
+      case '"' :
+        t = parseNamedRange1D(code, act);
+        act = t.act + 1; //skip ,
+        dims.push(t.dim);
         break;
-    default:
+      case ',' :
+        act++;
+        dims.push(Range1D.all());
+        break;
+      default:
         t = parseRange1D(code, act);
         act = t.act + 1; //skip ,
         dims.push(t.dim);
@@ -1102,65 +1100,65 @@ function parseRange(code:string) {
   return r;
 }
 
-function parseNamedRange1D(code:string, act:number) : { dim : Range1D; act: number} {
+function parseNamedRange1D(code:string, act:number):{ dim : Range1D; act: number} {
   act += 1; //skip "
-  var end = code.indexOf('"',act);
-  var name = code.slice(act,end);
+  var end = code.indexOf('"', act);
+  var name = code.slice(act, end);
   var r;
-  act = end+1;
-  switch(code.charAt(act)) {
-  case '"':
-    end = code.indexOf('"',act+1);
-    r = parseRange1D(code, end+1);
-    return {
-      dim : new Range1DGroup(name, code.slice(act+1, end), r.dim),
-      act : r.act
-    };
-  case '{':
-    var groups = [];
-    while (code.charAt(act) !== '}') {
-      r = parseNamedRange1D(code,act+1);
-      groups.push(r.dim);
-      act = r.act;
-    }
-    return {
-      dim : new CompositeRange1D(name, groups),
-      act : r.act+1
-    };
-  default: //ERROR
-    return {
-      dim: Range1D.all(),
-      act : act
-    };
+  act = end + 1;
+  switch (code.charAt(act)) {
+    case '"':
+      end = code.indexOf('"', act + 1);
+      r = parseRange1D(code, end + 1);
+      return {
+        dim: new Range1DGroup(name, code.slice(act + 1, end), r.dim),
+        act: r.act
+      };
+    case '{':
+      var groups = [];
+      while (code.charAt(act) !== '}') {
+        r = parseNamedRange1D(code, act + 1);
+        groups.push(r.dim);
+        act = r.act;
+      }
+      return {
+        dim: new CompositeRange1D(name, groups),
+        act: r.act + 1
+      };
+    default: //ERROR
+      return {
+        dim: Range1D.all(),
+        act: act
+      };
   }
 }
 
 function parseRange1D(code:string, act:number) {
-  var next,r = new Range1D();
-  switch(code.charAt(act)) {
-  case ',':
-  case '}':
-    next = act;
-    r = Range1D.all();
+  var next, r = new Range1D();
+  switch (code.charAt(act)) {
+    case ',':
+    case '}':
+      next = act;
+      r = Range1D.all();
       break;
-  case '(':
-    next = code.indexOf(')',act);
-    r.push.apply(r, code.slice(act+1,next).split(',').map(RangeElem.parse));
-    break;
-  default:
-    next = code.indexOf(',',act);
-    if (next < 0) {
-      next = code.indexOf('}', act);
-    }
-    if (next < 0) {
-      next = code.length;
-    }
-    r = new Range1D([RangeElem.parse(code.slice(act,next+1))]);
+    case '(':
+      next = code.indexOf(')', act);
+      r.push.apply(r, code.slice(act + 1, next).split(',').map(RangeElem.parse));
+      break;
+    default:
+      next = code.indexOf(',', act);
+      if (next < 0) {
+        next = code.indexOf('}', act);
+      }
+      if (next < 0) {
+        next = code.length;
+      }
+      r = new Range1D([RangeElem.parse(code.slice(act, next + 1))]);
       break;
   }
   return {
-    act : next,
-    dim : r
+    act: next,
+    dim: r
   };
 }
 /**
@@ -1168,9 +1166,9 @@ function parseRange1D(code:string, act:number) {
  * @param encoded
  * @returns {Range}
  */
-export function parse(range: Range);
+export function parse(range:Range);
 export function parse(...encoded:string[]);
-export function parse(...args: any[]){
+export function parse(...args:any[]) {
 
   if (args.length === 0) {
     return all();

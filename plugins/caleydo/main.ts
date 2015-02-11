@@ -49,7 +49,7 @@ export function reject(error) : IPromise<any> {
 export function asPromise<T>(f: IPromise<T>): IPromise<T>;
 export function asPromise<T>(f: T): IPromise<T>;
 export function asPromise<T>(f: any): IPromise<T> {
-  if (f.hasOwnProperty('then') && isFunction(f.then)) {
+  if (f.hasOwnProperty('then') && $.isFunction(f.then)) {
     return f;
   }
   return resolved(f);

@@ -2,15 +2,12 @@
  * Created by sam on 10.02.2015.
  */
 
-
-import C = require('../caleydo/main');
 import idtypes = require('../caleydo/idtype');
 import events = require('../caleydo/event');
 import provenance = require('./main');
 import ranges = require('../caleydo/range');
-import datatypes = require('../caleydo/datatype');
 
-function select(inputs: provenance.ObjectRef<any>[], parameter : any) : provenance.ICmdResult{
+function select(inputs:provenance.IObjectRef<any>[], parameter:any):provenance.ICmdResult {
   var idtype = parameter.idtype,
     range = ranges.parse(parameter.range),
     type = parameter.type;
@@ -20,11 +17,11 @@ function select(inputs: provenance.ObjectRef<any>[], parameter : any) : provenan
     created: [],
     removed: [],
     inverse: createSelection(idtype, type, bak)
-  }
+  };
 }
 
-function meta(idtype: idtypes.IDType, type: string, range: ranges.Range) {
-  return provenance.meta(range.toString()+' '+idtype.names+' '+type, provenance.cat.selection);
+function meta(idtype:idtypes.IDType, type:string, range:ranges.Range) {
+  return provenance.meta(range.toString() + ' ' + idtype.names + ' ' + type, provenance.cat.selection);
 }
 
 /**
@@ -35,7 +32,7 @@ function meta(idtype: idtypes.IDType, type: string, range: ranges.Range) {
  * @param old optional the old selection for inversion
  * @returns {Cmd}
  */
-export function createSelection(idtype: idtypes.IDType, type: string, range: ranges.Range, old: ranges.Range = null) {
+export function createSelection(idtype:idtypes.IDType, type:string, range:ranges.Range, old:ranges.Range = null) {
   return new provenance.Cmd(meta(idtype, type, range), 'select', select, [], {
     idtype: idtype,
     range: range,
@@ -56,9 +53,9 @@ class SelectionTypeRecorder {
     return this.l(event, this.type, sel, added, removed, old);
   };
 
-  constructor(private idtype: idtypes.IDType, private graph: provenance.ProvenanceGraph, private type?: string) {
+  constructor(private idtype:idtypes.IDType, private graph:provenance.ProvenanceGraph, private type?:string) {
     if (type) {
-      idtype.on('select-'+type, this.t);
+      idtype.on('select-' + type, this.t);
     } else {
       idtype.on('select', this.l);
     }
@@ -66,7 +63,7 @@ class SelectionTypeRecorder {
 
   destroy() {
     if (this.type) {
-      this.idtype.off('select-'+this.type, this.t);
+      this.idtype.off('select-' + this.type, this.t);
     } else {
       this.idtype.off('select', this.l);
     }
@@ -76,12 +73,12 @@ class SelectionTypeRecorder {
  * utility class to record all the selections within the provenance graph
  */
 export class SelectionRecorder {
-  private handler : SelectionTypeRecorder[] = [];
+  private handler:SelectionTypeRecorder[] = [];
   private adder = (event, idtype) => {
     this.handler.push(new SelectionTypeRecorder(idtype, this.graph, this.type));
   };
 
-  constructor(private graph : provenance.ProvenanceGraph, private type?: string) {
+  constructor(private graph:provenance.ProvenanceGraph, private type?:string) {
     events.on('register.idtype', this.adder);
     idtypes.list().forEach((d) => {
       this.adder(null, d);
@@ -96,13 +93,14 @@ export class SelectionRecorder {
 }
 
 
-export function create(graph : provenance.ProvenanceGraph, type?: string) {
+export function create(graph:provenance.ProvenanceGraph, type?:string) {
   return new SelectionRecorder(graph, type);
 }
 
-export function createCmd(id: string) {
-  switch(id) {
-    case 'select': return select;
+export function createCmd(id:string) {
+  switch (id) {
+    case 'select':
+      return select;
   }
   return null;
 }

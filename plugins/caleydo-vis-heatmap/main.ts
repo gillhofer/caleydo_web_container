@@ -246,7 +246,7 @@ export class HeatMap1D extends vis.AVisInstance implements vis.IVisInstance {
 
   locateImpl(range:ranges.Range) {
     var dims = this.data.dim;
-    var height = dims[0], width=20, o = this.options;
+    var height = dims[0], o = this.options;
 
     function l(r, max, s) {
       if (r.isAll || r.isNone) {
@@ -324,7 +324,7 @@ export class HeatMap1D extends vis.AVisInstance implements vis.IVisInstance {
 export function create(data:vector.IVector, parent:Element, options);
 export function create(data:matrix.IMatrix, parent:Element, options);
 export function create(data:datatypes.IDataType, parent:Element, options): vis.AVisInstance {
-  if (data.desc.type == 'matrix') {
+  if (data.desc.type === 'matrix') {
     return new HeatMap(<matrix.IMatrix>data, parent, options);
   } else if (data.desc.type === 'vector') {
     return new HeatMap1D(<vector.IVector>data, parent, options);

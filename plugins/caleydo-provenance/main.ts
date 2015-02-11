@@ -3,7 +3,6 @@
  */
 import C = require('../caleydo/main');
 import plugins = require('../caleydo/plugin');
-import events = require('../caleydo/event');
 import datatypes = require('../caleydo/datatype');
 import idtypes = require('../caleydo/idtype');
 import ranges = require('../caleydo/range');
@@ -37,7 +36,7 @@ export function inverseOperation(op:CmdOperation) {
 /**
  * id by category
  */
-export interface ObjectRef<T> {
+export interface IObjectRef<T> {
   /**
    * category for simpler visualization
    */
@@ -52,7 +51,7 @@ export interface ObjectRef<T> {
   v: T;
 }
 
-export function createRef<T>(value: T, name="Unknown", category = cat.data) : ObjectRef<T> {
+export function createRef<T>(value: T, name='Unknown', category = cat.data) : IObjectRef<T> {
   return {
     category: category,
     name: name,
@@ -62,8 +61,8 @@ export function createRef<T>(value: T, name="Unknown", category = cat.data) : Ob
 
 export interface ICmdResult {
   inverse : Cmd;
-  created : ObjectRef<any>[];
-  removed : ObjectRef<any>[];
+  created : IObjectRef<any>[];
+  removed : IObjectRef<any>[];
 }
 
 //how to find the corresponding inputs -- attach it to the object
@@ -87,11 +86,11 @@ export function meta(name: string, category: string = cat.data, operation: CmdOp
 }
 
 export interface ICmdFunction {
-  (inputs: ObjectRef<any>[], parameters: any) : ICmdResult;
+  (inputs: IObjectRef<any>[], parameters: any) : ICmdResult;
 }
 
 export interface ICmdFunctionPromise {
-  (inputs: ObjectRef<any>[], parameters: any) : C.IPromise<ICmdResult>;
+  (inputs: IObjectRef<any>[], parameters: any) : C.IPromise<ICmdResult>;
 }
 
 
@@ -100,7 +99,7 @@ export interface ICmdFunctionFactory {
 }
 
 export class Cmd {
-  constructor(public meta: ICmdMetaData, private f_id : string, private f : (inputs: ObjectRef<any>[], parameters: any, graph: ProvenanceGraph) => ICmdResult, public inputs:ObjectRef<any>[] = [], private parameter: any = {}) {
+  constructor(public meta: ICmdMetaData, private f_id : string, private f : (inputs: IObjectRef<any>[], parameters: any, graph: ProvenanceGraph) => ICmdResult, public inputs:IObjectRef<any>[] = [], private parameter: any = {}) {
 
   }
 
@@ -114,7 +113,7 @@ export class Cmd {
       return false;
     }
     if (this.f_id !== that.f_id) {
-      return false
+      return false;
     }
     //TODO check parameters if they are the same
     return true;
@@ -134,7 +133,7 @@ export class Cmd {
   }
 }
 
-export function cmd(meta: ICmdMetaData, f_id : string, f : (inputs: ObjectRef<any>[], parameters: any, graph: ProvenanceGraph) => ICmdResult, inputs:ObjectRef<any>[] = [], parameter: any = {}) {
+export function cmd(meta: ICmdMetaData, f_id : string, f : (inputs: IObjectRef<any>[], parameters: any, graph: ProvenanceGraph) => ICmdResult, inputs:IObjectRef<any>[] = [], parameter: any = {}) {
   return new Cmd(meta, f_id, f, inputs, parameter);
 }
 
@@ -150,14 +149,14 @@ class ProvenanceNode {
     this.pid = id;
     return {
 
-    }
+    };
   }
   persistLinks(p: any): void {
-
+    //nothing to do
   }
 
   restoreLinks(p: any, nodes: CmdNode[], states: StateNode[], objects: ObjectNode[]) {
-
+    //nothing to do
   }
 }
 
@@ -195,7 +194,7 @@ export class CmdNode extends ProvenanceNode {
     if (p.cmd.meta.name === 'root') {
       return new RootNode();
     }
-    return new CmdNode(Cmd.restore(p.cmd, factory), null)
+    return new CmdNode(Cmd.restore(p.cmd, factory), null);
   }
 
   get isRoot() {
@@ -247,7 +246,7 @@ export class ObjectNode extends ProvenanceNode {
   usedBy : { node: CmdNode; index: number; }[] = [];
   removedBy : CmdNode;
 
-  constructor(public ref : ObjectRef<any>, public createdBy : CmdNode) {
+  constructor(public ref : IObjectRef<any>, public createdBy : CmdNode) {
     super('object');
   }
 
@@ -271,7 +270,7 @@ export class ObjectNode extends ProvenanceNode {
 
   persistLinks(p: any) {
     p.createdBy = toPid(this.createdBy);
-    p.usedBy = this.usedBy.map((n) => { return { node: toPid(n.node), index: n.index} });
+    p.usedBy = this.usedBy.map((n) => { return { node: toPid(n.node), index: n.index}; });
     p.removedBy = toPid(this.removedBy);
   }
 }
@@ -351,7 +350,7 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
     return ['_provenance_nodes', '_provenance_objects', '_provenance_states'].map(idtypes.resolve);
   }
 
-  execute(meta: ICmdMetaData, f_id: string, f : ICmdFunction, inputs:ObjectRef<any>[], parameter: any) {
+  execute(meta: ICmdMetaData, f_id: string, f : ICmdFunction, inputs:IObjectRef<any>[], parameter: any) {
     return this.push(new Cmd(meta, f_id, f, inputs, parameter));
   }
 
@@ -363,7 +362,6 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
   }
 
   push(cmd: Cmd) {
-    var toId =(id) => this.byID(id);
     var node = new CmdNode(cmd, this.act.resultOf);
     this.fire('add_node', node);
     this.cmds.push(node);
@@ -474,7 +472,7 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
     return this.act.consistsOf;
   }
 
-  findObject<T>(v : T) : ObjectRef<T> {
+  findObject<T>(v : T) : IObjectRef<T> {
     var r = C.search(this.objects, (d) => d.ref.v === v).ref;
     if (r) {
       return r;
@@ -488,8 +486,8 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
     this.fire('add_state', s);
   }
 
-  private byID(id : ObjectRef<any>) {
-    return C.search(this.objects, (active) => active.ref == id);
+  private byID(id : IObjectRef<any>) {
+    return C.search(this.objects, (active) => active.ref === id);
   }
 
   get actState() {
@@ -527,7 +525,7 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
       i: number,
       current: CmdNode[];
     this.fire('jumpTo', node);
-    if (node == l) {
+    if (node === l) {
       return C.resolved(null);
     }
     if ( (i = target.indexOf(l)) >= 0) { //go forward multiple steps
@@ -566,7 +564,7 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
 
   restore(p : any) {
     var factories = plugins.list('cmdFactory');
-    var toLoad = [];
+    //var toLoad = factories;
 
     //FIXME since async load first all needed plugins and then do the magic
     var factory = (id) => {

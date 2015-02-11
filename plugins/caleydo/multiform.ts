@@ -8,7 +8,6 @@ import C = require('./main');
 import vis = require('./vis');
 import ranges = require('./range');
 import datatypes = require('./datatype');
-import events = require('./event');
 
 class ProxyMetaData implements vis.IVisMetaData {
   constructor(private proxy : () => vis.IVisMetaData) {
