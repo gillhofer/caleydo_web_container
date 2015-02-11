@@ -10,42 +10,15 @@ import ranges = require('../caleydo/range');
 import session = require('../caleydo/session');
 
 
-var categories = {
-  data: {
-    name: 'Data',
-    description: '',
-    color: 'red'
-  },
-  selection: {
-    name: 'Selection',
-    description: '',
-    color: 'orange'
-  },
-  visual: {
-    name: 'Visual Encoding',
-    description: '',
-    color: 'yellow'
-  },
-  layout: {
-    name: 'Layout',
-    description: '',
-    color: 'green'
-  },
-  logic: {
-    name: 'Logic',
-    description: '',
-    color: 'grey'
-  },
-  custom: {
-    name: 'Custom',
-    description: '',
-    color: 'white'
-  }
+export var cat = {
+  data: 'data',
+  selection: 'selection',
+  visual: 'visual',
+  layout: 'layout',
+  logic: 'logic',
+  custom: 'custom'
 };
 
-export enum CmdCategory {
-  data, selection, visual, logic, note, custom
-}
 export enum CmdOperation {
   create, update, remove
 }
@@ -68,7 +41,7 @@ export interface ObjectRef<T> {
   /**
    * category for simpler visualization
    */
-  category: CmdCategory;
+  category: string;
   /**
    *
    */
@@ -79,7 +52,7 @@ export interface ObjectRef<T> {
   v: T;
 }
 
-export function createRef<T>(value: T, name="Unknown", category = CmdCategory.data) : ObjectRef<T> {
+export function createRef<T>(value: T, name="Unknown", category = cat.data) : ObjectRef<T> {
   return {
     category: category,
     name: name,
@@ -96,7 +69,7 @@ export interface ICmdResult {
 //how to find the corresponding inputs -- attach it to the object
 
 export interface ICmdMetaData {
-  category: CmdCategory;
+  category: string;
   operation: CmdOperation;
   name: string;
   timestamp: number;
@@ -104,12 +77,12 @@ export interface ICmdMetaData {
 }
 
 export class CmdMetaData implements ICmdMetaData {
-  constructor(public category: CmdCategory, public operation: CmdOperation, public name: string, public timestamp: number, public user: string) {
+  constructor(public category: string, public operation: CmdOperation, public name: string, public timestamp: number, public user: string) {
 
   }
 }
 
-export function meta(name: string, category: CmdCategory = CmdCategory.data, operation: CmdOperation = CmdOperation.update, user: string = session.retrieve('user','Unknown'), timestamp: number = Date.now()) {
+export function meta(name: string, category: string = cat.data, operation: CmdOperation = CmdOperation.update, user: string = session.retrieve('user','Unknown'), timestamp: number = Date.now()) {
   return new CmdMetaData(category, operation, name, timestamp, user);
 }
 
@@ -215,7 +188,7 @@ export class CmdNode extends ProvenanceNode {
   }
 
   get category() {
-    return CmdCategory[this.cmd.meta.category];
+    return this.cmd.meta.category;
   }
 
   static restore(p: any, factory: ICmdFunctionFactory) {
@@ -278,6 +251,10 @@ export class ObjectNode extends ProvenanceNode {
     super('object');
   }
 
+  get category() {
+    return this.ref.category;
+  }
+
   get name() {
     return this.ref.name;
   }
@@ -335,7 +312,7 @@ class RootNode extends CmdNode {
         removed : []
       };
     };
-    cmd = new Cmd(new CmdMetaData(CmdCategory.logic, CmdOperation.update, 'root', 0, 'system'), 'root', root);
+    cmd = new Cmd(new CmdMetaData(cat.logic, CmdOperation.update, 'root', 0, 'system'), 'root', root);
     return cmd;
   }
 }
@@ -378,7 +355,7 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
     return this.push(new Cmd(meta, f_id, f, inputs, parameter));
   }
 
-  addObject<T>(value: T, name: string, category = CmdCategory.data, creator = this.root) {
+  addObject<T>(value: T, name: string, category = cat.data, creator = this.root) {
     var r = new ObjectNode(createRef(value, name, category), this.root);
     this.objects.push(r);
     this.fire('add_object', r);
@@ -434,7 +411,7 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
     rem.forEach((r) => {
       r.removedBy = node;
       this.fire('remove_object', r);
-      r.ref = null; //free the id itself
+      r.ref.v = null; //free the id itself
     });
     remAll(this.act.consistsOf, rem);
 

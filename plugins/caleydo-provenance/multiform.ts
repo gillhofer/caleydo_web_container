@@ -20,7 +20,7 @@ function transform(inputs:provenance.ObjectRef<any>[], parameter:any):provenance
   };
 }
 export function createTransform(v:provenance.ObjectRef<vis.IVisInstance>, t:vis.ITransform, old:vis.ITransform = null) {
-  return new provenance.Cmd(provenance.meta('transform ' + v.toString(), provenance.CmdCategory.visual), 'transform', transform, [v], {
+  return new provenance.Cmd(provenance.meta('transform ' + v.toString(), provenance.cat.visual), 'transform', transform, [v], {
     transform: t,
     old: old
   });
@@ -38,7 +38,7 @@ function changeVis(inputs:provenance.ObjectRef<any>[], parameter:any):provenance
   };
 }
 export function createChangeVis(v:provenance.ObjectRef<multiform.IMultiForm>, to:string, from:string = null) {
-  return new provenance.Cmd(provenance.meta('transform ' + v.toString(), provenance.CmdCategory.visual), 'changeVis', changeVis, [v], {
+  return new provenance.Cmd(provenance.meta('transform ' + v.toString(), provenance.cat.visual), 'changeVis', changeVis, [v], {
     to: to,
     from: from
   });
@@ -58,7 +58,7 @@ function setOption(inputs:provenance.ObjectRef<any>[], parameter:any):provenance
 }
 
 export function createSetOption(v:provenance.ObjectRef<vis.IVisInstance>, name:string, value:any, old:any = null) {
-  return new provenance.Cmd(provenance.meta('set option "' + name + +'" of "' + v.toString() + ' to "' + value + '"', provenance.CmdCategory.visual), 'setOption', setOption, [v], {
+  return new provenance.Cmd(provenance.meta('set option "' + name + +'" of "' + v.toString() + ' to "' + value + '"', provenance.cat.visual), 'setOption', setOption, [v], {
     name: name,
     value: value,
     old: old

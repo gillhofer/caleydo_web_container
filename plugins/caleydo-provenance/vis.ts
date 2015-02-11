@@ -179,7 +179,7 @@ export class ProvenanceVis extends vis.AVisInstance implements vis.IVisInstance 
   private update() {
     var s = this.rawSize;
     var shapes = {
-      id: this.line([[0, -5], [5, 5], [-5, 5]]),
+      object: this.line([[0, -5], [5, 5], [-5, 5]]),
       state: this.line([[-5, -5], [5, -5], [5, 5], [-5, 5]]),
       cmd: this.line([[0, -5], [5, 0], [0, 5], [-5, 0]])
     };
@@ -195,13 +195,13 @@ export class ProvenanceVis extends vis.AVisInstance implements vis.IVisInstance 
         break;
       case 'object':
         if (_.createdBy) {
-          links.push({ source : node, target: this.getNode(_.createdBy), type: 'createdBy'});
+          links.push({ target : node, source: this.getNode(_.createdBy), type: 'createdBy'});
         }
         if (_.removedBy) {
           links.push({ source : node, target: this.getNode(_.removedBy), type: 'removedBy'});
         }
         _.usedBy.forEach((u) => {
-          links.push({ source : node, target: this.getNode(u), type: 'usedBy'});
+          links.push({ source : node, target: this.getNode(u.node), type: 'usedBy'});
         });
         break;
       case 'state':
@@ -238,6 +238,8 @@ export class ProvenanceVis extends vis.AVisInstance implements vis.IVisInstance 
       .classed('root', (d) => d._.isRoot)
       .classed('last', (d) => this.data.last === d._)
     .select('path').attr('class', (d) => d._.category);
+    nodes.filter((d) => d._.type === 'object')
+      .select('path').attr('class', (d) => d._.category);
     nodes.filter((d) => d._.type === 'state')
       .classed('last', (d) => d._ === this.data.actState);
 

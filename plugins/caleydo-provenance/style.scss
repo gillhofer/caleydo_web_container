@@ -14,11 +14,32 @@
   }
 
   .node {
+
+    path {
+      &.data {
+        fill: green;
+      }
+      &.selection {
+        fill: orange;
+      }
+      &.visual {
+        fill: yellow;
+      }
+      &.layout {
+        fill: blue;
+      }
+      &.logic {
+        fill: gray;
+      }
+      &.custom {
+        fill: white;
+      }
+    }
+
     &.state {
       fill: black;
     }
     &.cmd {
-
       &.root {
         stroke: gray;
         stroke-width: 2;
@@ -26,27 +47,6 @@
       &.last {
         stroke: black;
         stroke-width: 2;
-      }
-
-      path {
-        &.data {
-          fill: green;
-        }
-        &.selection {
-          fill: orange;
-        }
-        &.visual {
-          fill: yellow;
-        }
-        &.layout {
-          fill: blue;
-        }
-        &.logic {
-          fill: gray;
-        }
-        &.custom {
-          fill: white;
-        }
       }
     }
     &.object {

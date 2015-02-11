@@ -24,7 +24,7 @@ function select(inputs: provenance.ObjectRef<any>[], parameter : any) : provenan
 }
 
 function meta(idtype: idtypes.IDType, type: string, range: ranges.Range) {
-  return provenance.meta(range.toString()+' '+idtype.names+' '+type, provenance.CmdCategory.selection);
+  return provenance.meta(range.toString()+' '+idtype.names+' '+type, provenance.cat.selection);
 }
 
 /**
