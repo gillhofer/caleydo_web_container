@@ -1,20 +1,32 @@
-.axis {
-  .makeover {
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-    pointer-events: none;
+g.node {
+  rect {
+    fill: rgb(200, 200, 200);
+    stroke: rgb(30, 30, 30);
   }
 
-  .tick line, path {
-    fill: none;
-    stroke: black;
-    shape-rendering: crispEdges;
+  text {
+    text-anchor: middle;
+    font-family: sans-serif;
+    font-size: 11px;
+    fill: rgb(30, 30, 30);
   }
+}
 
-  circle {
-
+g.node.fixed {
+  rect {
+    fill: rgb(200, 100, 50);
+    stroke: rgb(30, 10, 2);
   }
+}
+
+g.edge {
+  line {
+    stroke: rgb(80,80,80);
+    stroke-width: 2px;
+  }
+}
+
+#arrowRight {
+  stroke: rgb(80,80,80);
+  fill: rgb(80,80,80);
 }
