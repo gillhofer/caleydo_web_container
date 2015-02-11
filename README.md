@@ -1,13 +1,14 @@
 # caleydo-web
 
-## Installation
+## Installation as standalone version (w/o caleydo-web-server)
 
 1. Install [node.js](http://www.nodejs.org).
 2. Clone the repository ```git clone git@github.com:Caleydo/caleydo-web.git```.
 3. Install grunt and bower ```npm install -g bower grunt-cli``` (might have to be run using ```sudo```).
 4. Install requirements ```npm install``` (might have to be run using ```sudo```).
-5. Install bower requirements ```bower install```
-6. Build with ```grunt build```
+5. Create bower.json file ```node server --dependencyOnly``` 
+6. Install bower requirements ```bower install```
+7. Build with ```grunt buildd``` (two d's !!)
 
 ## Launching the server
 
