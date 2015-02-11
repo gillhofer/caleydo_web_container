@@ -63,6 +63,10 @@ export class DataTypeBase extends idtypes.SelectAble implements IDataType {
   restore(persisted: any) {
     return this;
   }
+
+  toString() {
+    return this.persist();
+  }
 }
 
 /**

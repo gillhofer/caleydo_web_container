@@ -76,14 +76,14 @@ export interface ObjectRef<T> {
   /**
    * the actual value
    */
-  value: T;
+  v: T;
 }
 
 export function createRef<T>(value: T, name="Unknown", category = CmdCategory.data) : ObjectRef<T> {
   return {
     category: category,
     name: name,
-    value: value
+    v: value
   };
 }
 
@@ -114,28 +114,33 @@ export function meta(name: string, category: CmdCategory = CmdCategory.data, ope
 }
 
 export interface ICmdFunction {
-  id: string;
-  (inputs: ObjectRef<any>[], parameters: any) : ICmdResult
+  (inputs: ObjectRef<any>[], parameters: any) : ICmdResult;
 }
+
+export interface ICmdFunctionPromise {
+  (inputs: ObjectRef<any>[], parameters: any) : C.IPromise<ICmdResult>;
+}
+
 
 export interface ICmdFunctionFactory {
   (id: string): ICmdFunction;
 }
 
 export class Cmd {
-  constructor(public meta: ICmdMetaData, private f : ICmdFunction, public inputs:ObjectRef<any>[] = [], private parameter: any = {}) {
+  constructor(public meta: ICmdMetaData, private f_id : string, private f : (inputs: ObjectRef<any>[], parameters: any, graph: ProvenanceGraph) => ICmdResult, public inputs:ObjectRef<any>[] = [], private parameter: any = {}) {
 
   }
 
-  execute():ICmdResult {
-    return this.f(this.inputs, this.parameter);
+  execute(graph: ProvenanceGraph):C.IPromise<ICmdResult> {
+    var r = this.f(this.inputs, this.parameter, graph);
+    return C.asPromise(r);
   }
 
   equals(that:Cmd):boolean {
     if (!(this.meta.category === that.meta.category && that.meta.operation === that.meta.operation)) {
       return false;
     }
-    if (this.f.id !== that.f.id) {
+    if (this.f_id !== that.f_id) {
       return false
     }
     //TODO check parameters if they are the same
@@ -145,16 +150,21 @@ export class Cmd {
   persist(): any {
     var r = {
       meta: this.meta,
-      f : this.f.id,
+      f : this.f_id,
       parameter: this.parameter
-    }
+    };
     return r;
   }
 
   static restore(data: any, factory: ICmdFunctionFactory) {
-    return new Cmd(data.meta, factory(data.id), [], data.parameter);
+    return new Cmd(data.meta, data.id, factory(data.id), [], data.parameter);
   }
 }
+
+export function cmd(meta: ICmdMetaData, f_id : string, f : (inputs: ObjectRef<any>[], parameters: any, graph: ProvenanceGraph) => ICmdResult, inputs:ObjectRef<any>[] = [], parameter: any = {}) {
+  return new Cmd(meta, f_id, f, inputs, parameter);
+}
+
 
 class ProvenanceNode {
   pid : number = -1;
@@ -219,11 +229,12 @@ export class CmdNode extends ProvenanceNode {
     return this.previous === this;
   }
 
-  execute():ICmdResult {
-    this.cmd.inputs = this.requires.map((r) => r.id);
-    var r = this.cmd.execute();
-    this.cmd.inputs = null; //reset
-    return r;
+  execute(graph: ProvenanceGraph):C.IPromise<ICmdResult> {
+    this.cmd.inputs = this.requires.map((r) => r.ref);
+    return this.cmd.execute(graph).then((r) => {
+      this.cmd.inputs = null; //reset
+      return r;
+    });
   }
 
   get path() {
@@ -256,28 +267,28 @@ export class CmdNode extends ProvenanceNode {
     this.requires = p.requires.map(byIndex(objects));
     this.produces = p.produces.map(byIndex(objects));
   }
-
 }
+
 
 export class ObjectNode extends ProvenanceNode {
   usedBy : { node: CmdNode; index: number; }[] = [];
   removedBy : CmdNode;
 
-  constructor(public id : ObjectRef<any>, public createdBy : CmdNode) {
+  constructor(public ref : ObjectRef<any>, public createdBy : CmdNode) {
     super('object');
   }
 
   get name() {
-    return this.id.name;
+    return this.ref.name;
   }
 
   static restore(p: any) {
-    return new ObjectNode(p.id, null);
+    return new ObjectNode(p.ref, null);
   }
 
   persist(id: number) {
     var r = super.persist(id);
-    r.id = this.id;
+    r.ref = this.ref;
     return r;
   }
 
@@ -324,8 +335,7 @@ class RootNode extends CmdNode {
         removed : []
       };
     };
-    root.id = 'root';
-    cmd = new Cmd(new CmdMetaData(CmdCategory.logic, CmdOperation.update, 'root', 0, 'system'), root);
+    cmd = new Cmd(new CmdMetaData(CmdCategory.logic, CmdOperation.update, 'root', 0, 'system'), 'root', root);
     return cmd;
   }
 }
@@ -364,15 +374,15 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
     return ['_provenance_nodes', '_provenance_objects', '_provenance_states'].map(idtypes.resolve);
   }
 
-  execute(meta: ICmdMetaData, f : ICmdFunction, inputs:ObjectRef<any>[], parameter: any) {
-    return this.push(new Cmd(meta, f, inputs, parameter));
+  execute(meta: ICmdMetaData, f_id: string, f : ICmdFunction, inputs:ObjectRef<any>[], parameter: any) {
+    return this.push(new Cmd(meta, f_id, f, inputs, parameter));
   }
 
-  pushObject<T>(value: T, name: string, category = CmdCategory.data, creator = this.root) {
+  addObject<T>(value: T, name: string, category = CmdCategory.data, creator = this.root) {
     var r = new ObjectNode(createRef(value, name, category), this.root);
     this.objects.push(r);
     this.fire('add_object', r);
-    return r.id;
+    return r.ref;
   }
 
   push(cmd: Cmd) {
@@ -393,21 +403,22 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
     });
 
     this.fire('execute', cmd);
-    var result = cmd.execute();
-    this.fire('executed', cmd, result);
-    //TODO check for similar ones
-    node.produces = result.created.map((id) => {
-      var c = new ObjectNode(id, node);
-      this.objects.push(c);
-      this.fire('add_object', c);
-      return c;
+    return cmd.execute(this).then((result) => {
+      result = C.mixin({ created: [], removed: [], inverse: null}, result);
+      this.fire('executed', cmd, result);
+      //TODO check for similar ones
+      node.produces = result.created.map((id) => {
+        var c = new ObjectNode(id, node);
+        this.objects.push(c);
+        this.fire('add_object', c);
+        return c;
+      });
+
+      this.objects.push.apply(this.objects, node.produces);
+
+      this.walkImpl(node, result);
+      return result;
     });
-
-    this.objects.push.apply(this.objects, node.produces);
-
-    this.walkImpl(node, result);
-
-    return result;
   }
 
   private walkImpl(node: CmdNode, result: ICmdResult) {
@@ -415,7 +426,7 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
 
     node.inverse = result.inverse;
 
-    node.produces.forEach((n, i) => n.id = result.created[i]);
+    node.produces.forEach((n, i) => n.ref = result.created[i]);
 
     this.act.consistsOf.push.apply(this.act.consistsOf, node.produces);
 
@@ -423,7 +434,7 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
     rem.forEach((r) => {
       r.removedBy = node;
       this.fire('remove_object', r);
-      r.id = null; //free the id itself
+      r.ref = null; //free the id itself
     });
     remAll(this.act.consistsOf, rem);
 
@@ -433,18 +444,22 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
   redo(node: CmdNode) {
     //assert this.last.next.indexOf(node) >= 0
     this.fire('execute', node.cmd);
-    var r = node.cmd.execute();
-    this.fire('executed', node.cmd, r);
-    //update with the new values
-    this.walkImpl(node, r);
-    return r;
+    return node.cmd.execute(this).then((r) => {
+      this.fire('executed', node.cmd, r);
+      //update with the new values
+      this.walkImpl(node, r);
+      return r;
+    });
   }
 
   redoAll(path: CmdNode[]) {
     //TODO optimize path by removing redundancies
     this.fire('redoAll', path);
-    path.forEach((todo) => this.redo(todo));
-    this.fire('redoAlled', path);
+    var r = C.resolved(null);
+    path.forEach((todo) => r = r.then(() => this.redo(todo)));
+    return r.then(() => {
+      this.fire('redoAlled', path);
+    });
   }
 
   undo() {
@@ -453,29 +468,41 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
     }
     var toUndo = this.last;
     this.fire('undo', toUndo);
-    this.push(toUndo.inverse);
-    var undoed = this.last;
-    //change the root to its grandparent and create a cycle
-    var grand = toUndo.previous;
+    this.push(toUndo.inverse).then(() => {
+      var undoed = this.last;
+      //change the root to its grandparent and create a cycle
+      var grand = toUndo.previous;
 
-    //free result
+      //free result
 
-    undoed.inverse = toUndo.cmd;
+      undoed.inverse = toUndo.cmd;
 
-    undoed.next.push(grand);
-    this.last = grand; //back at the grand parent
-    this.fire('undoed', toUndo);
+      undoed.next.push(grand);
+      this.last = grand; //back at the grand parent
+      this.fire('undoed', toUndo);
+    });
   }
 
   undoAll(path: CmdNode[]) {
     //TODO optimize path by removing redundancies
     this.fire('undoAll', path);
-    path.forEach(() => this.undo());
-    this.fire('undoAlled', path);
+    var r = C.resolved(null);
+    path.forEach(() => r = r.then(() => this.undo()));
+    return r.then(() => {
+      this.fire('undoAlled', path);
+    });
   }
 
-  get activeCmdIds() {
+  get activeObjects() {
     return this.act.consistsOf;
+  }
+
+  findObject<T>(v : T) : ObjectRef<T> {
+    var r = C.search(this.objects, (d) => d.ref.v === v).ref;
+    if (r) {
+      return r;
+    }
+    return this.addObject(v, v.toString());
   }
 
   takeSnapshot(name: string) {
@@ -485,7 +512,7 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
   }
 
   private byID(id : ObjectRef<any>) {
-    return C.search(this.objects, (active) => active.id == id);
+    return C.search(this.objects, (active) => active.ref == id);
   }
 
   get actState() {
@@ -524,26 +551,26 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
       current: CmdNode[];
     this.fire('jumpTo', node);
     if (node == l) {
-      return;
+      return C.resolved(null);
     }
     if ( (i = target.indexOf(l)) >= 0) { //go forward multiple steps
-      this.redoAll(target.slice(i+1));
+      return this.redoAll(target.slice(i+1));
     }
     current = l.path;
     if ((i = current.indexOf(node)) >= 0) { //go back multiple steps
-      this.undoAll(current.slice(i+1).reverse());
-      return;
+      return this.undoAll(current.slice(i+1).reverse());
     }
 
     //some other branch find common ancestor undo to it and then find
     for(i = 0; i < target.length; ++i) {
       if (target[i] !== current[i]) { //found different branch point
-        this.undoAll(current.slice(i+1).reverse()); //jump to common one
-        this.redoAll(target.slice(i+1)); //jump to real target
-        return;
+        var r = this.undoAll(current.slice(i+1).reverse()); //jump to common one
+        r = <any>r.then(() => this.redoAll(target.slice(i+1))); //jump to real target
+        return r;
       }
     }
     //error not a common sub path
+    return C.reject('no common path found');
   }
 
   persist(): any {

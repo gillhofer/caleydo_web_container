@@ -43,6 +43,17 @@ export function promised<T>(f) : IPromise<T> {
 export function resolved(result) : IPromise<any> {
   return $.Deferred().resolve(result).promise();
 }
+export function reject(error) : IPromise<any> {
+  return $.Deferred().reject(error).promise();
+}
+export function asPromise<T>(f: IPromise<T>): IPromise<T>;
+export function asPromise<T>(f: T): IPromise<T>;
+export function asPromise<T>(f: any): IPromise<T> {
+  if (f.hasOwnProperty('then') && isFunction(f.then)) {
+    return f;
+  }
+  return resolved(f);
+}
 
 /**
  * when all given promises are done

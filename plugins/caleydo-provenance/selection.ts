@@ -2,10 +2,13 @@
  * Created by sam on 10.02.2015.
  */
 
+
+import C = require('../caleydo/main');
 import idtypes = require('../caleydo/idtype');
 import events = require('../caleydo/event');
 import provenance = require('./main');
 import ranges = require('../caleydo/range');
+import datatypes = require('../caleydo/datatype');
 
 function select(inputs: provenance.ObjectRef<any>[], parameter : any) : provenance.ICmdResult{
   var idtype = parameter.idtype,
@@ -19,8 +22,6 @@ function select(inputs: provenance.ObjectRef<any>[], parameter : any) : provenan
     inverse: createSelection(idtype, type, bak)
   }
 }
-var selectCmd : provenance.ICmdFunction = <provenance.ICmdFunction>select;
-selectCmd.id = 'select';
 
 function meta(idtype: idtypes.IDType, type: string, range: ranges.Range) {
   return provenance.meta(range.toString()+' '+idtype.names+' '+type, provenance.CmdCategory.selection);
@@ -35,7 +36,7 @@ function meta(idtype: idtypes.IDType, type: string, range: ranges.Range) {
  * @returns {Cmd}
  */
 export function createSelection(idtype: idtypes.IDType, type: string, range: ranges.Range, old: ranges.Range = null) {
-  return new provenance.Cmd(meta(idtype, type, range), selectCmd, [], {
+  return new provenance.Cmd(meta(idtype, type, range), 'select', select, [], {
     idtype: idtype,
     range: range,
     type: type,
@@ -94,14 +95,14 @@ export class SelectionRecorder {
   }
 }
 
-export function createCmd(id: string) {
-  switch(id) {
-    case 'select': return selectCmd;
-  }
-  return null;
-}
-
 
 export function create(graph : provenance.ProvenanceGraph, type?: string) {
   return new SelectionRecorder(graph, type);
+}
+
+export function createCmd(id: string) {
+  switch(id) {
+    case 'select': return select;
+  }
+  return null;
 }

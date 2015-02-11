@@ -9,7 +9,7 @@ import session = require('../caleydo/session');
 import C = require('../caleydo/main');
 
 function transform(inputs:provenance.ObjectRef<any>[], parameter:any):provenance.ICmdResult {
-  var v:vis.IVisInstance = inputs[0].value,
+  var v:vis.IVisInstance = inputs[0].v,
     transform = parameter.transform,
     bak = parameter.old || v.transform();
   v.transform(transform.scale, transform.rotate);
@@ -19,18 +19,15 @@ function transform(inputs:provenance.ObjectRef<any>[], parameter:any):provenance
     inverse: createTransform(inputs[0], bak, transform)
   };
 }
-var transformCmd:provenance.ICmdFunction = <provenance.ICmdFunction>transform;
-transformCmd.id = 'transform';
-
-export function createTransform(v:provenance.ObjectRef<vis.IVisInstance>, transform:vis.ITransform, old:vis.ITransform = null) {
-  return new provenance.Cmd(provenance.meta('transform ' + v.toString(), provenance.CmdCategory.visual), transformCmd, [v], {
-    transform: transform,
+export function createTransform(v:provenance.ObjectRef<vis.IVisInstance>, t:vis.ITransform, old:vis.ITransform = null) {
+  return new provenance.Cmd(provenance.meta('transform ' + v.toString(), provenance.CmdCategory.visual), 'transform', transform, [v], {
+    transform: t,
     old: old
   });
 }
 
 function changeVis(inputs:provenance.ObjectRef<any>[], parameter:any):provenance.ICmdResult {
-  var v:multiform.IMultiForm = inputs[0].value,
+  var v:multiform.IMultiForm = inputs[0].v,
     to:string = parameter.to,
     from = parameter.from || v.act.id;
   v.switchTo(to);
@@ -40,18 +37,15 @@ function changeVis(inputs:provenance.ObjectRef<any>[], parameter:any):provenance
     inverse: createChangeVis(inputs[0], from, to)
   };
 }
-var changeVisCmd:provenance.ICmdFunction = <provenance.ICmdFunction>changeVis;
-changeVisCmd.id = 'changeVis';
-
 export function createChangeVis(v:provenance.ObjectRef<multiform.IMultiForm>, to:string, from:string = null) {
-  return new provenance.Cmd(provenance.meta('transform ' + v.toString(), provenance.CmdCategory.visual), changeVisCmd, [v], {
+  return new provenance.Cmd(provenance.meta('transform ' + v.toString(), provenance.CmdCategory.visual), 'changeVis', changeVis, [v], {
     to: to,
     from: from
   });
 }
 
 function setOption(inputs:provenance.ObjectRef<any>[], parameter:any):provenance.ICmdResult {
-  var v:vis.IVisInstance = inputs[0].value,
+  var v:vis.IVisInstance = inputs[0].v,
     name = parameter.name,
     value = parameter.value,
     bak = parameter.old || v.option(name);
@@ -62,11 +56,9 @@ function setOption(inputs:provenance.ObjectRef<any>[], parameter:any):provenance
     inverse: createSetOption(inputs[0], name, bak, value)
   };
 }
-var setOptionCmd:provenance.ICmdFunction = <provenance.ICmdFunction>setOption;
-setOptionCmd.id = 'setOption';
 
 export function createSetOption(v:provenance.ObjectRef<vis.IVisInstance>, name:string, value:any, old:any = null) {
-  return new provenance.Cmd(provenance.meta('set option "' + name + +'" of "' + v.toString() + ' to "' + value + '"', provenance.CmdCategory.visual), setOptionCmd, [v], {
+  return new provenance.Cmd(provenance.meta('set option "' + name + +'" of "' + v.toString() + ' to "' + value + '"', provenance.CmdCategory.visual), 'setOption', setOption, [v], {
     name: name,
     value: value,
     old: old
@@ -74,7 +66,7 @@ export function createSetOption(v:provenance.ObjectRef<vis.IVisInstance>, name:s
 }
 
 export function attach(graph:provenance.ProvenanceGraph, v:provenance.ObjectRef<vis.IVisInstance>) {
-  var m = v.value;
+  var m = v.v;
   if (C.isFunction((<any>m).switchTo)) {
     m.on('changed', (event, new_, old) => {
       graph.push(createChangeVis(<provenance.ObjectRef<multiform.IMultiForm>>v, new_.id, old ? old.id : null));
@@ -91,11 +83,11 @@ export function attach(graph:provenance.ProvenanceGraph, v:provenance.ObjectRef<
 export function createCmd(id:string) {
   switch (id) {
     case 'transform':
-      return transformCmd;
+      return transform;
     case 'changeVis' :
-      return changeVisCmd;
+      return changeVis;
     case 'setOption' :
-      return setOptionCmd;
+      return setOption;
   }
   return null;
 }
