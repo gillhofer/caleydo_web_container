@@ -30,3 +30,29 @@ g.edge {
   stroke: rgb(80,80,80);
   fill: rgb(80,80,80);
 }
+
+.outer {
+  float: left;
+  width: 50vw;
+  height: 100vh;
+  overflow: auto;
+}
+//.inner {
+//  width: 50vw;
+//  height:100vh;
+//}
+#pathlist {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+#pathgraph {
+  float: right;
+  width: 40vw;
+  height: auto;
+  overflow: auto;
+//  display: block;
+//  width: 100%;
+//  height: 100%;
+}

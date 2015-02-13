@@ -4,7 +4,7 @@
 require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugin', '../caleydo-window/main', '../caleydo/d3util'], function ($, d3, C, data, plugins, window, utils) {
     'use strict';
 
-    //var jsonPaths = require('./testpaths.json');
+    //var jsonPaths = require('./testpaths1.json');
 
     var pathListeners = {
       listeners: [],
@@ -23,195 +23,236 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
 
     $(document).ready(function () {
 
-      var w = 800;
-      var h = 800;
+        var w = 800;
+        var h = 800;
 
-      var svg = d3.select("body").append("svg")
-      svg.attr("width", w)
-        .attr("height", h);
-      svg.append("marker")
-        .attr("id", "arrowRight")
-        .attr("viewBox", "0 0 10 10")
-        .attr("refX", "0")
-        .attr("refY", "5")
-        .attr("markerUnits", "strokeWidth")
-        .attr("markerWidth", "4")
-        .attr("markerHeight", "3")
-        .attr("orient", "auto")
-        .append("path")
-        .attr("d", "M 0 0 L 10 5 L 0 10 z");
+        var selectPaths = $('<select>').prependTo('div.outer')[0];
 
-      var svg2 = d3.select("body").append("svg")
-      svg2.attr("width", w)
-        .attr("height", h);
-      svg2.append("marker")
-        .attr("id", "arrowRight")
-        .attr("viewBox", "0 0 10 10")
-        .attr("refX", "0")
-        .attr("refY", "5")
-        .attr("markerUnits", "strokeWidth")
-        .attr("markerWidth", "4")
-        .attr("markerHeight", "3")
-        .attr("orient", "auto")
-        .append("path")
-        .attr("d", "M 0 0 L 10 5 L 0 10 z");
-      //  //<marker id="triangle"
-      //  //viewBox="0 0 10 10" refX="0" refY="5"
-      //  //markerUnits="strokeWidth"
-      //  //markerWidth="4" markerHeight="3"
-      //  //orient="auto">
-      //  //<path d="M 0 0 L 10 5 L 0 10 z" />
-      //  //</marker>
-      //
-      //  //  $.ajax({
-      //  //
-      //  //    // The 'type' property sets the HTTP method.
-      //  //    // A value of 'PUT' or 'DELETE' will trigger a preflight request.
-      //  //    //type: 'POST',
-      //  //    type: 'GET',
-      //  //
-      //  //    // The URL to make the request to.
-      //  //    url: 'http://localhost:7474/db/data/',
-      //  //    //url: 'http://localhost:7474/db/data/ext/FindShortestPath/graphdb/get_shortest_path',
-      //  //
-      //  //    accepts: 'application/json',
-      //  //
-      //  //    success: function (response) {
-      //  //      d3.select("body").append("p").text(response);
-      //  //    },
-      //  //
-      //  //    error: function (response) {
-      //  //      var x = 2
-      //  //    }
-      //  //  });
-      //
-      //  console.time("time")
-      //
-      //  $.ajax({
-      //
-      //    // The 'type' property sets the HTTP method.
-      //    // A value of 'PUT' or 'DELETE' will trigger a preflight request.
-      //    //type: 'POST',
-      //    type: 'GET',
-      //
-      //    // The URL to make the request to.
-      //    //url: 'http://localhost:7474/db/data/ext/KShortestPaths/graphdb/kShortestPaths',
-      //    url: '/api/pathway/path',
-      //
-      //    accepts: 'application/json',
-      //
-      //    // The 'contentType' property sets the 'Content-Type' header.
-      //    // The JQuery default for this property is
-      //    // 'application/x-www-form-urlencoded; charset=UTF-8', which does not trigger
-      //    // a preflight. If you set this value to anything other than
-      //    // application/x-www-form-urlencoded, multipart/form-data, or text/plain,
-      //    // you will trigger a preflight request.
-      //    contentType: 'application/json',
-      //
-      //    //data: '{"source":"http://localhost/:7474/db/data/node/15991", ' +
-      //    //'"target":"http://localhost/:7474/db/data/node/1713", ' +
-      //    //'"k":"3", ' +
-      //    //'"costFunction":"function getCost(properties) {return 1.0}", ' +
-      //    //'"ignoreDirection":"false"}',
-      //    //data: '{"node_from": "/node/116", "node_to": "/node/92", "relationship_types": ["PATHWAY_EDGE"], "relationship_costs": [1.0], "only_one_route": true, "soft_timeout": 5000, "max_cost": 1000000.0 }',
-      //
-      //    //xhrFields: {
-      //    // The 'xhrFields' property sets additional fields on the XMLHttpRequest.
-      //    // This can be used to set the 'withCredentials' property.
-      //    // Set the value to 'true' if you'd like to pass cookies to the server.
-      //    // If this is enabled, your server must respond with the header
-      //    // 'Access-Control-Allow-Credentials: true'.
-      //    //withCredentials: false
-      //    //},
-      //
-      //    //headers: {
-      //    // Set any custom headers here.
-      //    // If you set any non-simple headers, your server must include these
-      //    // headers in the 'Access-Control-Allow-Headers' response header.
-      //    //},
-      //
-      //    success: function (response) {
-      //
-      //      console.timeEnd("time")
-      //      var paths = JSON.parse(response);
-      //
-      //      var strp = paths.toString();
-      //
-      //      if (paths.length > 0) {
-      //
-      //        renderPaths(svg, paths);
-      //
-      //        var firstPath = paths[0];
-      //        var firstNode = firstPath.nodes[0];
-      //        var lastNode = firstPath.nodes[firstPath.nodes.length - 1];
-      //
-      //        var pathGraph = getGraphFromPaths(paths);
-      //
-      //        renderGraph(svg2, pathGraph, firstNode, lastNode);
-      //      }
-      //    },
-      //
-      //    error: function (response) {
-      //      // Here's where you handle an error response.
-      //      // Note that if the error was due to a CORS issue,
-      //      // this function will still fire, but there won't be any additional
-      //      // information about the error.
-      //      var x = 2
-      //    }
-      //  });
+        $(selectPaths).append($("<option value='testpaths1.json'>20 paths from node 1800 to node 1713</option>"));
+        $(selectPaths).append($("<option value='testpaths2.json'>50 paths from node 1800 to node 1713</option>"));
+        $(selectPaths).append($("<option value='testpaths3.json'>50 paths from node 5 to node 9999</option>"));
+        $(selectPaths).append($("<option value='testpaths4.json'>20 paths from node 780 to node 5395</option>"));
+        $(selectPaths).on("change", function () {
+          $.getJSON(this.value, function (paths) {
+            loadPaths(paths);
+          });
 
-      $.getJSON("testpaths.json", function (paths) {
-        loadPaths(paths);
-      });
+        });
 
-      function loadPaths(paths) {
+        var svg = d3.select("#pathlist").append("svg")
+        svg.attr("width", w)
+          .attr("height", h);
+        svg.append("marker")
+          .attr("id", "arrowRight")
+          .attr("viewBox", "0 0 10 10")
+          .attr("refX", "0")
+          .attr("refY", "5")
+          .attr("markerUnits", "strokeWidth")
+          .attr("markerWidth", "4")
+          .attr("markerHeight", "3")
+          .attr("orient", "auto")
+          .append("path")
+          .attr("d", "M 0 0 L 10 5 L 0 10 z");
 
-        if (paths.length > 0) {
+        var svg2 = d3.select("#pathgraph").append("svg")
+        svg2.attr("width", w)
+          .attr("height", h);
+        svg2.append("marker")
+          .attr("id", "arrowRight")
+          .attr("viewBox", "0 0 10 10")
+          .attr("refX", "0")
+          .attr("refY", "5")
+          .attr("markerUnits", "strokeWidth")
+          .attr("markerWidth", "4")
+          .attr("markerHeight", "3")
+          .attr("orient", "auto")
+          .append("path")
+          .attr("d", "M 0 0 L 10 5 L 0 10 z");
+        //  //<marker id="triangle"
+        //  //viewBox="0 0 10 10" refX="0" refY="5"
+        //  //markerUnits="strokeWidth"
+        //  //markerWidth="4" markerHeight="3"
+        //  //orient="auto">
+        //  //<path d="M 0 0 L 10 5 L 0 10 z" />
+        //  //</marker>
+        //
+        //  $.ajax({
+        //
+        //    // The 'type' property sets the HTTP method.
+        //    // A value of 'PUT' or 'DELETE' will trigger a preflight request.
+        //    //type: 'POST',
+        //    type: 'GET',
+        //
+        //    // The URL to make the request to.
+        //    url: 'http://localhost:7474/db/data/',
+        //    //url: 'http://localhost:7474/db/data/ext/FindShortestPath/graphdb/get_shortest_path',
+        //
+        //    accepts: 'application/json',
+        //
+        //    success: function (response) {
+        //      d3.select("body").append("p").text(response);
+        //    },
+        //
+        //    error: function (response) {
+        //      var x = 2
+        //    }
+        //  });
 
-          renderPaths(svg, paths);
+        //console.time("time")
+        //
+        $.ajax({
 
-          var firstPath = paths[paths.length - 1];
-          var firstNode = firstPath.nodes[0];
-          var lastNode = firstPath.nodes[firstPath.nodes.length - 1];
+          // The 'type' property sets the HTTP method.
+          // A value of 'PUT' or 'DELETE' will trigger a preflight request.
+          //type: 'POST',
+          type: 'GET',
 
-          var pathGraph = getGraphFromPaths(paths);
+          // The URL to make the request to.
+          //url: 'http://localhost:7474/db/data/ext/KShortestPaths/graphdb/kShortestPaths',
+          url: '/api/pathway/path',
 
-          renderGraph(svg2, pathGraph, firstPath);
+          accepts: 'application/json',
+
+          // The 'contentType' property sets the 'Content-Type' header.
+          // The JQuery default for this property is
+          // 'application/x-www-form-urlencoded; charset=UTF-8', which does not trigger
+          // a preflight. If you set this value to anything other than
+          // application/x-www-form-urlencoded, multipart/form-data, or text/plain,
+          // you will trigger a preflight request.
+          contentType: 'application/json',
+
+          //data: '{"source":"http://localhost/:7474/db/data/node/15991", ' +
+          //'"target":"http://localhost/:7474/db/data/node/1713", ' +
+          //'"k":"3", ' +
+          //'"costFunction":"function getCost(properties) {return 1.0}", ' +
+          //'"ignoreDirection":"false"}',
+          //data: '{"node_from": "/node/116", "node_to": "/node/92", "relationship_types": ["PATHWAY_EDGE"], "relationship_costs": [1.0], "only_one_route": true, "soft_timeout": 5000, "max_cost": 1000000.0 }',
+
+          //xhrFields: {
+          // The 'xhrFields' property sets additional fields on the XMLHttpRequest.
+          // This can be used to set the 'withCredentials' property.
+          // Set the value to 'true' if you'd like to pass cookies to the server.
+          // If this is enabled, your server must respond with the header
+          // 'Access-Control-Allow-Credentials: true'.
+          //withCredentials: false
+          //},
+
+          //headers: {
+          // Set any custom headers here.
+          // If you set any non-simple headers, your server must include these
+          // headers in the 'Access-Control-Allow-Headers' response header.
+          //},
+
+          success: function (response) {
+
+            console.timeEnd("time")
+            var paths = JSON.parse(response);
+
+            //var strp = paths.toString();
+
+            loadPaths(paths);
+
+            //if (paths.length > 0) {
+            //
+            //  renderPaths(svg, paths);
+            //
+            //  var firstPath = paths[0];
+            //  var firstNode = firstPath.nodes[0];
+            //  var lastNode = firstPath.nodes[firstPath.nodes.length - 1];
+            //
+            //  var pathGraph = getGraphFromPaths(paths);
+            //
+            //  renderGraph(svg2, pathGraph, firstNode, lastNode);
+            //}
+          },
+
+          error: function (response) {
+            // Here's where you handle an error response.
+            // Note that if the error was due to a CORS issue,
+            // this function will still fire, but there won't be any additional
+            // information about the error.
+            var x = 2
+          }
+        });
+
+        $.ajax({
+          type: 'GET',
+          url: '/api/pathway/summary',
+          accepts: 'application/json',
+
+          success: function (response) {
+
+            var summaryData = JSON.parse(response);
+
+            d3.selectAll("body p")
+              .data(summaryData)
+              .enter()
+              .append("p")
+              .text(function (d) {
+                return d[0].toString() + ": " + d[1].toString();
+              });
+          },
+
+          error: function (response) {
+          }
+        });
+
+        //$.getJSON("testpaths1.json", function (paths) {
+        //  loadPaths(paths);
+        //});
+
+        function loadPaths(paths) {
+
+          pathListeners.listeners = [];
+
+          if (paths.length > 0) {
+
+            renderPaths(svg, paths);
+
+            var firstPath = paths[paths.length - 1];
+            var firstNode = firstPath.nodes[0];
+            var lastNode = firstPath.nodes[firstPath.nodes.length - 1];
+
+            var pathGraph = getGraphFromPaths(paths);
+
+            renderGraph(svg2, pathGraph, firstPath);
+          }
         }
+
+
+        //var propertyCosts = {
+        //  size: {
+        //    big: 2.0,
+        //    small: 1.0
+        //  },
+        //  mood: {
+        //    good: 2.0,
+        //    bad: 1.0
+        //  }
+        //};
+        //
+        //var myCost = getCost([["size", "big"], ["mood", "bad"]]);
+        //d3.select("body").append("p").text(myCost);
+        //
+        //function getCost(properties) {
+        //  var totalCost = 1.0;
+        //  properties.forEach(function (propObject) {
+        //    var property = propObject[0];
+        //    var value = propObject[1];
+        //    var propDef = propertyCosts[property];
+        //    if (typeof propDef != "undefined") {
+        //      var cost = propDef[value];
+        //      if (typeof cost != "undefined") {
+        //        totalCost += cost;
+        //      }
+        //    }
+        //  });
+        //  return totalCost;
+        //}
+
       }
-
-
-      //var propertyCosts = {
-      //  size: {
-      //    big: 2.0,
-      //    small: 1.0
-      //  },
-      //  mood: {
-      //    good: 2.0,
-      //    bad: 1.0
-      //  }
-      //};
-      //
-      //var myCost = getCost([["size", "big"], ["mood", "bad"]]);
-      //d3.select("body").append("p").text(myCost);
-      //
-      //function getCost(properties) {
-      //  var totalCost = 1.0;
-      //  properties.forEach(function (propObject) {
-      //    var property = propObject[0];
-      //    var value = propObject[1];
-      //    var propDef = propertyCosts[property];
-      //    if (typeof propDef != "undefined") {
-      //      var cost = propDef[value];
-      //      if (typeof cost != "undefined") {
-      //        totalCost += cost;
-      //      }
-      //    }
-      //  });
-      //  return totalCost;
-      //}
-
-    });
+    )
+    ;
 
     //$.get("/api/pathway/path", function (resp) {
     //
@@ -231,13 +272,17 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
       var sideSpacing = 10;
       var arrowWidth = 7;
 
+      svg.selectAll("g.edgeGroup")
+        .remove();
+      svg.selectAll("g.nodeGroup")
+        .remove();
 
       var force = d3.layout.force()
         .nodes(graph.nodes)
         .links(graph.edges)
         .size([w, h])
         //.linkDistance(300)
-        .charge(graph.nodes.length * -200)
+        .charge(-3000)
         .start();
 
       var edgeGroup = svg.append("g")
@@ -277,7 +322,29 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
         });
 
 
-      force.on("tick", function () {
+      var tick = function () {
+
+        graph.nodes.forEach(function (node) {
+
+          if(node.fixed) {
+            node.x ++;
+          }
+
+
+          if (node.x + nodeWidth / 2 > w) {
+            node.x = w - nodeWidth / 2;
+          }
+          if (node.y + nodeHeight / 2 > h) {
+            node.y = h - nodeHeight / 2;
+          }
+          if (node.x - nodeWidth / 2 < 0) {
+            node.x = nodeWidth / 2;
+          }
+          if (node.y - nodeHeight / 2 < 0) {
+            node.y = nodeHeight / 2;
+          }
+        });
+
         nodeRects.attr("x", function (d) {
           //if (d.id == startNode.id) {
           //  return 20;
@@ -315,7 +382,10 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
           .attr("y2", function (d) {
             return calcIntersectionY(d.target, d.source, nodeWidth, nodeHeight);
           });
-      });
+      }
+
+      force.on("tick", tick);
+
 
       pathListeners.add(function (path) {
 
@@ -326,26 +396,57 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
           node.fixed = false;
         });
 
+        //var nodeRangeDict = {};
+
+
+        //for (var i = 0; i <= 100; i++) {
+        //
+        //  var scale = i / 100;
+
         path.nodes.forEach(function (fixedNode) {
           graph.nodes.forEach(function (node) {
             if (node.id == fixedNode.id) {
+
+              //if (i === 0) {
+              //  nodeRangeDict[node.id.toString()] = {startX: node.x, endX: posX, startY: node.y, endY: posY};
+              //  node.fixed = true;
+              //  posX += nodeStep;
+              //} else {
+              //
+              //  var ranges = nodeRangeDict[node.id.toString()];
+              //
+              //  var vX = ranges.startX + scale * (ranges.endX - ranges.startX);
+              //  node.x = vX;
+              //  node.px = vX;
+              //  //delete node.px;
+              //  var vY = ranges.startY + scale * (ranges.endY - ranges.startY);
+              //  node.y = vY;
+              //  node.py = vY;
+
               node.x = posX;
               node.px = posX;
+              //delete node.px;
               node.y = posY;
               node.py = posY;
               node.fixed = true;
               posX += nodeStep;
+              //delete node.py;
+
             }
           });
         });
+        //tick();
+        //}
         nodeGroup.selectAll("g.node")
           .attr("class", function (d) {
             return "node " + (d.fixed ? ("fixed") : "");
           });
-        force.nodes(graph.nodes).resume();
+
+        force.start();
+        //for(var i = 0; i < 200; i++) tick();
+        //force.stop();
 
       });
-
 
     }
 
@@ -477,8 +578,13 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
 
     function renderPaths(svg, paths) {
 
+      svg.attr("height", 50 * paths.length);
+
       var posX = 20;
       var posY = 20;
+
+      svg.selectAll("g.path")
+        .remove();
 
       paths.forEach(function (path) {
         var p = svg.append("g");
