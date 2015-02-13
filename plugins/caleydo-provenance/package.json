@@ -28,6 +28,14 @@
         "creates" : "select"
       },
       {
+        "type" : "cmdCompressor",
+        "id" : "idtype-selection",
+        "folder" : "caleydo-provenance",
+        "module" : "caleydo-provenance/selection",
+        "factory" : "createCompressor",
+        "matches" : "select"
+      },
+      {
         "type" : "cmdFactory",
         "id" : "multiform",
         "folder" : "caleydo-provenance",

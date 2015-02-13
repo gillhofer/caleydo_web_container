@@ -15,7 +15,8 @@ export var cat = {
   visual: 'visual',
   layout: 'layout',
   logic: 'logic',
-  custom: 'custom'
+  custom: 'custom',
+  annotation: 'annotation'
 };
 
 export enum CmdOperation {
@@ -250,25 +251,29 @@ export class ObjectNode extends ProvenanceNode {
   usedBy : { node: CmdNode; index: number; }[] = [];
   removedBy : CmdNode;
 
+  name: string;
+  category : string;
+
   constructor(public ref : IObjectRef<any>, public createdBy : CmdNode) {
     super('object');
-  }
-
-  get category() {
-    return this.ref.category;
-  }
-
-  get name() {
-    return this.ref.name;
+    //backup as the ref is transient
+    if (ref) {
+      this.category = this.ref.category;
+      this.name = this.ref.name;
+    }
   }
 
   static restore(p: any) {
-    return new ObjectNode(p.ref, null);
+    var r = new ObjectNode(null, null);
+    r.category = p.category;
+    r.name = p.name;
+    return r;
   }
 
   persist(id: number) {
     var r = super.persist(id);
-    r.ref = this.ref;
+    r.name = this.name;
+    r.category = this.category;
     return r;
   }
 
@@ -423,10 +428,36 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
     return r.ref;
   }
 
+  private run(cmds: Cmd[]) {
+    cmds = this.compress(cmds);
+    var r = C.resolved(null);
+    cmds.forEach((cmd) => {
+      r = r.then(() => this.runOne(cmd));
+    });
+    return r;
+  }
+  private runOne(cmd: Cmd) {
+    this.fire('execute', cmd);
+    return cmd.execute(this).then((result) => {
+      result = C.mixin({ created: [], removed: [], inverse: null}, result);
+      this.fire('executed', cmd, result);
+      //TODO check for similar ones
+      node.produces = result.created.map((ref) => {
+        var c = new ObjectNode(ref, node);
+        this.objects.push(c);
+        this.fire('add_object', c);
+        return c;
+      });
+
+      this.walkImpl(node, result);
+      return result;
+    });
+  }
+
   push(cmd: Cmd) {
-    var node = new CmdNode(cmd, this.act.resultOf);
-    this.fire('add_node', node);
+    var node = new CmdNode(cmd, this.last);
     this.cmds.push(node);
+    this.fire('add_node', node);
     node.requires = cmd.inputs.map((id, i) => {
       var r = this.byID(id);
       if (!r) {
@@ -444,14 +475,12 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
       result = C.mixin({ created: [], removed: [], inverse: null}, result);
       this.fire('executed', cmd, result);
       //TODO check for similar ones
-      node.produces = result.created.map((id) => {
-        var c = new ObjectNode(id, node);
+      node.produces = result.created.map((ref) => {
+        var c = new ObjectNode(ref, node);
         this.objects.push(c);
         this.fire('add_object', c);
         return c;
       });
-
-      this.objects.push.apply(this.objects, node.produces);
 
       this.walkImpl(node, result);
       return result;
@@ -461,17 +490,20 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
   private walkImpl(node: CmdNode, result: ICmdResult) {
     var toId =(id) => this.byID(id);
 
-    node.inverse = result.inverse;
+    node.inverseCmd = result.inverse;
 
+    //update references
     node.produces.forEach((n, i) => n.ref = result.created[i]);
 
+    //add to active objects
     this.act.consistsOf.push.apply(this.act.consistsOf, node.produces);
 
+    //remove from active objects
     var rem = result.removed.map(toId);
     rem.forEach((r) => {
       r.removedBy = node;
       this.fire('remove_object', r);
-      r.ref.v = null; //free the id itself
+      r.ref = null; //free the reference
     });
     remAll(this.act.consistsOf, rem);
 
