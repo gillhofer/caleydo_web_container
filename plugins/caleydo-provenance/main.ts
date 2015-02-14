@@ -82,6 +82,17 @@ export class ObjectNode<T> extends ProvenanceNode implements IObjectRef<T> {
     super('object');
   }
 
+  persist(id: number) {
+    var r = super.persist(id);
+    r.name = this.name;
+    r.category = this.category;
+    return r;
+  }
+
+  static restore(p) {
+    return new ObjectNode<any>(null, p.name, p.category);
+  }
+
   get createdBy() {
     var r = this.incoming.filter(isType('creates'))[0];
     return r ? <ActionNode>r.source : null;
@@ -108,6 +119,9 @@ export class ObjectNode<T> extends ProvenanceNode implements IObjectRef<T> {
 export class ActionMetaData {
   constructor(public category: string, public operation: string, public name: string, public timestamp: number = Date.now(), public user: string = session.retrieve('user', 'Anonymous')) {
 
+  }
+  static restore(p) {
+    return new ActionMetaData(p.category, p.operation, p.name, p.timestamp, p.user);
   }
 }
 
@@ -139,6 +153,21 @@ export class ActionNode extends ProvenanceNode {
 
   constructor(public meta: ActionMetaData, private f_id : string, private f : (inputs: IObjectRef<any>[], parameters: any, graph: ProvenanceGraph) => ICmdResult, public parameter: any = {}) {
     super('action');
+  }
+
+  persist(id: number) {
+    var r = super.persist(id);
+    r.meta = this.meta;
+    r.id = this.id;
+    r.parameter = this.parameter;
+    r.onceExecuted = this.onceExecuted;
+    return r;
+  }
+
+  static restore(r, factory: ICmdFunctionFactory) {
+    var a = new ActionNode(ActionMetaData.restore(r.meta), r.id, factory(r.id), r.parameter);
+    a.onceExecuted = r.onceExecuted;
+    return a;
   }
 
   get id() {
@@ -193,19 +222,6 @@ export class ActionNode extends ProvenanceNode {
     return true;
   }
 
-  persist(): any {
-    var r = {
-      meta: this.meta,
-      f : this.f_id,
-      parameter: this.parameter
-    };
-    return r;
-  }
-
-  static restore(data: any, factory: ICmdFunctionFactory) {
-    return new ActionNode(data.meta, data.id, factory(data.id), data.parameter);
-  }
-
   get creates() {
     return this.outgoing.filter(isType('creates')).map((e) => <ObjectNode<any>>e.target);
   }
@@ -232,6 +248,16 @@ export class ActionNode extends ProvenanceNode {
 export class StateNode extends ProvenanceNode{
   constructor(public name: string) {
     super('state');
+  }
+
+  persist(id: number) {
+    var r = super.persist(id);
+    r.name = this.name;
+    return r;
+  }
+
+  static restore(r) {
+    return new StateNode(r.name);
   }
 
   get consistsOf() {
@@ -282,11 +308,31 @@ export class StateNode extends ProvenanceNode{
 
 export class ProvenanceEdge {
   constructor(public type: string, public source: ProvenanceNode, public target: ProvenanceNode) {
-
+    source.outgoing.push(this);
+    target.incoming.push(this);
   }
 
   toString() {
     return this.source + ' '+this.type + ' '+this.target;
+  }
+
+  persist() {
+    return {
+      type: this.type,
+      source: this.source.pid,
+      source_type : this.source.type,
+      target: this.target.pid,
+      target_type : this.target.type
+    }
+  }
+
+  static restore(p, states, actions, objects) {
+    var m = {
+      object : objects,
+      state : states,
+      action : actions
+    };
+    return new ProvenanceEdge(p.type, m[p.source_type][p.source], m[p.target_type][p.target]);
   }
 }
 
@@ -483,8 +529,6 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
 
   private link(s : ProvenanceNode, type: string, t : ProvenanceNode) {
     var l = new ProvenanceEdge(type, s, t);
-    s.outgoing.push(l);
-    t.incoming.push(l);
     this.links.push(l);
     this.fire('add_link', l, type, s, t);
   }
@@ -614,6 +658,27 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
       return;
     }
     bak.consistsOf.forEach((o) => this.link(state, 'consistsOf', state));
+  }
+
+  persist() {
+    var r : any = {
+      root: this.desc.id
+    };
+    r.states = this.states.map((s,i) => s.persist(i));
+    r.objects = this.objects.map((s,i) => s.persist(i));
+    r.actions = this.actions.map((s,i) => s.persist(i));
+    r.links = this.links.map((l) => l.persist());
+    return r;
+  }
+
+  restore(persisted: any) {
+    var f = (id) => null;
+    this.states = persisted.states.map((s) => StateNode.restore(s));
+    this.objects = persisted.objects.map((s) => ObjectNode.restore(s));
+    this.actions = persisted.actions.map((s) => ActionNode.restore(s, f));
+    this.links = persisted.links.map((l) => ProvenanceEdge.restore(l, this.states, this.actions, this.objects));
+
+    return this;
   }
 }
 
