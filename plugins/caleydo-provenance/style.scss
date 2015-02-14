@@ -41,12 +41,12 @@
 
     &.state {
       fill: black;
-    }
-    &.cmd {
-      &.root {
-        stroke: gray;
+      &.last {
+        stroke: orange;
         stroke-width: 2;
       }
+    }
+    &.action {
       &.last {
         stroke: black;
         stroke-width: 2;
@@ -60,16 +60,19 @@
     &.next {
       stroke: black;
     }
-    &.createdBy {
+    &.creates {
       stroke: green;
     }
-    &.removedBy {
+    &.removes {
       stroke: red;
     }
     &.usedBy {
       stroke: gray;
     }
-    &.resultOf {
+    &.resultsIn {
+      stroke: black;
+    }
+    &.inverse {
       stroke: black;
     }
     &.consistsOf {

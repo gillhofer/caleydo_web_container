@@ -33,7 +33,7 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
     var s = prov_sel.create(graph_, 'selected');
 
     canvas.forEach(function(entry) {
-      prov_multi.attach(graph.addObject(entry.multi), graph);
+      //prov_multi.attach(graph.addObject(entry.multi), graph);
     });
 
     vis.list(graph)[0].load().then(function (plugin) {
@@ -132,7 +132,7 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
         multi: multi
       };
       if (graph) {
-        prov_multi.attach(graph.addObject(entry.multi), graph);
+        //prov_multi.attach(graph.addObject(entry.multi), graph);
       }
       canvas.push(entry);
       return entry;

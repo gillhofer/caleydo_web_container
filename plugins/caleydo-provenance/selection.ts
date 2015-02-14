@@ -12,11 +12,12 @@ function select(inputs:provenance.IObjectRef<any>[], parameter:any):provenance.I
     range = ranges.parse(parameter.range),
     type = parameter.type;
   var bak = parameter.old ? ranges.parse(parameter.old) : idtype.selections(type);
+  parameter.rec.disable(); //disable listening to events
+  console.log('select', range.toString());
   idtype.select(type, range);
+  parameter.rec.enable();
   return {
-    created: [],
-    removed: [],
-    inverse: createSelection(idtype, type, bak)
+    inverse: createSelection(idtype, parameter.rec, type, bak, range)
   };
 }
 
@@ -32,16 +33,22 @@ function meta(idtype:idtypes.IDType, type:string, range:ranges.Range) {
  * @param old optional the old selection for inversion
  * @returns {Cmd}
  */
-export function createSelection(idtype:idtypes.IDType, type:string, range:ranges.Range, old:ranges.Range = null) {
-  return new provenance.Cmd(meta(idtype, type, range), 'select', select, [], {
-    idtype: idtype,
-    range: range,
-    type: type,
-    old: old
-  });
+export function createSelection(idtype:idtypes.IDType, rec: SelectionTypeRecorder, type:string, range:ranges.Range, old:ranges.Range = null) {
+  return {
+    meta: meta(idtype, type, range),
+    id: 'select',
+    f: select,
+    parameter: {
+      idtype: idtype,
+      range: range,
+      type: type,
+      old: old,
+      rec: rec
+    }
+  }
 }
 
-export function createCompressor() : provenance.ICmdCompressor {
+export function createCompressor() : provenance.IActionCompressor {
   return {
     matches : (id) => id === 'select',
     toKey : (cmd) => { //by idtype and type
@@ -57,7 +64,7 @@ export function createCompressor() : provenance.ICmdCompressor {
  */
 class SelectionTypeRecorder {
   private l = (event, type, sel, added, removed, old) => {
-    var cmd = createSelection(this.idtype, type, sel, old);
+    var cmd = createSelection(this.idtype, this, type, sel, old);
     this.graph.push(cmd);
   };
   private t = (event, sel, added, removed, old) => {
@@ -65,19 +72,27 @@ class SelectionTypeRecorder {
   };
 
   constructor(private idtype:idtypes.IDType, private graph:provenance.ProvenanceGraph, private type?:string) {
-    if (type) {
-      idtype.on('select-' + type, this.t);
-    } else {
-      idtype.on('select', this.l);
-    }
+    this.enable();
   }
 
-  destroy() {
+  disable() {
     if (this.type) {
       this.idtype.off('select-' + this.type, this.t);
     } else {
       this.idtype.off('select', this.l);
     }
+  }
+
+  enable() {
+    if (this.type) {
+      this.idtype.on('select-' + this.type, this.t);
+    } else {
+      this.idtype.on('select', this.l);
+    }
+  }
+
+  destroy() {
+    this.disable();
   }
 }
 /**
