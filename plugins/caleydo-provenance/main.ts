@@ -56,6 +56,14 @@ export interface IObjectRef<T> {
   v : T;
 }
 
+export function ref<T>(v: T, name: string, category = cat.data): IObjectRef<T> {
+  return {
+    v: v,
+    name: name,
+    category: category
+  }
+}
+
 export interface ICmdResult {
   inverse : any;
   created? : IObjectRef<any>[];
@@ -494,10 +502,15 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
   }
 
   addObject<T>(value: T, name: string = value ? value.toString(): 'Null', category = cat.data) {
+    var r = this.addJustObject(value, name, category);
+    this.link(this.act, 'consistsOf', r);
+    return r;
+  }
+
+  private addJustObject<T>(value: T, name: string = value ? value.toString(): 'Null', category = cat.data) {
     var r = new ObjectNode<T>(value, name, category);
     this.objects.push(r);
     this.fire('add_object', r);
-    this.link(this.act, 'consistsOf', r);
     return r;
   }
 
@@ -517,13 +530,13 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
       if (r) {
         return r;
       }
-      return this.addObject(i.v, i.name, i.category);
+      return this.addJustObject(i.v, i.name, i.category);
     } else { //raw value
       var r = C.search(this.objects, (obj) => obj.v === i);
       if (r) {
         return r;
       }
-      return this.addObject(i);
+      return this.addJustObject(i);
     }
   }
 
@@ -585,9 +598,11 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
       }
       result.inverse = asFunction(result.inverse);
       action.updateInverse(this, result.inverse);
+
       var bak : any = this.act;
       this.act = next;
       this.fire('switch_state', next, bak);
+      
       bak = this.lastAction;
       this.lastAction = action;
       this.fire('switch_action', action, bak);
