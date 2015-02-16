@@ -538,7 +538,7 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
     this.links.push(l);
     this.fire('add_link', l, type, s, t);
   }
-  
+
   run(action: ActionNode) {
     var current = this.act,
       next : StateNode = action.resultsIn,
