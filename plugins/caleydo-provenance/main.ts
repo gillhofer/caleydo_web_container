@@ -304,7 +304,7 @@ export class StateNode extends ProvenanceNode {
     var p = this.previousState;
     r.unshift(this);
     if (p && r.indexOf(p) < 0) { //no loop
-      console.log(p.toString() + ' path '+ r.join(','));
+      //console.log(p.toString() + ' path '+ r.join(','));
       p.previousStates(r);
     }
   }
@@ -358,7 +358,7 @@ class CompositeActionCompressor implements  IActionCompressor {
     return C.search(this.c, (ci) => ci.matches(id));
   }
   matches(id: string) : boolean {
-    return this.choose(id) !== null;
+    return this.choose(id) != null;
   }
   toKey(action: ActionNode) : string {
     return this.choose(action.id).toKey(action);
@@ -370,7 +370,7 @@ class CompositeActionCompressor implements  IActionCompressor {
 
 function createCompressor(path: ActionNode[]) {
   var toload = plugins.list('actionCompressor').filter((plugin) => {
-    return path.some((action) => plugin.matchees(action.id));
+    return path.some((action) => action.id.match(plugin.matches) != null);
   });
   return plugins.load(toload).then((loaded) => {
     return new CompositeActionCompressor(loaded.map((l) => l.factory()));
@@ -497,6 +497,14 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
     var r = this.addJustObject(value, name, category);
     this.link(this.act, 'consistsOf', r);
     return r;
+  }
+
+  findObject<T>(value: T) {
+    var r = C.search(this.objects, (obj) => obj.v === value);
+    if (r) {
+      return r;
+    }
+    return null;
   }
 
   private addJustObject<T>(value: T, name: string = value ? value.toString(): 'Null', category = cat.data) {
