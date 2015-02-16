@@ -83,6 +83,18 @@ export interface ICmdFunctionFactory {
   (id: string): ICmdFunction;
 }
 
+function createCompositeCmd(factories : ICmdFunctionFactory[]) {
+  return (id :string) => {
+    var r, i, fl = factories.length;
+    for(i = 0; i < fl; ++i) {
+      r = factories[i](id);
+      if (r) {
+        return r;
+      }
+    }
+    return null; //can't create
+  };
+}
 
 
 export class ObjectNode<T> extends ProvenanceNode implements IObjectRef<T> {
@@ -432,6 +444,21 @@ function asFunction(i) {
   }
   return i;
 }
+function toUnique(ids : string[]) {
+  var help = {}; //use a dict
+  ids.forEach((id) => help[id] = true);
+  return Object.keys(help);
+}
+
+function createFactory(ids: string[]) {
+  ids = toUnique(ids);
+  var toload = plugins.list('actionFactory').filter((plugin) => {
+    return ids.some((id) => id.match(plugin.creates) != null);
+  });
+  return plugins.load(toload).then((loaded) => {
+    return createCompositeCmd(loaded.map((l) => <ICmdFunctionFactory>l.factory));
+  });
+}
 
 export class ProvenanceGraph extends datatypes.DataTypeBase {
   actions : ActionNode[] = [];
@@ -677,12 +704,12 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
   }
 
   restore(persisted: any) {
-    var f = (id) => null; //FIXME
-    this.states = persisted.states.map((s) => StateNode.restore(s));
-    this.objects = persisted.objects.map((s) => ObjectNode.restore(s));
-    this.actions = persisted.actions.map((s) => ActionNode.restore(s, f));
-    this.links = persisted.links.map((l) => ProvenanceEdge.restore(l, this.states, this.actions, this.objects));
-
+    createFactory(persisted.actions.map((action) => action.id)).then((factory) => {
+      this.states = persisted.states.map((s) => StateNode.restore(s));
+      this.objects = persisted.objects.map((s) => ObjectNode.restore(s));
+      this.actions = persisted.actions.map((s) => ActionNode.restore(s, factory));
+      this.links = persisted.links.map((l) => ProvenanceEdge.restore(l, this.states, this.actions, this.objects));
+    });
     return this;
   }
 }
