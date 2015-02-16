@@ -26,6 +26,20 @@ g.edge {
   }
 }
 
+g.set {
+  text {
+    text-anchor: middle;
+    font-family: sans-serif;
+    font-size: 8px;
+    fill: rgb(30, 30, 30);
+  }
+
+  line {
+    stroke: rgb(150,150,150);
+    stroke-width: 2px;
+  }
+}
+
 #arrowRight {
   stroke: rgb(80,80,80);
   fill: rgb(80,80,80);
