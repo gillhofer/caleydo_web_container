@@ -538,12 +538,7 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
     this.links.push(l);
     this.fire('add_link', l, type, s, t);
   }
-
-  /**
-   * first time adding of action
-   * @param action
-   * @returns {JQueryPromise<{action: ActionNode, state: StateNode, created: ObjectNode<any>[], removed: ObjectNode<any>[]}>}
-   */
+  
   run(action: ActionNode) {
     var current = this.act,
       next : StateNode = action.resultsIn,
