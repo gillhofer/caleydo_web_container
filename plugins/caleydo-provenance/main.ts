@@ -61,7 +61,7 @@ export function ref<T>(v: T, name: string, category = cat.data): IObjectRef<T> {
     v: v,
     name: name,
     category: category
-  }
+  };
 }
 
 export interface ICmdResult {
@@ -253,7 +253,7 @@ export class ActionNode extends ProvenanceNode {
   }
 }
 
-export class StateNode extends ProvenanceNode{
+export class StateNode extends ProvenanceNode {
   constructor(public name: string) {
     super('state');
   }
@@ -331,7 +331,7 @@ export class ProvenanceEdge {
       source_type : this.source.type,
       target: this.target.pid,
       target_type : this.target.type
-    }
+    };
   }
 
   static restore(p, states, actions, objects) {
@@ -342,24 +342,6 @@ export class ProvenanceEdge {
     };
     return new ProvenanceEdge(p.type, m[p.source_type][p.source], m[p.target_type][p.target]);
   }
-}
-
-function toPid(n : ProvenanceNode) {
-  return n ? n.pid : -1;
-}
-function byIndex<T>(arr: T[]) {
-  return (i) => arr[i];
-}
-
-
-
-function remAll<T>(arr: T[], toremove: T[]) {
-  toremove.forEach((r) => {
-    var i = arr.indexOf(r);
-    if (i >= 0) {
-      arr.splice(i, 1);
-    }
-  });
 }
 
 export interface IActionCompressor {
@@ -388,11 +370,11 @@ class CompositeActionCompressor implements  IActionCompressor {
 
 function createCompressor(path: ActionNode[]) {
   var toload = plugins.list('actionCompressor').filter((plugin) => {
-    return path.some((action) => plugin.matchees(action.id))
+    return path.some((action) => plugin.matchees(action.id));
   });
   return plugins.load(toload).then((loaded) => {
     return new CompositeActionCompressor(loaded.map((l) => l.factory()));
-  })
+  });
 }
 /**
  * returns a compressed version of the paths where just the last selection operation remains
@@ -427,7 +409,7 @@ export function compress(path: ActionNode[]) {
     //filter all to remove ones
     path = path.filter((cmd) => toremove.indexOf(cmd) < 0);
     return path;
-  })
+  });
 }
 
 function findCommon<T>(a: T[], b : T[]) {
@@ -441,7 +423,7 @@ function findCommon<T>(a: T[], b : T[]) {
   return {
     i : c - 1,
     j: c - 1
-  }
+  };
 }
 
 function asFunction(i) {
@@ -531,18 +513,19 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
   private findOrAddObject<T>(i: T) : ObjectNode<T>;
   private findOrAddObject<T>(i: IObjectRef<T>) : ObjectNode<T>;
   private findOrAddObject<T>(i: any) : ObjectNode<T> {
+    var r;
     if (i instanceof ObjectNode) {
       return <ObjectNode<T>>i;
     }
     if (i.hasOwnProperty('v') && i.hasOwnProperty('name')) { //sounds like an proxy
       i.category = i.category || cat.data;
-      var r = C.search(this.objects, (obj) => obj.v === i.v && i.name === obj.name && i.category === obj.category);
+      r = C.search(this.objects, (obj) => obj.v === i.v && i.name === obj.name && i.category === obj.category);
       if (r) {
         return r;
       }
       return this.addJustObject(i.v, i.name, i.category);
     } else { //raw value
-      var r = C.search(this.objects, (obj) => obj.v === i);
+      r = C.search(this.objects, (obj) => obj.v === i);
       if (r) {
         return r;
       }
@@ -586,7 +569,7 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
         var removed = this.resolve(result.removed);
         removed.forEach((c) => {
           c.v = null; //free reference
-          this.link(action, 'removes', c)
+          this.link(action, 'removes', c);
         });
 
         //update new state
@@ -677,14 +660,6 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
     this.states.push(s);
     this.fire('add_state', s);
     return s;
-  }
-
-  private switchAndCopyState(state: StateNode) {
-    var bak = this.act;
-    if (bak === state) {
-      return;
-    }
-    bak.consistsOf.forEach((o) => this.link(state, 'consistsOf', state));
   }
 
   persist() {

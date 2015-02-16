@@ -45,7 +45,7 @@ export function createSelection(idtype:idtypes.IDType, rec: SelectionTypeRecorde
       old: old,
       rec: rec
     }
-  }
+  };
 }
 
 export function createCompressor() : provenance.IActionCompressor {
@@ -56,7 +56,7 @@ export function createCompressor() : provenance.IActionCompressor {
       return 'select:'+para.idtype + '@' + para.type;
     },
     select : (cmds) => cmds[cmds.length-1] //last survive
-  }
+  };
 }
 
 /**
