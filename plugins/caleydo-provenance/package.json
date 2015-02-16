@@ -20,7 +20,7 @@
         "module" : "caleydo-provenance/vis"
       },
       {
-        "type" : "cmdFactory",
+        "type" : "actionFactory",
         "id" : "idtype-selection",
         "folder" : "caleydo-provenance",
         "module" : "caleydo-provenance/selection",
@@ -28,7 +28,7 @@
         "creates" : "select"
       },
       {
-        "type" : "cmdCompressor",
+        "type" : "actionCompressor",
         "id" : "idtype-selection",
         "folder" : "caleydo-provenance",
         "module" : "caleydo-provenance/selection",
@@ -36,7 +36,7 @@
         "matches" : "select"
       },
       {
-        "type" : "cmdFactory",
+        "type" : "actionFactory",
         "id" : "multiform",
         "folder" : "caleydo-provenance",
         "module" : "caleydo-provenance/multiform",

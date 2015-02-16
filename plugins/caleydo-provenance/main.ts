@@ -386,38 +386,48 @@ class CompositeActionCompressor implements  IActionCompressor {
   }
 }
 
+function createCompressor(path: ActionNode[]) {
+  var toload = plugins.list('actionCompressor').filter((plugin) => {
+    return path.some((action) => plugin.matchees(action.id))
+  });
+  return plugins.load(toload).then((loaded) => {
+    return new CompositeActionCompressor(loaded.map((l) => l.factory()));
+  })
+}
 /**
  * returns a compressed version of the paths where just the last selection operation remains
  * @param path
  */
-export function compress(path: ActionNode[], compressor : IActionCompressor) {
-  var group = {};
-  path.forEach((action) => {
-    var key;
-    if (compressor.matches(action.id)) {
-      key = compressor.toKey(action);
-      if (!group.hasOwnProperty(key)) {
-        group[key] = [action];
-      } else {
-        group[key].push(action);
+export function compress(path: ActionNode[]) {
+  return createCompressor(path).then((compressor) => {
+    var group = {};
+    path.forEach((action) => {
+      var key;
+      if (compressor.matches(action.id)) {
+        key = compressor.toKey(action);
+        if (!group.hasOwnProperty(key)) {
+          group[key] = [action];
+        } else {
+          group[key].push(action);
+        }
       }
+    });
+    var toremove = [];
+    Object.keys(group).forEach((g) => {
+      var gs = group[g];
+      if (gs.length <= 1) { //nothing to compress
+        return;
+      }
+      var last = compressor.select(gs);
+      toremove.push.apply(toremove, gs.filter((gi) => gi !== last)); //mark all others to remove
+    });
+    if (toremove.length <= 0) {
+      return path;
     }
-  });
-  var toremove = [];
-  Object.keys(group).forEach((g) => {
-    var gs = group[g];
-    if (gs.length <= 1) { //nothing to compress
-      return;
-    }
-    var last = compressor.select(gs);
-    toremove.push.apply(toremove, gs.filter((gi) => gi !== last)); //mark all others to remove
-  });
-  if (toremove.length <= 0) {
+    //filter all to remove ones
+    path = path.filter((cmd) => toremove.indexOf(cmd) < 0);
     return path;
-  }
-  //filter all to remove ones
-  path = path.filter((cmd) => toremove.indexOf(cmd) < 0);
-  return path;
+  })
 }
 
 function findCommon<T>(a: T[], b : T[]) {
@@ -602,7 +612,7 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
       var bak : any = this.act;
       this.act = next;
       this.fire('switch_state', next, bak);
-      
+
       bak = this.lastAction;
       this.lastAction = action;
       this.fire('switch_action', action, bak);
@@ -622,14 +632,16 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
    */
   private runChain(actions: ActionNode[]) {
     //actions = compress(actions, null);
-    var r = C.resolved([]);
-    actions.forEach((action) => {
-      r = r.then((results) => this.run(action).then((result) => {
-        results.push(result);
-        return results;
-      }));
+    return compress(actions).then((torun) => {
+      var r = C.resolved([]);
+      torun.forEach((action) => {
+        r = r.then((results) => this.run(action).then((result) => {
+          results.push(result);
+          return results;
+        }));
+      });
+      return r;
     });
-    return r;
   }
 
   undo() {
@@ -687,7 +699,7 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
   }
 
   restore(persisted: any) {
-    var f = (id) => null;
+    var f = (id) => null; //FIXME
     this.states = persisted.states.map((s) => StateNode.restore(s));
     this.objects = persisted.objects.map((s) => ObjectNode.restore(s));
     this.actions = persisted.actions.map((s) => ActionNode.restore(s, f));
