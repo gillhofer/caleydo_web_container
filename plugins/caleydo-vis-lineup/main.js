@@ -47,7 +47,7 @@ define(['exports', 'd3', '../caleydo/main', 'lineupjs', '../caleydo/d3util', 'fo
           _id : rowIds[i]
         }, obj);
       });
-      that.lineup = LineUpJS.create(LineUpJS.createLocalStorage(data, columns, null, '_id'), $div, that.option('lineup'));
+      that.lineup = LineUpJS.create(LineUpJS.createLocalStorage(data, columns, that.option('layout'), '_id'), $div, that.option('lineup'));
       that.lineup.on('hover', function(row) {
         var id = row ? row._id : null;
         if (row) {
