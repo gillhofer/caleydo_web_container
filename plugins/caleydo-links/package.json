@@ -9,6 +9,33 @@
       {
         "type": "autoload",
         "id": "caleydo-links"
+      },
+      {
+        "type": "link-representation",
+        "id" : "link-block",
+        "folder" : "caleydo-links",
+        "module" : "caleydo-links/link-representation",
+        "name" : "Block Link Representation",
+        "factory" : "createBlockRep",
+        "granularity" : 0
+      },
+      {
+        "type": "link-representation",
+        "id" : "link-group",
+        "folder" : "caleydo-links",
+        "module" : "caleydo-links/link-representation",
+        "name" : "Group Link Representation",
+        "factory" : "createGroupRep",
+        "granularity" : 5
+      },
+      {
+        "type": "link-representation",
+        "id" : "link-item",
+        "folder" : "caleydo-links",
+        "module" : "caleydo-links/link-representation",
+        "name" : "Item Link Representation",
+        "factory" : "createItemRep",
+        "granularity" : 10
       }
     ]
   }
