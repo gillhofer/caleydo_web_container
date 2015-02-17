@@ -105,11 +105,11 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
         //  // The 'type' property sets the HTTP method.
         //  // A value of 'PUT' or 'DELETE' will trigger a preflight request.
         //  //type: 'POST',
-        //  type: 'GET',
+        //  type: 'POST',
         //
         //  // The URL to make the request to.
         //  //url: 'http://localhost:7474/db/data/ext/KShortestPaths/graphdb/kShortestPaths',
-        //  url: '/api/pathway/path',
+        //  url: '/api/pathway/setinfo',
         //
         //  accepts: 'application/json',
         //
@@ -120,6 +120,7 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
         //  // application/x-www-form-urlencoded, multipart/form-data, or text/plain,
         //  // you will trigger a preflight request.
         //  contentType: 'application/json',
+        //  data: "{\"sets\":[\"hsa00310\", \"hsa00330\"]}",
         //
         //  //data: '{"source":"http://localhost/:7474/db/data/node/15991", ' +
         //  //'"target":"http://localhost/:7474/db/data/node/1713", ' +
@@ -196,6 +197,10 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
         //  error: function (response) {
         //  }
         //});
+
+        //$.getJSON("/api/pathway/setinfo", {sets:"tololo"}, function (paths) {
+        //  loadPaths(paths);
+        //} );
 
         $.getJSON("testpaths1.json", function (paths) {
           loadPaths(paths);
@@ -585,6 +590,9 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
       svg.selectAll("g.path")
         .remove();
 
+      var allSets = [];
+      var setDict = {};
+
       paths.forEach(function (path) {
         var p = svg.append("g");
         p.attr("class", "path")
@@ -594,9 +602,61 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
         addPathSets(path);
         renderPath(p, path, posX, posY);
         posY += 50 + path.sets.length * 10;
+
+        path.sets.forEach(function (s) {
+          var setExists = setDict[s.id];
+          if (!setExists) {
+            allSets.push(s.id);
+            setDict[s.id] = true;
+          }
+        });
       });
 
       svg.attr("height", posY);
+
+      $.ajax({
+        type: 'POST',
+        url: '/api/pathway/setinfo',
+        accepts: 'application/json',
+        contentType: 'application/json',
+        data: JSON.stringify(allSets),
+        success: function (response) {
+
+          var setInfos = JSON.parse(response);
+          updateSets(svg, setInfos);
+        }
+      });
+    }
+
+    function updateSets(svg, setInfo) {
+      svg.selectAll("g.path g.setGroup g.set text")
+        .text(function (d) {
+          var info = setInfo["path:" + d.id];
+
+          if (typeof info == "undefined") {
+            return getClampedText(d.id, 15);
+          }
+
+          var text = info.properties["name"];
+          return getClampedText(text, 15);
+        });
+
+      svg.selectAll("g.path g.setGroup g.set title")
+        .text(function (d) {
+          var info = setInfo["path:" + d.id];
+
+          if (typeof info == "undefined") {
+            return d.id;
+          }
+          return info.properties["name"];
+        });
+    }
+
+    function getClampedText(text, maxLength) {
+      if (text.length > maxLength) {
+        return text.substring(0, maxLength);
+      }
+      return text;
     }
 
     function addPathSets(path) {
@@ -622,6 +682,7 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
     }
 
     function renderPath(p, path, posX, posY) {
+      var nodeStart = 90;
       var nodeWidth = 50;
       var nodeHeight = 20;
       var vSpacing = 10;
@@ -638,7 +699,7 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
         .attr("class", "node");
       node.append("rect")
         .attr("x", function (d, i) {
-          return (i * nodeWidth) + (i * edgeSize);
+          return nodeStart + (i * nodeWidth) + (i * edgeSize);
         })
         .attr("y", posY + vSpacing)
         .attr("width", nodeWidth)
@@ -649,13 +710,10 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
       node.append("text")
         .text(function (d) {
           var text = d.properties["name"];
-          if (text.length > 7) {
-            text = text.substring(0, 7);
-          }
-          return text;
+          return getClampedText(text, 7);
         })
         .attr("x", function (d, i) {
-          return (i * nodeWidth) + (i * edgeSize) + nodeWidth / 2;
+          return nodeStart + (i * nodeWidth) + (i * edgeSize) + nodeWidth / 2;
         })
         .attr("y", posY + vSpacing + nodeHeight - 5);
 
@@ -671,17 +729,17 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
       edge.append("line")
         .attr("x1", function (d, i) {
           if (isSourceNodeLeft(path.nodes, d, i)) {
-            return ((i + 1) * nodeWidth) + (i * edgeSize);
+            return ( nodeStart + (i + 1) * nodeWidth) + (i * edgeSize);
           } else {
-            return ((i + 1) * nodeWidth) + ((i + 1) * edgeSize);
+            return ( nodeStart + (i + 1) * nodeWidth) + ((i + 1) * edgeSize);
           }
         })
         .attr("y1", posY + vSpacing + nodeHeight / 2)
         .attr("x2", function (d, i) {
           if (isSourceNodeLeft(path.nodes, d, i)) {
-            return ((i + 1) * nodeWidth) + ((i + 1) * edgeSize) - arrowWidth;
+            return ( nodeStart + (i + 1) * nodeWidth) + ((i + 1) * edgeSize) - arrowWidth;
           } else {
-            return ((i + 1) * nodeWidth) + (i * edgeSize) + arrowWidth;
+            return ( nodeStart + (i + 1) * nodeWidth) + (i * edgeSize) + arrowWidth;
           }
         })
         .attr("y2", posY + vSpacing + nodeHeight / 2)
@@ -699,15 +757,13 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
       set.append("text")
         .text(function (d) {
           var text = d.id;
-          if (text.length > 10) {
-            text = text.substring(0, 10);
-          }
-          return text;
+          return getClampedText(text, 15);
         })
         .attr("x", 0)
         .attr("y", function (d, i) {
           return posY + 2 * vSpacing + nodeHeight + i * 10;
         });
+
 
       set.selectAll("line")
         .data(function (d, i) {
@@ -718,17 +774,23 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
         .enter()
         .append("line")
         .attr("x1", function (d) {
-          return (d[0] * nodeWidth) + (d[0] * edgeSize) + nodeWidth / 2;
+          return nodeStart + (d[0] * nodeWidth) + (d[0] * edgeSize) + nodeWidth / 2;
 
         })
         .attr("y1", function (d) {
           return posY + 2 * vSpacing + nodeHeight + d[1] * 10 - 3;
         })
         .attr("x2", function (d, i) {
-          return ((d[0] + 1) * nodeWidth) + ((d[0] + 1) * edgeSize) + nodeWidth / 2;
+          return nodeStart + ((d[0] + 1) * nodeWidth) + ((d[0] + 1) * edgeSize) + nodeWidth / 2;
         })
         .attr("y2", function (d) {
           return posY + 2 * vSpacing + nodeHeight + d[1] * 10 - 3;
+        });
+
+      set.append("title")
+        .text(function (d) {
+          var text = d.id;
+          return d.id;
         });
 
       //path.sets.forEach(function (s) {
