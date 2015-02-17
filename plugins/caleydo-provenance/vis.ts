@@ -15,11 +15,16 @@ export class ProvenanceVis extends vis.AVisInstance implements vis.IVisInstance 
     this.add(added);
     this.update();
   };
+  private rebindLink = (event, added) => {
+    this.addLink(added);
+    this.update();
+  };
   private trigger = (event) => {
     this.update();
   };
   private force = d3.layout.force();
   private nodes = [];
+  private links = [];
   private line = d3.svg.line().interpolate('linear-closed').x(C.getter(0)).y(C.getter(1));
 
   private node_drag = d3.behavior.drag()
@@ -47,19 +52,21 @@ export class ProvenanceVis extends vis.AVisInstance implements vis.IVisInstance 
   }
 
   private bind() {
-    this.data.on('add_node', this.rebind);
-    this.data.on('add_object', this.rebind);
+    this.data.on('add_action', this.rebind);
+    //this.data.on('add_object', this.rebind);
     this.data.on('add_state', this.rebind);
-    this.data.on('switch', this.trigger);
+    this.data.on('add_link', this.rebindLink);
+    this.data.on('switch_action', this.trigger);
   }
 
   destroy() {
     super.destroy();
     this.force().stop();
-    this.data.off('add_node', this.rebind);
-    this.data.off('add_object', this.rebind);
+    this.data.off('add_action', this.rebind);
+    //this.data.off('add_object', this.rebind);
     this.data.off('add_state', this.rebind);
-    this.data.off('switch', this.trigger);
+    this.data.off('add_link', this.rebindLink);
+    this.data.off('switch_action', this.trigger);
   }
 
   get rawSize() {
@@ -131,20 +138,13 @@ export class ProvenanceVis extends vis.AVisInstance implements vis.IVisInstance 
       }).append('path').attr('d', 'M0,-5L10,0L0,5');
     var $g = $svg.append('g').attr('transform', 'scale(' + scale[0] + ',' + scale[1] + ')');
 
-    $g.append('text').attr({
-      x : 10,
-      y: 20,
-      'class' : 'action'
-    }).text('Add Snapshot').on('click', () => {
-      var name = prompt('Enter state name','NoName');
-      this.data.takeSnapshot(name);
-    });
     $g.append('g').attr('class', 'links');
     $g.append('g').attr('class', 'nodes');
 
-    this.data.allCmds.map((f) => this.add(f));
-    this.data.allStates.map((f) => this.add(f));
-    this.data.allObjects.map((f) => this.add(f));
+    this.data.actions.map((f) => this.add(f));
+    this.data.states.map((f) => this.add(f));
+    //this.data.objects.map((f) => this.add(f));
+    this.data.links.map((l) => this.addLink(l));
 
     return $svg;
   }
@@ -157,6 +157,18 @@ export class ProvenanceVis extends vis.AVisInstance implements vis.IVisInstance 
       _: elem
     };
     this.nodes.push(n);
+  }
+
+  private addLink(l) {
+    var link = {
+      _ : l,
+      source: this.getNode(l.source),
+      target: this.getNode(l.target),
+      type : l.type
+    };
+    if (link.source && link.target) {
+      this.links.push(link);
+    }
   }
 
   private getNode(elem) {
@@ -178,47 +190,14 @@ export class ProvenanceVis extends vis.AVisInstance implements vis.IVisInstance 
     var shapes = {
       object: this.line([[0, -5], [5, 5], [-5, 5]]),
       state: this.line([[-5, -5], [5, -5], [5, 5], [-5, 5]]),
-      cmd: this.line([[0, -5], [5, 0], [0, 5], [-5, 0]])
+      action: this.line([[0, -5], [5, 0], [0, 5], [-5, 0]])
     };
-
-    var links = [];
-    this.nodes.forEach((node) => {
-      var _ = node._;
-      switch(_.type) {
-      case 'cmd':
-        _.next.forEach((u) => {
-          links.push({ source : node, target: this.getNode(u), type: 'next'});
-        });
-        break;
-      case 'object':
-        if (_.createdBy) {
-          links.push({ target : node, source: this.getNode(_.createdBy), type: 'createdBy'});
-        }
-        if (_.removedBy) {
-          links.push({ source : node, target: this.getNode(_.removedBy), type: 'removedBy'});
-        }
-        _.usedBy.forEach((u) => {
-          links.push({ source : node, target: this.getNode(u.node), type: 'usedBy'});
-        });
-        break;
-      case 'state':
-        if (_.resultOf) {
-          links.push({ source : node, target: this.getNode(_.resultOf), type: 'resultOf'});
-        }
-        _.consistsOf.forEach((u) => {
-          links.push({ source : node, target: this.getNode(u), type: 'consistsOf'});
-        });
-        break;
-      }
-    });
-
 
     this.force
       .stop()
       .nodes(this.nodes)
-      .links(links)
+      .links(this.links)
       .size(s);
-
 
 
 
@@ -227,22 +206,20 @@ export class ProvenanceVis extends vis.AVisInstance implements vis.IVisInstance 
       'class': (d) => 'node ' + d._.type
     }).call((sel) => {
       sel.append('path').attr('d', (d) => shapes[d._.type]).append('title').text((d) => d._.name);
-      sel.filter((d) => d._.type === 'cmd').on('dblclick', (d) => {
+      sel.filter((d) => d._.type === 'state').on('dblclick', (d) => {
         this.data.jumpTo(d._);
       });
     }).call(this.node_drag);
-    nodes.filter((d) => d._.type === 'cmd')
-      .classed('root', (d) => d._.isRoot)
-      .classed('last', (d) => this.data.last === d._)
-    .select('path').attr('class', (d) => d._.category);
+    nodes.filter((d) => d._.type === 'action')
+      .select('path').attr('class', (d) => d._.meta.category);
     nodes.filter((d) => d._.type === 'object')
       .select('path').attr('class', (d) => d._.category);
     nodes.filter((d) => d._.type === 'state')
-      .classed('last', (d) => d._ === this.data.actState);
+      .classed('last', (d) => d._ === this.data.act);
 
     nodes.exit().remove();
 
-    var link = this.$node.select('g.links').selectAll('line').data(links);
+    var link = this.$node.select('g.links').selectAll('line').data(this.links);
     link.enter().append('line').attr('marker-end','url(#marker)');
     link.attr({
       'class': (d) => 'link ' + d.type

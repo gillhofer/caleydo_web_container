@@ -745,7 +745,7 @@ export class Range {
   }
 
   eq(other:Range) {
-    if ((this.isAll && other.isAll) || (this.isNone && other.isNone)) {
+    if (this === other || (this.isAll && other.isAll) || (this.isNone && other.isNone)) {
       return true;
     }
     //TODO more performant comparison

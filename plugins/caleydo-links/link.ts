@@ -296,7 +296,7 @@ class Link {
         return (g,i) => { return {
             g : g,
             len : g.length,
-            loc : locs[i].aabb()
+            loc : locs[i] ? locs[i].aabb() : null
           }; };
       }
       var groupa = data[0].groupa.map(more(data[1]));
@@ -310,10 +310,12 @@ class Link {
             return;
           }
           var id = ga.g.name + '-' + gb.g.name;
-          r.push.apply(r, this.createBand(ga.loc, gb.loc, ga.g, gb.g, int, id, 'rel-group'));
-          //shift the location for attaching
-          ga.loc.y += ga.loc.h * (l / ga.len);
-          gb.loc.y += gb.loc.h * (l / gb.len);
+          if (ga.loc && gb.loc) {
+            r.push.apply(r, this.createBand(ga.loc, gb.loc, ga.g, gb.g, int, id, 'rel-group'));
+            //shift the location for attaching
+            ga.loc.y += ga.loc.h * (l / ga.len);
+            gb.loc.y += gb.loc.h * (l / gb.len);
+          }
         });
       });
       return r;

@@ -5,9 +5,11 @@
 'use strict';
 import d3 = require('d3');
 import C = require('./main');
+import $ = require('jquery');
 import vis = require('./vis');
 import ranges = require('./range');
 import datatypes = require('./datatype');
+import geom = require('./geom');
 
 class ProxyMetaData implements vis.IVisMetaData {
   constructor(private proxy : () => vis.IVisMetaData) {
@@ -245,7 +247,12 @@ class GridElem implements C.IPersistable {
   private actVis : vis.IVisInstance;
   $content : D3.Selection;
 
-  constructor(public range: ranges.Range, public data: datatypes.IDataType) {
+  constructor(public range: ranges.Range, public pos : number[], public data: datatypes.IDataType) {
+  }
+
+  subrange(r : ranges.Range) {
+    var ri = this.range.intersect(r);
+    return this.range.indexOf(ri);
   }
 
   get hasOne() {
@@ -300,6 +307,14 @@ class GridElem implements C.IPersistable {
   build(plugin: any) {
     this.actVis = plugin.factory(this.data, this.$content.node());
     return this.actVis;
+  }
+
+  get location() {
+    var offset = $(this.$content.node()).position();
+    return {
+      x : offset.left,
+      y : offset.top
+    };
   }
 
 
@@ -360,21 +375,27 @@ export class MultiFormGrid extends vis.AVisInstance implements vis.IVisInstance,
       }
     });
     var grid = this.grid = [];
-    function product(level: number, range : ranges.Range1D[]) {
+    function product(level: number, range : ranges.Range1D[], pos : number[]) {
       if (level === dims.length) {
         var r = range.length === 0 ? ranges.all() : ranges.list(range.slice()); //work on a copy for safety reason
-        grid.push(new GridElem(r, viewFactory(data, r)));
+        grid.push(new GridElem(r, pos.slice(), viewFactory(data, r)));
       } else {
-        dims[level].forEach((group) => {
+        dims[level].forEach((group, i) => {
           range.push(group);
-          product(level + 1, range);
+          pos.push(i);
+          product(level + 1, range, pos);
           range.pop();
+          pos.pop();
         });
       }
     }
-    product(0, []);
+    product(0, [], []);
 
     this.build();
+  }
+
+  get dimSizes() {
+    return this.dims.map((d) => d.length);
   }
 
   /**
@@ -444,14 +465,57 @@ export class MultiFormGrid extends vis.AVisInstance implements vis.IVisInstance,
     return null;
   }
 
-  private locateGroup(range:ranges.Range) {
 
-    return C.resolved(undefined);
+  private locateGroup(range:ranges.Range) {
+    if (range.isAll || range.isNone) {
+      var s = this.size;
+      return C.resolved(geom.rect(0,0,s[0], s[1]));
+    }
+    function filterTo() {
+      var inElems = [], i : number, matched, g : GridElem;
+
+      for (i = 0; i < this.grid.length; ++i) {
+        g = this.grid[i];
+        matched = g.subrange(range);
+
+        if (!matched.isNone) { //direct group hit
+          inElems.push({
+            g: g,
+            pos: g.location,
+            r : matched
+          });
+        }
+      }
+      return inElems;
+    }
+    var inElems = filterTo.call(this);
+
+    if (inElems.length === 1) {
+      return inElems[0].g.actVis.locate(inElems[0].r).then((loc) => {
+        return loc ? loc.shift(inElems[0].pos) : loc;
+      });
+    }
+    return C.all(inElems.map((elem) => elem.g.actVis.locate(elem.r))).then((locations) => {
+      //shift the locations according to grid position
+      locations = locations.map((loc, i) => loc ? loc.shift(inElems[i].pos) : loc).filter((loc) => !!loc);
+      //merge into a single one
+      var base = locations[0].aabb(),
+        x = base.x, y = base.y, x2 = base.x2, y2 = base.y2;
+      locations.forEach((loc) => {
+        var aab = loc.aabb();
+        x = Math.min(x, aab.x);
+        y = Math.min(y, aab.y);
+        x2 = Math.min(x2, aab.x2);
+        y2 = Math.min(y2, aab.y2);
+      });
+      return geom.rect(x, y, x2-x , y2-y);
+    });
   }
 
   private locateGroupById(range:ranges.Range) {
-
-    return C.resolved(undefined);
+    return this.data.ids().then((ids) => {
+      return this.locateGroup(ids.indexOf(range));
+    });
   }
 
   locate() {
@@ -483,8 +547,8 @@ export class MultiFormGrid extends vis.AVisInstance implements vis.IVisInstance,
         return visses[0].locateById.apply(visses[0], args);
       } else {
         //multiple groups
-        if (arguments.length === 1) {
-          return this.locateGroupById(arguments[0]);
+        if (args.length === 1) {
+          return this.locateGroupById(args[0]);
         } else {
           return C.all(args.map((arg) => this.locateGroupById(arg)));
         }
