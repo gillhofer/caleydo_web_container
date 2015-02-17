@@ -377,7 +377,6 @@ export class Vector extends VectorBase implements IVector {
 class VectorView extends VectorBase implements IVector {
   constructor(root:IVector, private range:ranges.Range) {
     super(root);
-    this.range = range;
   }
 
   get desc() {
@@ -430,9 +429,9 @@ class VectorView extends VectorBase implements IVector {
     return [this.idtype];
   }
 
-  get indices() {
+  /*get indices() {
     return this.range;
-  }
+  }*/
 
   sort(compareFn?: (a: any, b: any) => number, thisArg?: any): C.IPromise<IVector> {
     return this.data().then((d) => {

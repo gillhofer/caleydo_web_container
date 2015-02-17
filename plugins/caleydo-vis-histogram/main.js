@@ -191,7 +191,7 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-too
         return entry.v > 0;
       });
       var $m = $highlight.selectAll('rect').data(highlights);
-      $m.enter().append('rect').attr('width', '100%');
+      $m.enter().append('rect').attr('width', '100%').classed('select-selected', true);
       $m.attr({
         y: function (d) {
           return d.acc;

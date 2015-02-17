@@ -353,9 +353,13 @@ export class Range1D {
     //TODO optimize
     var l = this.iter(size).asList();
     var s = sub.iter(l.length);
-    var r = new Array<number>();
+    var r = new Array<number>(),
+      i : number;
     while (s.hasNext()) {
-      r.push(l[s.next()]);
+      i = s.next();
+      if (i >= 0 && i < l.length) { //check for out of range
+        r.push(l[i]);
+      }
     }
     return Range1D.from(r);
   }

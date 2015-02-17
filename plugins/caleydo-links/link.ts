@@ -8,6 +8,7 @@ import _2D = require('../caleydo/2D');
 import events = require('../caleydo/event');
 import idtypes = require('../caleydo/idtype');
 import ranges = require('../caleydo/range');
+import plugins = require('../caleydo/plugin');
 import vis = require('../caleydo/vis');
 import d3 = require('d3');
 
@@ -18,7 +19,14 @@ export interface IDataVis extends events.IEventHandler, vis.ILocateAble {
   ids() : C.IPromise<ranges.Range>;
 }
 
-class VisWrapper implements vis.ILocateAble {
+export interface IVisWrapper extends vis.ILocateAble {
+  id: number;
+  location: geom.AShape;
+  dimOf(idtype:idtypes.IDType) : number;
+  ids() : C.IPromise<ranges.Range>;
+}
+
+class VisWrapper implements IVisWrapper {
   callbacks : Array<(v : VisWrapper) => void> = [];
   private lookup: D3.Map<number> = d3.map();
 
@@ -76,25 +84,6 @@ class VisWrapper implements vis.ILocateAble {
   }
 }
 
-function selectCorners(a: geom.AShape, b: geom.AShape) {
-  var ac = a.aabb(),
-    bc = b.aabb();
-  if (ac.cx > bc.cx) {
-    return ['w','e'];
-  } else {
-    return ['e','w'];
-  }
-  // TODO better
-}
-
-
-var line = d3.svg.line().interpolate('linear-closed').x((d) => d.x).y((d) => d.y);
-
-interface ILink {
-  clazz : string;
-  id : string;
-  d : string;
-}
 
 
 function toId(a,b) {
@@ -102,6 +91,27 @@ function toId(a,b) {
   b = typeof b === 'number' ? b : b.id;
   return Math.min(a,b)+'-'+Math.max(a,b);
 }
+
+
+export interface ILink {
+  clazz : string;
+  id : string;
+  d : string;
+  range: ranges.Range;
+}
+
+export interface IBandContext {
+  line: D3.Svg.Line;
+  idtype: idtypes.IDType;
+  createBand(aBounds: geom.Rect, bBounds: geom.Rect, aIDs: ranges.Range1D, bIDs: ranges.Range1D, union: ranges.Range1D, id: string, clazz : string) : ILink[];
+}
+
+export interface IBandRepresentation {
+  (context: IBandContext, a: IVisWrapper, aa: geom.Rect, b: IVisWrapper, bb: geom.Rect): C.IPromise<ILink[]>;
+}
+
+
+var lineGlobal = d3.svg.line().interpolate('linear-closed').x(C.getter('x')).y(C.getter('y'));
 
 class Link {
   id : string;
@@ -129,91 +139,26 @@ class Link {
       this.render([], $g);
       return;
     }
-    var f;
-    switch (this.mode($g)) {
-      case 'group':
-      case '-group':
-        f = this.createGroupRep(a, al, b, bl);
-        break;
-      case 'item':
-        f = this.createItemRep(a, al, b, bl);
-        break;
-      default:
-        f = this.createBlockRep(a, al, b, bl);
-        break;
-    }
+    var f = this.options.reprs[Math.abs(this.mode($g))-1]
+      .load()
+      .then((plugin) => plugin.factory(this, a, al, b, bl));
     f.then((llinks) => {
-      var r = [{
-        clazz: 'rel-back',
-        d: line.interpolate('linear-closed')([al.corner('ne'), bl.corner('nw'), bl.corner('sw'), al.corner('se')]),
-        id: 'background'
-      }];
-      r = r.concat.apply(r, llinks);
-      this.render(r, $g);
-    });
-  }
-
-  private shouldRender(a: VisWrapper, aa: geom.Rect, b: VisWrapper, bb: geom.Rect) {
-    if (aa.x2 < (bb.x - 10)) {
-      //nothing to do
-    } else {
-      return false;
-    }
-    var shape = geom.polygon(aa.corner('ne'), bb.corner('nw'), bb.corner('sw'), aa.corner('se'));
-    //check if we have an intersection
-    return this.all.every((other) => {
-      if (other === this.a || other === this.b) { //don't check me
-        return true;
+      if (this.options.interactive !== false) {
+        llinks.unshift({ //add a background
+          clazz: 'rel-back',
+          d: lineGlobal.interpolate('linear-closed')([al.corner('ne'), bl.corner('nw'), bl.corner('sw'), al.corner('se')]),
+          id: 'background'
+        });
       }
-      var o = other.location;
-      var int = shape.intersects(o);
-      return !int.intersects;
+      this.render(llinks, $g);
     });
   }
 
-  mode($g: D3.Selection) : string {
-    return $g.attr('data-mode') || this.options.mode || 'block';
+  get line() {
+    return lineGlobal;
   }
 
-  setMode($g: D3.Selection, value: string) {
-    $g.attr('data-mode', value);
-    this.update($g);
-  }
-
-  private nextMode($g: D3.Selection) {
-    switch (this.mode($g)) {
-    case 'item':
-      this.setMode($g, '-group');
-      break;
-    case 'group':
-      this.setMode($g, 'item');
-      break;
-    case '-group':
-      this.setMode($g, 'block');
-      break;
-    default:
-      this.setMode($g, 'group');
-      break;
-    }
-  }
-
-  private render(links : ILink[], $g: D3.Selection) {
-    var $links = $g.selectAll('path').data(links, (d) => d.id);
-    $links.enter().append('path');
-    $links.exit().remove();
-    $links.attr({
-      'class' : (d) => d.clazz,
-      d: (d) => d.d
-    });
-    if (this.options.interactive !== false) {
-      $g.select('path.rel-back').on('contextmenu', () => {
-        this.nextMode($g);
-        d3.event.preventDefault();
-      });
-    }
-  }
-
-  private createBand(aa: geom.Rect, bb: geom.Rect, ida: ranges.Range1D, idb: ranges.Range1D, union, id, clazz) {
+  createBand(aa: geom.Rect, bb: geom.Rect, ida: ranges.Range1D, idb: ranges.Range1D, union: ranges.Range1D, id: string, clazz : string) {
     var ul = union.length;
 
     var l : _2D.Vector2D[] = [aa.corner('ne'), bb.corner('nw')];
@@ -234,8 +179,9 @@ class Link {
       }
       r.push({
         clazz: clazz,
-        d: line.interpolate('linear-closed')(ll),
-        id: id
+        d: lineGlobal.interpolate('linear-closed')(ll),
+        id: id,
+        range: ranges.list(union)
       });
     }
 
@@ -253,124 +199,77 @@ class Link {
     return r;
   }
 
-  private createBlockRep(a: VisWrapper, aa: geom.Rect, b: VisWrapper, bb: geom.Rect):C.IPromise<ILink[]> {
-    var adim = a.dimOf(this.idtype),
-      bdim = b.dimOf(this.idtype);
-    return C.all([a.ids(), b.ids()]).then((ids) => {
-      var ida:ranges.Range1D = ids[0].dim(adim);
-      var idb:ranges.Range1D = ids[1].dim(bdim);
-      return this.createBand(aa, bb, ida, idb, ida.intersect(idb), 'block', 'rel-block');
-    });
-  }
-
-  private createGroupRep(a: VisWrapper, aa: geom.Rect, b: VisWrapper, bb: geom.Rect):C.IPromise<ILink[]> {
-    var adim = a.dimOf(this.idtype),
-      bdim = b.dimOf(this.idtype);
-    function toGroups(ids) {
-      if (ids instanceof ranges.CompositeRange1D) {
-        return (<ranges.CompositeRange1D>ids).groups;
-      } else {
-        return [ranges.asUngrouped(ids)];
-      }
+  private shouldRender(a: VisWrapper, aa: geom.Rect, b: VisWrapper, bb: geom.Rect) {
+    if (aa.x2 < (bb.x - 10)) {
+      //nothing to do
+    } else {
+      return false;
     }
-    return C.all([a.ids(), b.ids()]).then((ids) => {
-      var groupa : ranges.Range1DGroup[] = toGroups(ids[0].dim(adim));
-      var groupb : ranges.Range1DGroup[] = toGroups(ids[1].dim(bdim));
-
-      var ars = groupa.map((group) => {
-        var r = ranges.all();
-        r.dims[adim] = group;
-        return r;
-      });
-      var brs = groupb.map((group) => {
-        var r = ranges.all();
-        r.dims[bdim] = group;
-        return r;
-      });
-      return C.all([C.resolved({
-        groupa : groupa,
-        groupb : groupb
-      }), a.locateById.apply(a, ars), b.locateById.apply(b, brs)]);
-    }).then((data) => {
-      function more(locs) {
-        return (g,i) => { return {
-            g : g,
-            len : g.length,
-            loc : locs[i] ? locs[i].aabb() : null
-          }; };
+    var shape = geom.polygon(aa.corner('ne'), bb.corner('nw'), bb.corner('sw'), aa.corner('se'));
+    //check if we have an intersection
+    return this.all.every((other) => {
+      if (other === this.a || other === this.b) { //don't check me
+        return true;
       }
-      var groupa = data[0].groupa.map(more(data[1]));
-      var groupb = data[0].groupb.map(more(data[2]));
-      var r = [];
-      groupa.forEach((ga) => {
-        groupb.forEach((gb) => {
-          var int = ga.g.intersect(gb.g);
-          var l = int.length;
-          if (l === 0) {
-            return;
-          }
-          var id = ga.g.name + '-' + gb.g.name;
-          if (ga.loc && gb.loc) {
-            r.push.apply(r, this.createBand(ga.loc, gb.loc, ga.g, gb.g, int, id, 'rel-group'));
-            //shift the location for attaching
-            ga.loc.y += ga.loc.h * (l / ga.len);
-            gb.loc.y += gb.loc.h * (l / gb.len);
-          }
-        });
-      });
-      return r;
+      var o = other.location;
+      var int = shape.intersects(o);
+      return !int.intersects;
     });
   }
 
-  private createItemRep(a: VisWrapper, aa: geom.Rect, b: VisWrapper, bb: geom.Rect):C.IPromise<ILink[]> {
-    var adim = a.dimOf(this.idtype),
-      bdim = b.dimOf(this.idtype),
-      amulti = a.data.dim.length > 1,
-      bmulti = b.data.dim.length > 1;
-
-    function toPoint(loc, other, multi) {
-      if (!multi) {
-        return loc.center;
-      }
-      var c = selectCorners(loc, other);
-      return loc.corner(c[0]);
+  mode($g: D3.Selection) : number {
+    var m = +$g.attr('data-mode');
+    if (m) {
+      return m;
     }
-    return C.all([a.ids(), b.ids()]).then((ids) => {
-      var ida:ranges.Range1D = ids[0].dim(adim);
-      var idb:ranges.Range1D = ids[1].dim(bdim);
-      var union = ida.intersect(idb);
-      var ars = [], brs = [];
-      union.forEach((index) => {
-        var r = ranges.all();
-        r.dim(adim).setList([index]);
-        ars.push(r);
-
-        r = ranges.all();
-        r.dim(bdim).setList([index]);
-        brs.push(r);
-      });
-      return C.all([C.resolved(union), a.locateById.apply(a, ars), b.locateById.apply(b, brs)]);
-    }).then((locations) => {
-      var union = locations[0],
-        loca = locations[1],
-        locb = locations[2];
-      var r = [];
-      line.interpolate('linear');
-      var selections = this.idtype.selections().dim(0);
-      union.forEach((id, i) => {
-        var la = geom.wrap(loca[i]);
-        var lb = geom.wrap(locb[i]);
-        if (la && lb) {
-          r.push({
-            clazz: 'rel-item' + (selections.contains(id) ? ' select-selected' : ''),
-            id: id,
-            d: line([toPoint(la, lb, amulti), toPoint(lb, la, bmulti)])
-          });
-        } //TODO optimize use the native select to just update the classes and not recreate them
-      });
-      return r;
-    });
+    m = this.options.mode || 1;
+    if (typeof m === 'string') {
+      m = 1 + C.indexOf(this.options.reprs, (c: any) => c.id === m);
+    }
+    return m;
   }
+
+  setMode($g: D3.Selection, value: number) {
+    $g.attr('data-mode', value);
+    this.update($g);
+  }
+
+  private nextMode($g: D3.Selection) {
+    var mode = this.mode($g),
+      l = this.options.reprs.length;
+    if( l === 1) {
+      return;
+    }
+    if (mode > 0) {
+      mode = mode === l.length ? -mode+1 : mode+1;
+    } else if (mode < 0) {
+      mode = mode === -1 ? -mode+1 : mode+1;
+    }
+    this.setMode($g, mode);
+  }
+
+  private render(links : ILink[], $g: D3.Selection) {
+    var $links = $g.selectAll('path').data(links, (d) => d.id);
+    $links.enter().append('path').on('click', (link) => {
+      if (link.range) {
+        this.idtype.select(link.range);
+      }
+      d3.event.preventDefault();
+      d3.event.stopPropagation();
+    });
+    $links.exit().remove();
+    $links.attr({
+      'class' : (d) => d.clazz,
+      d: (d) => d.d
+    });
+    if (this.options.interactive !== false) {
+      $g.select('path.rel-back').on('contextmenu', () => {
+        this.nextMode($g);
+        d3.event.preventDefault();
+      });
+    }
+  }
+
 }
 
 class LinkIDTypeContainer {
@@ -523,6 +422,7 @@ export class LinkContainer {
     parent.appendChild(this.node);
     this.node.classList.add('link-container');
     C.onDOMNodeRemoved(this.node, this.destroy, this);
+    this.options.reprs = plugins.list('link-representation').sort((a, b) => b.granularity - a.granularity);
   }
 
   push(...elems : IDataVis[]) {
