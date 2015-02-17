@@ -3,7 +3,6 @@
  */
 
 import C = require('../caleydo/main');
-import d3 = require('d3');
 import link = require('./link');
 import geom = require('../caleydo/geom');
 import ranges = require('../caleydo/range');
@@ -18,6 +17,13 @@ export function createBlockRep(context: link.IBandContext, a: link.IVisWrapper, 
     var idb:ranges.Range1D = ids[1].dim(bdim);
     return context.createBand(aa, bb, ida, idb, ida.intersect(idb), 'block', 'rel-block');
   });
+}
+
+function toArray(a : any) {
+  if (!C.isArray(a)) {
+    return [a];
+  }
+  return a;
 }
 
 export function createGroupRep(context: link.IBandContext, a: link.IVisWrapper, aa: geom.Rect, b: link.IVisWrapper, bb: geom.Rect):C.IPromise<link.ILink[]> {
@@ -56,8 +62,8 @@ export function createGroupRep(context: link.IBandContext, a: link.IVisWrapper, 
         loc : locs[i] ? locs[i].aabb() : null
       }; };
     }
-    var groupa = data[0].groupa.map(more(data[1]));
-    var groupb = data[0].groupb.map(more(data[2]));
+    var groupa = data[0].groupa.map(more(toArray(data[1])));
+    var groupb = data[0].groupb.map(more(toArray(data[2])));
     var r = [];
     groupa.forEach((ga) => {
       groupb.forEach((gb) => {
@@ -121,8 +127,8 @@ export function createItemRep(context: link.IBandContext, a: link.IVisWrapper, a
     return C.all([C.resolved(union), a.locateById.apply(a, ars), b.locateById.apply(b, brs)]);
   }).then((locations) => {
     var union = locations[0],
-      loca = locations[1],
-      locb = locations[2];
+      loca = toArray(locations[1]),
+      locb = toArray(locations[2]);
     var r = [];
     context.line.interpolate('linear');
     var selections = this.idtype.selections().dim(0);
