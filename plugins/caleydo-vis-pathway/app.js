@@ -6,14 +6,272 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
 
     //var jsonPaths = require('./testpaths1.json');
 
+    //TODO: fetch amount of sets from server
+    var totalNumSets = 290;
 
-    var sortingStrategies = {
-      pathLength: function (a, b) {
-        return d3.descending(a.edges.length, b.edges.length);
+    function SortingStrategy(type) {
+      this.type = type;
+    }
+
+    SortingStrategy.prototype = {
+      STRATEGY_TYPES: {
+        ID: 0,
+        WEIGHT: 1,
+        PRESENCE: 2,
+        UNKNOWN: 3
+      },
+      compare: function (a, b) {
+        return 0;
       }
     }
 
-    var currentSortingStrategy = sortingStrategies.pathLength;
+    function PathLengthSortingStrategy() {
+      SortingStrategy.call(this, SortingStrategy.prototype.STRATEGY_TYPES.WEIGHT);
+    }
+
+    PathLengthSortingStrategy.prototype = Object.create(SortingStrategy.prototype);
+    PathLengthSortingStrategy.prototype.compare = function (a, b) {
+      if (sortingManager.ascending) {
+        return d3.ascending(a.edges.length, b.edges.length);
+      }
+      return d3.descending(a.edges.length, b.edges.length);
+    }
+
+
+    function PathIdSortingStrategy() {
+      SortingStrategy.call(this, SortingStrategy.prototype.STRATEGY_TYPES.ID);
+    }
+
+    PathIdSortingStrategy.prototype = Object.create(SortingStrategy.prototype);
+    PathIdSortingStrategy.prototype.compare = function (a, b) {
+      if (sortingManager.ascending) {
+        return d3.ascending(a.id, b.id);
+      }
+      return d3.descending(a.id, b.id);
+    }
+
+
+    function SetCountEdgeWeightSortingStrategy() {
+      SortingStrategy.call(this, SortingStrategy.prototype.STRATEGY_TYPES.ID);
+    }
+
+    SetCountEdgeWeightSortingStrategy.prototype = Object.create(SortingStrategy.prototype);
+    SetCountEdgeWeightSortingStrategy.prototype.compare = function (a, b) {
+      function calcWeight(path) {
+        var totalWeight = 0;
+
+        path.edges.forEach(function (edge) {
+            var numSets = 0;
+            for (var key in edge.properties) {
+              if (key.charAt(0) !== '_') {
+                var property = edge.properties[key];
+                if (property instanceof Array) {
+                  numSets += property.length;
+                } else {
+                  numSets++;
+                }
+              }
+            }
+
+            totalWeight += (totalNumSets - numSets + 1) / totalNumSets;
+          }
+        );
+
+        return totalWeight;
+      }
+
+      var weightA = calcWeight(a);
+      var weightB = calcWeight(b);
+
+      if (sortingManager.ascending) {
+        return d3.ascending(weightA, weightB);
+      }
+      return d3.descending(weightA, weightB);
+    }
+
+    function NodePresenceSortingStrategy(nodeIds) {
+      SortingStrategy.call(this, SortingStrategy.prototype.STRATEGY_TYPES.PRESENCE);
+      this.compare = function (a, b) {
+        var numNodesA = 0;
+        var numNodesB = 0;
+        nodeIds.forEach(function (nodeId) {
+          a.nodes.forEach(function (node) {
+            if (node.id === nodeId) {
+              numNodesA++;
+            }
+          });
+
+          b.nodes.forEach(function (node) {
+            if (node.id === nodeId) {
+              numNodesB++;
+            }
+          });
+        });
+
+        //Inverse definition of ascending and descending, as more nodes should be ranked higher
+        if (sortingManager.ascending) {
+          return d3.descending(numNodesA, numNodesB);
+        }
+        return d3.ascending(numNodesA, numNodesB);
+      }
+    }
+
+    NodePresenceSortingStrategy.prototype = Object.create(SortingStrategy.prototype);
+
+
+    var sortingStrategies = {
+      pathLength: new PathLengthSortingStrategy(),
+
+      pathId: new PathIdSortingStrategy(),
+
+      setCountEdgeWeight: new SetCountEdgeWeightSortingStrategy(),
+
+      getNodePresenceStrategy: function (nodeIds) {
+        return new NodePresenceSortingStrategy(nodeIds);
+      },
+
+      getChainComparator: function (strategies) {
+        return function (a, b) {
+
+          for (var i = 0; i < strategies.length; i++) {
+            var res = strategies[i].compare(a, b);
+            if (res !== 0) {
+              return res;
+            }
+          }
+          return 0;
+        }
+      }
+    }
+
+    //var sortingStrategies = {
+    //  pathLength: function (a, b) {
+    //    if (sortingManager.ascending) {
+    //      return d3.ascending(a.edges.length, b.edges.length);
+    //    }
+    //    return d3.descending(a.edges.length, b.edges.length);
+    //  },
+    //
+    //  pathId: function (a, b) {
+    //    if (sortingManager.ascending) {
+    //      return d3.ascending(a.id, b.id);
+    //    }
+    //    return d3.descending(a.id, b.id);
+    //  },
+    //
+    //  setCountEdgeWeight: function (a, b) {
+    //    function calcWeight(path) {
+    //      var totalWeight = 0;
+    //
+    //      path.edges.forEach(function (edge) {
+    //          var numSets = 0;
+    //          for (var key in edge.properties) {
+    //            if (key.charAt(0) !== '_') {
+    //              var property = edge.properties[key];
+    //              if (property instanceof Array) {
+    //                numSets += property.length;
+    //              } else {
+    //                numSets++;
+    //              }
+    //            }
+    //          }
+    //
+    //          totalWeight += (totalNumSets - numSets + 1) / totalNumSets;
+    //        }
+    //      );
+    //
+    //      return totalWeight;
+    //    }
+    //
+    //    var weightA = calcWeight(a);
+    //    var weightB = calcWeight(b);
+    //
+    //    if (sortingManager.ascending) {
+    //      return d3.ascending(weightA, weightB);
+    //    }
+    //    return d3.descending(weightA, weightB);
+    //  },
+    //
+    //  getNodePresenceStrategy: function (nodeIds) {
+    //    return function (a, b) {
+    //      var numNodesA = 0;
+    //      var numNodesB = 0;
+    //      nodeIds.forEach(function (nodeId) {
+    //        a.nodes.forEach(function (node) {
+    //          if (node.id === nodeId) {
+    //            numNodesA++;
+    //          }
+    //        });
+    //
+    //        b.nodes.forEach(function (node) {
+    //          if (node.id === nodeId) {
+    //            numNodesB++;
+    //          }
+    //        });
+    //      });
+    //
+    //      //Inverse definition of ascending and descending, as more nodes should be ranked higher
+    //      if (sortingManager.ascending) {
+    //        return d3.descending(numNodesA, numNodesB);
+    //      }
+    //      return d3.ascending(numNodesA, numNodesB);
+    //    }
+    //  },
+    //
+    //  getSortingStrategyChain: function (strategies) {
+    //    return function (a, b) {
+    //
+    //      for (var i = 0; i < strategies.length; i++) {
+    //        var res = strategies[i](a, b);
+    //        if (res !== 0) {
+    //          return res;
+    //        }
+    //      }
+    //      return 0;
+    //    }
+    //  }
+    //}
+
+    var sortingManager = {
+
+      ascending: true,
+
+      currentStrategyChain: [sortingStrategies.setCountEdgeWeight, sortingStrategies.pathId],
+      currentComparator: sortingStrategies.getChainComparator([sortingStrategies.setCountEdgeWeight, sortingStrategies.pathId]),
+
+      clearStrategy: function () {
+        this.currentStrategyChain = [];
+        this.currentComparator = undefined;
+      },
+
+      setStrategyChain: function (chain) {
+        this.currentStrategyChain = chain;
+        this.currentComparator = sortingStrategies.getChainComparator(this.currentStrategyChain)
+      },
+
+      sortPaths: function (svg, strategyChain) {
+        this.currentStrategyChain = strategyChain || this.currentStrategyChain;
+        this.currentComparator = sortingStrategies.getChainComparator(this.currentStrategyChain)
+
+        var pathHeight = 50;
+        var setHeight = 10;
+
+        allPaths.sort(this.currentComparator);
+
+        svg.selectAll("g.path")
+          .sort(this.currentComparator)
+          .transition()
+          .duration(500)
+          .attr("transform", function (d, i) {
+            var posY = 0;
+            for (var index = 0; index < i; index++) {
+              posY += pathHeight + allPaths[index].sets.length * setHeight;
+            }
+            return "translate(0," + posY + ")";
+          })
+      }
+    }
+
 
     var pathListeners = {
       listeners: [],
@@ -50,6 +308,7 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
 
         });
 
+
         var svg = d3.select("#pathlist").append("svg")
         svg.attr("width", w)
           .attr("height", h);
@@ -65,16 +324,25 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
           .append("path")
           .attr("d", "M 0 0 L 10 5 L 0 10 z");
 
+        var selectSortingStrategy = $('<select>').prependTo('div.outer')[0];
+
+        $(selectSortingStrategy).append($("<option value='0'>Set Count Edge Weight</option>"));
+        $(selectSortingStrategy).append($("<option value='1'>Path Length</option>"));
+        $(selectSortingStrategy).on("change", function () {
+          if (this.value == '0') {
+            sortingManager.sortPaths(svg, [sortingStrategies.setCountEdgeWeight, sortingStrategies.pathId]);
+          }
+          if (this.value == '1') {
+            sortingManager.sortPaths(svg, [sortingStrategies.pathLength, sortingStrategies.pathId]);
+          }
+        });
+
         var sortButton = $('<input>').prependTo('div.outer')[0];
         $(sortButton).attr("type", "checkbox");
         $(sortButton).on("click", function () {
           var that = this;
-          sortPaths(svg, function (a, b) {
-            if (that.checked) {
-              return d3.descending(a.edges.length, b.edges.length);
-            }
-            return d3.ascending(a.edges.length, b.edges.length);
-          });
+          sortingManager.ascending = !this.checked;
+          sortingManager.sortPaths(svg);
         });
 
         var svg2 = d3.select("#pathgraph").append("svg")
@@ -237,6 +505,8 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
 
           pathListeners.listeners = [];
           allPaths = paths;
+
+          allPaths.sort(sortingManager.currentComparator);
 
           if (paths.length > 0) {
 
@@ -599,26 +869,6 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
       return {nodes: nodeList, edges: edgeList};
     }
 
-    function sortPaths(svg, sortingStrategy) {
-
-      var pathHeight = 50;
-      var setHeight = 10;
-
-      allPaths.sort(sortingStrategy);
-
-      svg.selectAll("g.path")
-        .sort(sortingStrategy)
-        .transition()
-        .duration(500)
-        .attr("transform", function (d, i) {
-          var posY = 0;
-          for (var index = 0; index < i; index++) {
-            posY += pathHeight + allPaths[index].sets.length * setHeight;
-          }
-          return "translate(0," + posY + ")";
-        })
-    }
-
 
     function displayPaths(svg, paths) {
 
@@ -977,7 +1227,12 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
         })
         .enter()
         .append("g")
-        .attr("class", "node");
+        .attr("class", "node")
+        .on("dblclick", function (d) {
+          //sortingManager.sortPaths(svg, [sortingStrategies.getNodePresenceStrategy([d.id]),
+          //  sortingManager.currentStrategyChain]);
+        });
+
       node.append("rect")
         .attr("x", function (d, i) {
           return nodeStart + (i * nodeWidth) + (i * edgeSize);
