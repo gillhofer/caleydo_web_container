@@ -9,6 +9,17 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
     //TODO: fetch amount of sets from server
     var totalNumSets = 290;
 
+
+    var nodeStart = 90;
+    var nodeWidth = 50;
+    var nodeHeight = 20;
+    var vSpacing = 5;
+    var pathHeight = nodeHeight + 2 * vSpacing;
+    var edgeSize = 50;
+    var arrowWidth = 7;
+    var setHeight = 10;
+    var pathSpacing = 15;
+
     function SortingStrategy(type) {
       this.type = type;
     }
@@ -125,9 +136,9 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
         var setScoreB = 0;
         setIds.forEach(function (setId) {
           var setOccurrencesA = getSetOccurrences(a, setId);
-          setScoreA+= setOccurrencesA/ a.edges.length;
+          setScoreA += setOccurrencesA / a.edges.length;
           var setOccurrencesB = getSetOccurrences(b, setId);
-          setScoreB+= setOccurrencesB/ b.edges.length;
+          setScoreB += setOccurrencesB / b.edges.length;
         });
 
         //Inverse definition of ascending and descending, as higher score should be ranked higher
@@ -144,12 +155,12 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
             if (key.charAt(0) !== '_') {
               var property = edge.properties[key];
               if (property instanceof Array) {
-                for(var i = 0; i < property.length; i++) {
-                  if(property[i] === setId) {
+                for (var i = 0; i < property.length; i++) {
+                  if (property[i] === setId) {
                     numSetOccurrences++
                   }
                 }
-              } else if(property === setId){
+              } else if (property === setId) {
                 numSetOccurrences++;
               }
             }
@@ -317,19 +328,16 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
       sortPaths: function (svg, strategyChain) {
         this.setStrategyChain(strategyChain || this.currentStrategyChain);
 
-        var pathHeight = 50;
-        var setHeight = 10;
-
         allPaths.sort(this.currentComparator);
 
-        svg.selectAll("g.path")
+        svg.selectAll("g.pathContainer")
           .sort(this.currentComparator)
           .transition()
           .duration(500)
           .attr("transform", function (d, i) {
             var posY = 0;
             for (var index = 0; index < i; index++) {
-              posY += pathHeight + allPaths[index].sets.length * setHeight;
+              posY += pathHeight + allPaths[index].sets.length * setHeight + pathSpacing;
             }
             return "translate(0," + posY + ")";
           })
@@ -387,6 +395,13 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
           .attr("orient", "auto")
           .append("path")
           .attr("d", "M 0 0 L 10 5 L 0 10 z");
+        svg.append("clipPath")
+          .attr("id", "SetLabelClipPath")
+          .append("rect")
+          .attr("x", 0)
+          .attr("y", 0)
+          .attr("width", 90)
+          .attr("height", 10);
 
         var selectSortingStrategy = $('<select>').prependTo('div.outer')[0];
 
@@ -937,15 +952,13 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
     function displayPaths(svg, paths) {
 
       var totalHeight = 0;
-      var pathHeight = 50;
-      var setHeight = 10;
 
       var allSets = [];
       var setDict = {};
 
       paths.forEach(function (path) {
         addPathSets(path);
-        totalHeight += pathHeight
+        totalHeight += pathHeight + pathSpacing;
 
         path.sets.forEach(function (s) {
           var setExists = setDict[s.id];
@@ -982,6 +995,8 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
       //});
 
       svg.attr("height", totalHeight);
+      svg.select("#SetLabelClipPath rect")
+        .attr("height", totalHeight);
 
       $.ajax({
         type: 'POST',
@@ -998,19 +1013,21 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
     }
 
     function updateSets(svg, setInfo) {
-      svg.selectAll("g.path g.setGroup g.set text")
+      svg.selectAll("g.pathContainer g.setGroup g.set text")
         .text(function (d) {
           var info = setInfo["path:" + d[0].id];
 
           if (typeof info === "undefined") {
-            return getClampedText(d[0].id, 15);
+            //return getClampedText(d[0].id, 15);
+            return d[0].id;
           }
 
           var text = info.properties["name"];
-          return getClampedText(text, 15);
+          //return getClampedText(text, 15);
+          return text;
         });
 
-      svg.selectAll("g.path g.setGroup g.set title")
+      svg.selectAll("g.pathContainer g.setGroup g.set title")
         .text(function (d) {
           var info = setInfo["path:" + d[0].id];
 
@@ -1252,35 +1269,39 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
     }
 
     function renderPaths(svg, paths) {
-      var pathHeight = 50;
-      var nodeStart = 90;
-      var nodeWidth = 50;
-      var nodeHeight = 20;
-      var vSpacing = 10;
-      var edgeSize = 50;
-      var arrowWidth = 7;
-      var setHeight = 10;
 
-      svg.selectAll("g.path")
+
+      svg.selectAll("g.pathContainer")
         .remove();
 
-      var p = svg.selectAll("g.path")
+      var pathContainer = svg.selectAll("g.pathContainer")
         .data(paths, getPathKey)
         .enter()
         .append("g");
 
-      p.attr("class", "path")
-        .on("click", function (d) {
-          pathListeners.notify(d);
-        })
+      pathContainer.attr("class", "pathContainer")
         .attr("transform", function (d, i) {
           var posY = 0;
           for (var index = 0; index < i; index++) {
             posY += pathHeight + paths[index].sets.length * setHeight;
           }
+          posY += i * pathSpacing;
 
           return "translate(0," + posY + ")";
         });
+
+      var p = pathContainer.append("g")
+        .attr("class", "path")
+        .on("click", function (d) {
+          pathListeners.notify(d);
+        });
+
+      p.append("rect")
+        .attr("class", "filler")
+        .attr("x", nodeStart)
+        .attr("y", 0)
+        .attr("width", "100%")
+        .attr("height", pathHeight)
 
       var nodeGroup = p.append("g")
         .attr("class", "nodeGroup");
@@ -1318,7 +1339,12 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
         .attr("x", function (d, i) {
           return nodeStart + (i * nodeWidth) + (i * edgeSize) + nodeWidth / 2;
         })
-        .attr("y", vSpacing + nodeHeight - 5);
+        .attr("y", vSpacing + nodeHeight - 5)
+        .append("title")
+        .text(function (d) {
+          return d.properties["name"];
+        });
+      ;
 
       var edgeGroup = p.append("g")
         .attr("class", "edgeGroup");
@@ -1352,7 +1378,7 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
         .attr("y2", vSpacing + nodeHeight / 2)
         .attr("marker-end", "url(#arrowRight)");
 
-      var setGroup = p.append("g")
+      var setGroup = pathContainer.append("g")
         .attr("class", "setGroup");
 
       var set = setGroup.selectAll("g.set")
@@ -1369,15 +1395,26 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
           sortingManager.sortPaths(svg);
         });
 
-      set.append("text")
-        .text(function (d) {
-          var text = d[0].id;
-          return getClampedText(text, 15);
-        })
+      set.append("rect")
+        .attr("class", "filler")
         .attr("x", 0)
         .attr("y", function (d, i) {
           return 2 * vSpacing + nodeHeight + i * setHeight;
-        });
+        })
+        .attr("width", "100%")
+        .attr("height", setHeight)
+
+      set.append("text")
+        .text(function (d) {
+          //var text = d[0].id;
+          //return getClampedText(text, 15);
+          return d[0].id;
+        })
+        .attr("x", 0)
+        .attr("y", function (d, i) {
+          return 2 * vSpacing + nodeHeight + (i + 1) * setHeight;
+        })
+        .attr("clip-path", "url(#SetLabelClipPath)");
 
 
       set.selectAll("line")
@@ -1396,19 +1433,18 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
           return nodeStart + (d[0] * nodeWidth) + (d[0] * edgeSize) + nodeWidth / 2;
         })
         .attr("y1", function (d) {
-          return 2 * vSpacing + nodeHeight + d[1] * setHeight - 3;
+          return 2 * vSpacing + nodeHeight + (d[1] + 1) * setHeight - 3;
         })
         .attr("x2", function (d) {
           return nodeStart + ((d[0] + 1) * nodeWidth) + ((d[0] + 1) * edgeSize) + nodeWidth / 2;
         })
         .attr("y2", function (d) {
-          return 2 * vSpacing + nodeHeight + d[1] * setHeight - 3;
+          return 2 * vSpacing + nodeHeight + (d[1] + 1) * setHeight - 3;
         });
 
       set.append("title")
         .text(function (d) {
-          var text = d[0].id;
-          return getClampedText(text);
+          return d[0].id;
         });
 
       //path.sets.forEach(function (s) {
