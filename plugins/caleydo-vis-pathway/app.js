@@ -118,6 +118,49 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
 
     NodePresenceSortingStrategy.prototype = Object.create(SortingStrategy.prototype);
 
+    function SetPresenceSortingStrategy(setIds) {
+      SortingStrategy.call(this, SortingStrategy.prototype.STRATEGY_TYPES.PRESENCE);
+      this.compare = function (a, b) {
+        var setScoreA = 0;
+        var setScoreB = 0;
+        setIds.forEach(function (setId) {
+          var setOccurrencesA = getSetOccurrences(a, setId);
+          setScoreA+= setOccurrencesA/ a.edges.length;
+          var setOccurrencesB = getSetOccurrences(b, setId);
+          setScoreB+= setOccurrencesB/ b.edges.length;
+        });
+
+        //Inverse definition of ascending and descending, as higher score should be ranked higher
+        if (sortingManager.ascending) {
+          return d3.descending(setScoreA, setScoreB);
+        }
+        return d3.ascending(setScoreA, setScoreB);
+      }
+
+      function getSetOccurrences(path, setId) {
+        var numSetOccurrences = 0;
+        path.edges.forEach(function (edge) {
+          for (var key in edge.properties) {
+            if (key.charAt(0) !== '_') {
+              var property = edge.properties[key];
+              if (property instanceof Array) {
+                for(var i = 0; i < property.length; i++) {
+                  if(property[i] === setId) {
+                    numSetOccurrences++
+                  }
+                }
+              } else if(property === setId){
+                numSetOccurrences++;
+              }
+            }
+          }
+        });
+        return numSetOccurrences;
+      }
+    }
+
+    SetPresenceSortingStrategy.prototype = Object.create(SortingStrategy.prototype);
+
 
     var sortingStrategies = {
       pathLength: new PathLengthSortingStrategy(),
@@ -128,6 +171,10 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
 
       getNodePresenceStrategy: function (nodeIds) {
         return new NodePresenceSortingStrategy(nodeIds);
+      },
+
+      getSetPresenceStrategy: function (setIds) {
+        return new SetPresenceSortingStrategy(setIds);
       },
 
       getChainComparator: function (strategies) {
@@ -249,9 +296,26 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
         this.currentComparator = sortingStrategies.getChainComparator(this.currentStrategyChain)
       },
 
+      // Replaces the first occurrence of an existing strategy of the same strategy type in the chain, or adds it to the
+      // front, if no such strategy exists.
+      addOrReplace: function (strategy) {
+
+        var replaced = false;
+        for (var i = 0; i < this.currentStrategyChain.length; i++) {
+          var currentStrategy = this.currentStrategyChain[i];
+          if (currentStrategy.type == strategy.type) {
+            this.currentStrategyChain[i] = strategy;
+            replaced = true;
+          }
+        }
+        if (!replaced) {
+          this.currentStrategyChain.unshift(strategy);
+        }
+        this.setStrategyChain(this.currentStrategyChain);
+      },
+
       sortPaths: function (svg, strategyChain) {
-        this.currentStrategyChain = strategyChain || this.currentStrategyChain;
-        this.currentComparator = sortingStrategies.getChainComparator(this.currentStrategyChain)
+        this.setStrategyChain(strategyChain || this.currentStrategyChain);
 
         var pathHeight = 50;
         var setHeight = 10;
@@ -1229,6 +1293,9 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
         .append("g")
         .attr("class", "node")
         .on("dblclick", function (d) {
+          sortingManager.addOrReplace(sortingStrategies.getNodePresenceStrategy([d.id]));
+          sortingManager.sortPaths(svg);
+
           //sortingManager.sortPaths(svg, [sortingStrategies.getNodePresenceStrategy([d.id]),
           //  sortingManager.currentStrategyChain]);
         });
@@ -1296,7 +1363,11 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
         })
         .enter()
         .append("g")
-        .attr("class", "set");
+        .attr("class", "set")
+        .on("dblclick", function (d) {
+          sortingManager.addOrReplace(sortingStrategies.getSetPresenceStrategy([d[0].id]));
+          sortingManager.sortPaths(svg);
+        });
 
       set.append("text")
         .text(function (d) {
