@@ -1,0 +1,637 @@
+define(['jquery', 'd3', './pathlisteners'],
+  function ($, d3, pathListeners) {
+    'use strict';
+
+    //var jsonPaths = require('./testpaths1.json');
+
+    //TODO: fetch amount of sets from server
+    var totalNumSets = 290;
+
+
+    var nodeStart = 90;
+    var nodeWidth = 50;
+    var nodeHeight = 20;
+    var vSpacing = 5;
+    var pathHeight = nodeHeight + 2 * vSpacing;
+    var edgeSize = 50;
+    var arrowWidth = 7;
+    var setHeight = 10;
+    var pathSpacing = 15;
+
+    function SortingStrategy(type) {
+      this.type = type;
+    }
+
+    SortingStrategy.prototype = {
+      STRATEGY_TYPES: {
+        ID: 0,
+        WEIGHT: 1,
+        PRESENCE: 2,
+        UNKNOWN: 3
+      },
+      compare: function (a, b) {
+        return 0;
+      }
+    }
+
+    function PathLengthSortingStrategy() {
+      SortingStrategy.call(this, SortingStrategy.prototype.STRATEGY_TYPES.WEIGHT);
+    }
+
+    PathLengthSortingStrategy.prototype = Object.create(SortingStrategy.prototype);
+    PathLengthSortingStrategy.prototype.compare = function (a, b) {
+      if (sortingManager.ascending) {
+        return d3.ascending(a.edges.length, b.edges.length);
+      }
+      return d3.descending(a.edges.length, b.edges.length);
+    }
+
+
+    function PathIdSortingStrategy() {
+      SortingStrategy.call(this, SortingStrategy.prototype.STRATEGY_TYPES.ID);
+    }
+
+    PathIdSortingStrategy.prototype = Object.create(SortingStrategy.prototype);
+    PathIdSortingStrategy.prototype.compare = function (a, b) {
+      if (sortingManager.ascending) {
+        return d3.ascending(a.id, b.id);
+      }
+      return d3.descending(a.id, b.id);
+    }
+
+
+    function SetCountEdgeWeightSortingStrategy() {
+      SortingStrategy.call(this, SortingStrategy.prototype.STRATEGY_TYPES.ID);
+    }
+
+    SetCountEdgeWeightSortingStrategy.prototype = Object.create(SortingStrategy.prototype);
+    SetCountEdgeWeightSortingStrategy.prototype.compare = function (a, b) {
+      function calcWeight(path) {
+        var totalWeight = 0;
+
+        path.edges.forEach(function (edge) {
+            var numSets = 0;
+            for (var key in edge.properties) {
+              if (key.charAt(0) !== '_') {
+                var property = edge.properties[key];
+                if (property instanceof Array) {
+                  numSets += property.length;
+                } else {
+                  numSets++;
+                }
+              }
+            }
+
+            totalWeight += (totalNumSets - numSets + 1) / totalNumSets;
+          }
+        );
+
+        return totalWeight;
+      }
+
+      var weightA = calcWeight(a);
+      var weightB = calcWeight(b);
+
+      if (sortingManager.ascending) {
+        return d3.ascending(weightA, weightB);
+      }
+      return d3.descending(weightA, weightB);
+    }
+
+    function NodePresenceSortingStrategy(nodeIds) {
+      SortingStrategy.call(this, SortingStrategy.prototype.STRATEGY_TYPES.PRESENCE);
+      this.compare = function (a, b) {
+        var numNodesA = 0;
+        var numNodesB = 0;
+        nodeIds.forEach(function (nodeId) {
+          a.nodes.forEach(function (node) {
+            if (node.id === nodeId) {
+              numNodesA++;
+            }
+          });
+
+          b.nodes.forEach(function (node) {
+            if (node.id === nodeId) {
+              numNodesB++;
+            }
+          });
+        });
+
+        //Inverse definition of ascending and descending, as more nodes should be ranked higher
+        if (sortingManager.ascending) {
+          return d3.descending(numNodesA, numNodesB);
+        }
+        return d3.ascending(numNodesA, numNodesB);
+      }
+    }
+
+    NodePresenceSortingStrategy.prototype = Object.create(SortingStrategy.prototype);
+
+    function SetPresenceSortingStrategy(setIds) {
+      SortingStrategy.call(this, SortingStrategy.prototype.STRATEGY_TYPES.PRESENCE);
+      this.compare = function (a, b) {
+        var setScoreA = 0;
+        var setScoreB = 0;
+        setIds.forEach(function (setId) {
+          var setOccurrencesA = getSetOccurrences(a, setId);
+          setScoreA += setOccurrencesA / a.edges.length;
+          var setOccurrencesB = getSetOccurrences(b, setId);
+          setScoreB += setOccurrencesB / b.edges.length;
+        });
+
+        //Inverse definition of ascending and descending, as higher score should be ranked higher
+        if (sortingManager.ascending) {
+          return d3.descending(setScoreA, setScoreB);
+        }
+        return d3.ascending(setScoreA, setScoreB);
+      }
+
+      function getSetOccurrences(path, setId) {
+        var numSetOccurrences = 0;
+        path.edges.forEach(function (edge) {
+          for (var key in edge.properties) {
+            if (key.charAt(0) !== '_') {
+              var property = edge.properties[key];
+              if (property instanceof Array) {
+                for (var i = 0; i < property.length; i++) {
+                  if (property[i] === setId) {
+                    numSetOccurrences++
+                  }
+                }
+              } else if (property === setId) {
+                numSetOccurrences++;
+              }
+            }
+          }
+        });
+        return numSetOccurrences;
+      }
+    }
+
+    SetPresenceSortingStrategy.prototype = Object.create(SortingStrategy.prototype);
+
+
+    var sortingStrategies = {
+      pathLength: new PathLengthSortingStrategy(),
+
+      pathId: new PathIdSortingStrategy(),
+
+      setCountEdgeWeight: new SetCountEdgeWeightSortingStrategy(),
+
+      getNodePresenceStrategy: function (nodeIds) {
+        return new NodePresenceSortingStrategy(nodeIds);
+      },
+
+      getSetPresenceStrategy: function (setIds) {
+        return new SetPresenceSortingStrategy(setIds);
+      },
+
+      getChainComparator: function (strategies) {
+        return function (a, b) {
+
+          for (var i = 0; i < strategies.length; i++) {
+            var res = strategies[i].compare(a, b);
+            if (res !== 0) {
+              return res;
+            }
+          }
+          return 0;
+        }
+      }
+    }
+
+
+    var sortingManager = {
+
+      ascending: true,
+
+      currentStrategyChain: [sortingStrategies.setCountEdgeWeight, sortingStrategies.pathId],
+      currentComparator: sortingStrategies.getChainComparator([sortingStrategies.setCountEdgeWeight, sortingStrategies.pathId]),
+
+      clearStrategy: function () {
+        this.currentStrategyChain = [];
+        this.currentComparator = undefined;
+      },
+
+      setStrategyChain: function (chain) {
+        this.currentStrategyChain = chain;
+        this.currentComparator = sortingStrategies.getChainComparator(this.currentStrategyChain)
+      },
+
+      // Replaces the first occurrence of an existing strategy of the same strategy type in the chain, or adds it to the
+      // front, if no such strategy exists.
+      addOrReplace: function (strategy) {
+
+        var replaced = false;
+        for (var i = 0; i < this.currentStrategyChain.length; i++) {
+          var currentStrategy = this.currentStrategyChain[i];
+          if (currentStrategy.type == strategy.type) {
+            this.currentStrategyChain[i] = strategy;
+            replaced = true;
+          }
+        }
+        if (!replaced) {
+          this.currentStrategyChain.unshift(strategy);
+        }
+        this.setStrategyChain(this.currentStrategyChain);
+      },
+
+      sortPaths: function (svg, strategyChain) {
+        this.setStrategyChain(strategyChain || this.currentStrategyChain);
+
+        allPaths.sort(this.currentComparator);
+
+        svg.selectAll("g.pathContainer")
+          .sort(this.currentComparator)
+          .transition()
+          .duration(500)
+          .attr("transform", function (d, i) {
+            var posY = 0;
+            for (var index = 0; index < i; index++) {
+              posY += pathHeight + allPaths[index].sets.length * setHeight + pathSpacing;
+            }
+            return "translate(0," + posY + ")";
+          })
+      }
+    }
+
+
+    var allPaths = [];
+
+    function displayPaths(svg, paths) {
+
+      var totalHeight = 0;
+
+      var allSets = [];
+      var setDict = {};
+
+      paths.forEach(function (path) {
+        addPathSets(path);
+        totalHeight += pathHeight + pathSpacing;
+
+        path.sets.forEach(function (s) {
+          var setExists = setDict[s.id];
+          totalHeight += setHeight;
+          if (!setExists) {
+            allSets.push(s.id);
+            setDict[s.id] = true;
+          }
+        });
+
+      });
+
+      renderPaths(svg, paths);
+
+
+      //paths.forEach(function (path) {
+      //  var p = svg.append("g");
+      //  p.attr("class", "path")
+      //    .on("click", function () {
+      //      pathListeners.notify(path);
+      //    });
+      //
+      //  addPathSets(path);
+      //  renderPath(p, path, posX, posY);
+      //  posY += 50 + path.sets.length * 10;
+      //
+      //  path.sets.forEach(function (s) {
+      //    var setExists = setDict[s.id];
+      //    if (!setExists) {
+      //      allSets.push(s.id);
+      //      setDict[s.id] = true;
+      //    }
+      //  });
+      //});
+
+      svg.attr("height", totalHeight);
+      svg.select("#SetLabelClipPath rect")
+        .attr("height", totalHeight);
+
+      $.ajax({
+        type: 'POST',
+        url: '/api/pathway/setinfo',
+        accepts: 'application/json',
+        contentType: 'application/json',
+        data: JSON.stringify(allSets),
+        success: function (response) {
+
+          var setInfos = JSON.parse(response);
+          updateSets(svg, setInfos);
+        }
+      });
+    }
+
+    function updateSets(svg, setInfo) {
+      svg.selectAll("g.pathContainer g.setGroup g.set text")
+        .text(function (d) {
+          var info = setInfo["path:" + d[0].id];
+
+          if (typeof info === "undefined") {
+            //return getClampedText(d[0].id, 15);
+            return d[0].id;
+          }
+
+          var text = info.properties["name"];
+          //return getClampedText(text, 15);
+          return text;
+        });
+
+      svg.selectAll("g.pathContainer g.setGroup g.set title")
+        .text(function (d) {
+          var info = setInfo["path:" + d[0].id];
+
+          if (typeof info === "undefined") {
+            return d[0].id;
+          }
+          return info.properties["name"];
+        });
+    }
+
+    function getClampedText(text, maxLength) {
+      if (text.length > maxLength) {
+        return text.substring(0, maxLength);
+      }
+      return text;
+    }
+
+    function addPathSets(path) {
+      var setDict = {};
+      var setList = [];
+
+      for (var i = 0; i < path.edges.length; i++) {
+        var edge = path.edges[i];
+        edge.properties["pathways"].forEach(function (pathwayId) {
+
+          var mySet = setDict[pathwayId];
+          if (typeof mySet == "undefined") {
+            mySet = {id: pathwayId, relIndices: [i]};
+            setDict[pathwayId] = mySet;
+            setList.push(mySet);
+          } else {
+            mySet.relIndices.push(i);
+          }
+        });
+      }
+
+      path.sets = setList;
+    }
+
+
+    function getPathKey(d) {
+      return d.id;
+    }
+
+    function renderPaths(svg, paths) {
+
+
+      svg.selectAll("g.pathContainer")
+        .remove();
+
+      var pathContainer = svg.selectAll("g.pathContainer")
+        .data(paths, getPathKey)
+        .enter()
+        .append("g");
+
+      pathContainer.attr("class", "pathContainer")
+        .attr("transform", function (d, i) {
+          var posY = 0;
+          for (var index = 0; index < i; index++) {
+            posY += pathHeight + paths[index].sets.length * setHeight;
+          }
+          posY += i * pathSpacing;
+
+          return "translate(0," + posY + ")";
+        });
+
+      var p = pathContainer.append("g")
+        .attr("class", "path")
+        .on("click", function (d) {
+          pathListeners.notify(d);
+        });
+
+      p.append("rect")
+        .attr("class", "filler")
+        .attr("x", nodeStart)
+        .attr("y", 0)
+        .attr("width", "100%")
+        .attr("height", pathHeight)
+
+      var nodeGroup = p.append("g")
+        .attr("class", "nodeGroup");
+
+      var node = nodeGroup.selectAll("g.node")
+        .data(function (path) {
+          return path.nodes;
+        })
+        .enter()
+        .append("g")
+        .attr("class", "node")
+        .on("dblclick", function (d) {
+          sortingManager.addOrReplace(sortingStrategies.getNodePresenceStrategy([d.id]));
+          sortingManager.sortPaths(svg);
+
+          //sortingManager.sortPaths(svg, [sortingStrategies.getNodePresenceStrategy([d.id]),
+          //  sortingManager.currentStrategyChain]);
+        });
+
+      node.append("rect")
+        .attr("x", function (d, i) {
+          return nodeStart + (i * nodeWidth) + (i * edgeSize);
+        })
+        .attr("y", vSpacing)
+        .attr("width", nodeWidth)
+        .attr("height", nodeHeight);
+      //.attr("fill", "rgb(200,200,200)")
+      //.attr("stroke", "rgb(30,30,30)");
+
+      node.append("text")
+        .text(function (d) {
+          var text = d.properties["name"];
+          return getClampedText(text, 7);
+        })
+        .attr("x", function (d, i) {
+          return nodeStart + (i * nodeWidth) + (i * edgeSize) + nodeWidth / 2;
+        })
+        .attr("y", vSpacing + nodeHeight - 5)
+        .append("title")
+        .text(function (d) {
+          return d.properties["name"];
+        });
+      ;
+
+      var edgeGroup = p.append("g")
+        .attr("class", "edgeGroup");
+
+      var edge = edgeGroup.selectAll("g.edge")
+        .data(function (path, i) {
+          return path.edges.map(function (edge) {
+            return [edge, i];
+          });
+        })
+        .enter()
+        .append("g")
+        .attr("class", "edge");
+
+      edge.append("line")
+        .attr("x1", function (d, i) {
+          if (isSourceNodeLeft(paths[d[1]].nodes, d[0], i)) {
+            return ( nodeStart + (i + 1) * nodeWidth) + (i * edgeSize);
+          } else {
+            return ( nodeStart + (i + 1) * nodeWidth) + ((i + 1) * edgeSize);
+          }
+        })
+        .attr("y1", vSpacing + nodeHeight / 2)
+        .attr("x2", function (d, i) {
+          if (isSourceNodeLeft(paths[d[1]].nodes, d[0], i)) {
+            return ( nodeStart + (i + 1) * nodeWidth) + ((i + 1) * edgeSize) - arrowWidth;
+          } else {
+            return ( nodeStart + (i + 1) * nodeWidth) + (i * edgeSize) + arrowWidth;
+          }
+        })
+        .attr("y2", vSpacing + nodeHeight / 2)
+        .attr("marker-end", "url(#arrowRight)");
+
+      var setGroup = pathContainer.append("g")
+        .attr("class", "setGroup");
+
+      var set = setGroup.selectAll("g.set")
+        .data(function (path, i) {
+          return path.sets.map(function (myset) {
+            return [myset, i];
+          });
+        })
+        .enter()
+        .append("g")
+        .attr("class", "set")
+        .on("dblclick", function (d) {
+          sortingManager.addOrReplace(sortingStrategies.getSetPresenceStrategy([d[0].id]));
+          sortingManager.sortPaths(svg);
+        });
+
+      set.append("rect")
+        .attr("class", "filler")
+        .attr("x", 0)
+        .attr("y", function (d, i) {
+          return 2 * vSpacing + nodeHeight + i * setHeight;
+        })
+        .attr("width", "100%")
+        .attr("height", setHeight)
+
+      set.append("text")
+        .text(function (d) {
+          //var text = d[0].id;
+          //return getClampedText(text, 15);
+          return d[0].id;
+        })
+        .attr("x", 0)
+        .attr("y", function (d, i) {
+          return 2 * vSpacing + nodeHeight + (i + 1) * setHeight;
+        })
+        .attr("clip-path", "url(#SetLabelClipPath)");
+
+
+      set.selectAll("line")
+        .data(function (d, i) {
+          var numPrevSets = 0;
+          for (var pathIndex = 0; pathIndex < d[1]; pathIndex++) {
+            numPrevSets += paths[pathIndex].sets.length;
+          }
+          return d[0].relIndices.map(function (item) {
+            return [item, i - numPrevSets];
+          });
+        })
+        .enter()
+        .append("line")
+        .attr("x1", function (d) {
+          return nodeStart + (d[0] * nodeWidth) + (d[0] * edgeSize) + nodeWidth / 2;
+        })
+        .attr("y1", function (d) {
+          return 2 * vSpacing + nodeHeight + (d[1] + 1) * setHeight - 3;
+        })
+        .attr("x2", function (d) {
+          return nodeStart + ((d[0] + 1) * nodeWidth) + ((d[0] + 1) * edgeSize) + nodeWidth / 2;
+        })
+        .attr("y2", function (d) {
+          return 2 * vSpacing + nodeHeight + (d[1] + 1) * setHeight - 3;
+        });
+
+      set.append("title")
+        .text(function (d) {
+          return d[0].id;
+        });
+    }
+
+    function isSourceNodeLeft(nodes, edge, edgeIndex) {
+      return nodes[edgeIndex].id === edge.sourceNodeId;
+    }
+
+    return {
+      init: function () {
+
+        var w = 800;
+        var h = 800;
+
+        var svg = d3.select("#pathlist").append("svg")
+        svg.attr("width", w)
+          .attr("height", h);
+        svg.append("marker")
+          .attr("id", "arrowRight")
+          .attr("viewBox", "0 0 10 10")
+          .attr("refX", "0")
+          .attr("refY", "5")
+          .attr("markerUnits", "strokeWidth")
+          .attr("markerWidth", "4")
+          .attr("markerHeight", "3")
+          .attr("orient", "auto")
+          .append("path")
+          .attr("d", "M 0 0 L 10 5 L 0 10 z");
+        svg.append("clipPath")
+          .attr("id", "SetLabelClipPath")
+          .append("rect")
+          .attr("x", 0)
+          .attr("y", 0)
+          .attr("width", 90)
+          .attr("height", 10);
+
+        var sortButton = $('<input>').prependTo('div.outer')[0];
+        $(sortButton).attr("type", "checkbox");
+        $(sortButton).on("click", function () {
+          var that = this;
+          sortingManager.ascending = !this.checked;
+          sortingManager.sortPaths(svg);
+        });
+
+        var selectSortingStrategy = $('<select>').prependTo('div.outer')[0];
+        $(selectSortingStrategy).append($("<option value='0'>Set Count Edge Weight</option>"));
+        $(selectSortingStrategy).append($("<option value='1'>Path Length</option>"));
+        $(selectSortingStrategy).on("change", function () {
+          if (this.value == '0') {
+            sortingManager.sortPaths(svg, [sortingStrategies.setCountEdgeWeight, sortingStrategies.pathId]);
+          }
+          if (this.value == '1') {
+            sortingManager.sortPaths(svg, [sortingStrategies.pathLength, sortingStrategies.pathId]);
+          }
+        });
+
+
+
+      },
+
+
+      render: function (paths) {
+
+        allPaths = paths;
+
+        allPaths.sort(sortingManager.currentComparator);
+
+        if (paths.length > 0) {
+          var svg = d3.select("#pathlist svg");
+          displayPaths(svg, paths);
+        }
+      }
+
+    }
+
+
+  }
+)
