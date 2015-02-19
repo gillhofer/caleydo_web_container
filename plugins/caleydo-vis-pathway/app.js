@@ -6,6 +6,273 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
 
     //var jsonPaths = require('./testpaths1.json');
 
+    //TODO: fetch amount of sets from server
+    var totalNumSets = 290;
+
+    function SortingStrategy(type) {
+      this.type = type;
+    }
+
+    SortingStrategy.prototype = {
+      STRATEGY_TYPES: {
+        ID: 0,
+        WEIGHT: 1,
+        PRESENCE: 2,
+        UNKNOWN: 3
+      },
+      compare: function (a, b) {
+        return 0;
+      }
+    }
+
+    function PathLengthSortingStrategy() {
+      SortingStrategy.call(this, SortingStrategy.prototype.STRATEGY_TYPES.WEIGHT);
+    }
+
+    PathLengthSortingStrategy.prototype = Object.create(SortingStrategy.prototype);
+    PathLengthSortingStrategy.prototype.compare = function (a, b) {
+      if (sortingManager.ascending) {
+        return d3.ascending(a.edges.length, b.edges.length);
+      }
+      return d3.descending(a.edges.length, b.edges.length);
+    }
+
+
+    function PathIdSortingStrategy() {
+      SortingStrategy.call(this, SortingStrategy.prototype.STRATEGY_TYPES.ID);
+    }
+
+    PathIdSortingStrategy.prototype = Object.create(SortingStrategy.prototype);
+    PathIdSortingStrategy.prototype.compare = function (a, b) {
+      if (sortingManager.ascending) {
+        return d3.ascending(a.id, b.id);
+      }
+      return d3.descending(a.id, b.id);
+    }
+
+
+    function SetCountEdgeWeightSortingStrategy() {
+      SortingStrategy.call(this, SortingStrategy.prototype.STRATEGY_TYPES.ID);
+    }
+
+    SetCountEdgeWeightSortingStrategy.prototype = Object.create(SortingStrategy.prototype);
+    SetCountEdgeWeightSortingStrategy.prototype.compare = function (a, b) {
+      function calcWeight(path) {
+        var totalWeight = 0;
+
+        path.edges.forEach(function (edge) {
+            var numSets = 0;
+            for (var key in edge.properties) {
+              if (key.charAt(0) !== '_') {
+                var property = edge.properties[key];
+                if (property instanceof Array) {
+                  numSets += property.length;
+                } else {
+                  numSets++;
+                }
+              }
+            }
+
+            totalWeight += (totalNumSets - numSets + 1) / totalNumSets;
+          }
+        );
+
+        return totalWeight;
+      }
+
+      var weightA = calcWeight(a);
+      var weightB = calcWeight(b);
+
+      if (sortingManager.ascending) {
+        return d3.ascending(weightA, weightB);
+      }
+      return d3.descending(weightA, weightB);
+    }
+
+    function NodePresenceSortingStrategy(nodeIds) {
+      SortingStrategy.call(this, SortingStrategy.prototype.STRATEGY_TYPES.PRESENCE);
+      this.compare = function (a, b) {
+        var numNodesA = 0;
+        var numNodesB = 0;
+        nodeIds.forEach(function (nodeId) {
+          a.nodes.forEach(function (node) {
+            if (node.id === nodeId) {
+              numNodesA++;
+            }
+          });
+
+          b.nodes.forEach(function (node) {
+            if (node.id === nodeId) {
+              numNodesB++;
+            }
+          });
+        });
+
+        //Inverse definition of ascending and descending, as more nodes should be ranked higher
+        if (sortingManager.ascending) {
+          return d3.descending(numNodesA, numNodesB);
+        }
+        return d3.ascending(numNodesA, numNodesB);
+      }
+    }
+
+    NodePresenceSortingStrategy.prototype = Object.create(SortingStrategy.prototype);
+
+
+    var sortingStrategies = {
+      pathLength: new PathLengthSortingStrategy(),
+
+      pathId: new PathIdSortingStrategy(),
+
+      setCountEdgeWeight: new SetCountEdgeWeightSortingStrategy(),
+
+      getNodePresenceStrategy: function (nodeIds) {
+        return new NodePresenceSortingStrategy(nodeIds);
+      },
+
+      getChainComparator: function (strategies) {
+        return function (a, b) {
+
+          for (var i = 0; i < strategies.length; i++) {
+            var res = strategies[i].compare(a, b);
+            if (res !== 0) {
+              return res;
+            }
+          }
+          return 0;
+        }
+      }
+    }
+
+    //var sortingStrategies = {
+    //  pathLength: function (a, b) {
+    //    if (sortingManager.ascending) {
+    //      return d3.ascending(a.edges.length, b.edges.length);
+    //    }
+    //    return d3.descending(a.edges.length, b.edges.length);
+    //  },
+    //
+    //  pathId: function (a, b) {
+    //    if (sortingManager.ascending) {
+    //      return d3.ascending(a.id, b.id);
+    //    }
+    //    return d3.descending(a.id, b.id);
+    //  },
+    //
+    //  setCountEdgeWeight: function (a, b) {
+    //    function calcWeight(path) {
+    //      var totalWeight = 0;
+    //
+    //      path.edges.forEach(function (edge) {
+    //          var numSets = 0;
+    //          for (var key in edge.properties) {
+    //            if (key.charAt(0) !== '_') {
+    //              var property = edge.properties[key];
+    //              if (property instanceof Array) {
+    //                numSets += property.length;
+    //              } else {
+    //                numSets++;
+    //              }
+    //            }
+    //          }
+    //
+    //          totalWeight += (totalNumSets - numSets + 1) / totalNumSets;
+    //        }
+    //      );
+    //
+    //      return totalWeight;
+    //    }
+    //
+    //    var weightA = calcWeight(a);
+    //    var weightB = calcWeight(b);
+    //
+    //    if (sortingManager.ascending) {
+    //      return d3.ascending(weightA, weightB);
+    //    }
+    //    return d3.descending(weightA, weightB);
+    //  },
+    //
+    //  getNodePresenceStrategy: function (nodeIds) {
+    //    return function (a, b) {
+    //      var numNodesA = 0;
+    //      var numNodesB = 0;
+    //      nodeIds.forEach(function (nodeId) {
+    //        a.nodes.forEach(function (node) {
+    //          if (node.id === nodeId) {
+    //            numNodesA++;
+    //          }
+    //        });
+    //
+    //        b.nodes.forEach(function (node) {
+    //          if (node.id === nodeId) {
+    //            numNodesB++;
+    //          }
+    //        });
+    //      });
+    //
+    //      //Inverse definition of ascending and descending, as more nodes should be ranked higher
+    //      if (sortingManager.ascending) {
+    //        return d3.descending(numNodesA, numNodesB);
+    //      }
+    //      return d3.ascending(numNodesA, numNodesB);
+    //    }
+    //  },
+    //
+    //  getSortingStrategyChain: function (strategies) {
+    //    return function (a, b) {
+    //
+    //      for (var i = 0; i < strategies.length; i++) {
+    //        var res = strategies[i](a, b);
+    //        if (res !== 0) {
+    //          return res;
+    //        }
+    //      }
+    //      return 0;
+    //    }
+    //  }
+    //}
+
+    var sortingManager = {
+
+      ascending: true,
+
+      currentStrategyChain: [sortingStrategies.setCountEdgeWeight, sortingStrategies.pathId],
+      currentComparator: sortingStrategies.getChainComparator([sortingStrategies.setCountEdgeWeight, sortingStrategies.pathId]),
+
+      clearStrategy: function () {
+        this.currentStrategyChain = [];
+        this.currentComparator = undefined;
+      },
+
+      setStrategyChain: function (chain) {
+        this.currentStrategyChain = chain;
+        this.currentComparator = sortingStrategies.getChainComparator(this.currentStrategyChain)
+      },
+
+      sortPaths: function (svg, strategyChain) {
+        this.currentStrategyChain = strategyChain || this.currentStrategyChain;
+        this.currentComparator = sortingStrategies.getChainComparator(this.currentStrategyChain)
+
+        var pathHeight = 50;
+        var setHeight = 10;
+
+        allPaths.sort(this.currentComparator);
+
+        svg.selectAll("g.path")
+          .sort(this.currentComparator)
+          .transition()
+          .duration(500)
+          .attr("transform", function (d, i) {
+            var posY = 0;
+            for (var index = 0; index < i; index++) {
+              posY += pathHeight + allPaths[index].sets.length * setHeight;
+            }
+            return "translate(0," + posY + ")";
+          })
+      }
+    }
+
+
     var pathListeners = {
       listeners: [],
 
@@ -20,6 +287,8 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
       }
 
     };
+
+    var allPaths = [];
 
     $(document).ready(function () {
 
@@ -39,6 +308,7 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
 
         });
 
+
         var svg = d3.select("#pathlist").append("svg")
         svg.attr("width", w)
           .attr("height", h);
@@ -53,6 +323,27 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
           .attr("orient", "auto")
           .append("path")
           .attr("d", "M 0 0 L 10 5 L 0 10 z");
+
+        var selectSortingStrategy = $('<select>').prependTo('div.outer')[0];
+
+        $(selectSortingStrategy).append($("<option value='0'>Set Count Edge Weight</option>"));
+        $(selectSortingStrategy).append($("<option value='1'>Path Length</option>"));
+        $(selectSortingStrategy).on("change", function () {
+          if (this.value == '0') {
+            sortingManager.sortPaths(svg, [sortingStrategies.setCountEdgeWeight, sortingStrategies.pathId]);
+          }
+          if (this.value == '1') {
+            sortingManager.sortPaths(svg, [sortingStrategies.pathLength, sortingStrategies.pathId]);
+          }
+        });
+
+        var sortButton = $('<input>').prependTo('div.outer')[0];
+        $(sortButton).attr("type", "checkbox");
+        $(sortButton).on("click", function () {
+          var that = this;
+          sortingManager.ascending = !this.checked;
+          sortingManager.sortPaths(svg);
+        });
 
         var svg2 = d3.select("#pathgraph").append("svg")
         svg2.attr("width", w)
@@ -208,11 +499,18 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
 
         function loadPaths(paths) {
 
+          for (var i = 0; i < paths.length; i++) {
+            paths[i].id = i;
+          }
+
           pathListeners.listeners = [];
+          allPaths = paths;
+
+          allPaths.sort(sortingManager.currentComparator);
 
           if (paths.length > 0) {
 
-            renderPaths(svg, paths);
+            displayPaths(svg, paths);
 
             var firstPath = paths[paths.length - 1];
             var firstNode = firstPath.nodes[0];
@@ -351,20 +649,11 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
         });
 
         nodeRects.attr("x", function (d) {
-          //if (d.id == startNode.id) {
-          //  return 20;
-          //} else if (d.id == endNode.id) {
-          //  return w - 20;
-          //} else {
           return d.x - nodeWidth / 2;
           //}
         });
         nodeRects.attr("y", function (d) {
-          //if (d.id == startNode.id || d.id == endNode.id) {
-          //  return h / 2 - nodeHeight / 2;
-          //} else {
           return d.y - nodeHeight / 2;
-          //}
 
         });
 
@@ -581,38 +870,54 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
     }
 
 
-    function renderPaths(svg, paths) {
+    function displayPaths(svg, paths) {
 
-
-      var posX = 20;
-      var posY = 20;
-
-      svg.selectAll("g.path")
-        .remove();
+      var totalHeight = 0;
+      var pathHeight = 50;
+      var setHeight = 10;
 
       var allSets = [];
       var setDict = {};
 
       paths.forEach(function (path) {
-        var p = svg.append("g");
-        p.attr("class", "path")
-          .on("click", function () {
-            pathListeners.notify(path);
-          });
         addPathSets(path);
-        renderPath(p, path, posX, posY);
-        posY += 50 + path.sets.length * 10;
+        totalHeight += pathHeight
 
         path.sets.forEach(function (s) {
           var setExists = setDict[s.id];
+          totalHeight += setHeight;
           if (!setExists) {
             allSets.push(s.id);
             setDict[s.id] = true;
           }
         });
+
       });
 
-      svg.attr("height", posY);
+      renderPaths(svg, paths);
+
+
+      //paths.forEach(function (path) {
+      //  var p = svg.append("g");
+      //  p.attr("class", "path")
+      //    .on("click", function () {
+      //      pathListeners.notify(path);
+      //    });
+      //
+      //  addPathSets(path);
+      //  renderPath(p, path, posX, posY);
+      //  posY += 50 + path.sets.length * 10;
+      //
+      //  path.sets.forEach(function (s) {
+      //    var setExists = setDict[s.id];
+      //    if (!setExists) {
+      //      allSets.push(s.id);
+      //      setDict[s.id] = true;
+      //    }
+      //  });
+      //});
+
+      svg.attr("height", totalHeight);
 
       $.ajax({
         type: 'POST',
@@ -631,10 +936,10 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
     function updateSets(svg, setInfo) {
       svg.selectAll("g.path g.setGroup g.set text")
         .text(function (d) {
-          var info = setInfo["path:" + d.id];
+          var info = setInfo["path:" + d[0].id];
 
-          if (typeof info == "undefined") {
-            return getClampedText(d.id, 15);
+          if (typeof info === "undefined") {
+            return getClampedText(d[0].id, 15);
           }
 
           var text = info.properties["name"];
@@ -643,10 +948,10 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
 
       svg.selectAll("g.path g.setGroup g.set title")
         .text(function (d) {
-          var info = setInfo["path:" + d.id];
+          var info = setInfo["path:" + d[0].id];
 
-          if (typeof info == "undefined") {
-            return d.id;
+          if (typeof info === "undefined") {
+            return d[0].id;
           }
           return info.properties["name"];
         });
@@ -681,27 +986,258 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
       path.sets = setList;
     }
 
-    function renderPath(p, path, posX, posY) {
+    //function renderPaths(svg, paths) {
+    //  var pathHeight = 50;
+    //  var nodeStart = 90;
+    //  var nodeWidth = 50;
+    //  var nodeHeight = 20;
+    //  var vSpacing = 10;
+    //  var edgeSize = 50;
+    //  var arrowWidth = 7;
+    //  var setHeight = 10;
+    //
+    //  svg.selectAll("g.path")
+    //    .remove();
+    //
+    //  var p = svg.selectAll("g.path")
+    //    .data(paths)
+    //    .enter()
+    //    .append("g");
+    //
+    //  p.attr("class", "path")
+    //    .on("click", function (d) {
+    //      pathListeners.notify(d);
+    //    });
+    //
+    //  var nodeGroup = p.append("g")
+    //    .attr("class", "nodeGroup");
+    //
+    //  var node = nodeGroup.selectAll("g.node")
+    //    .data(function (path, i) {
+    //      return path.nodes.map(function (node) {
+    //        return [node, i];
+    //      });
+    //    })
+    //    .enter()
+    //    .append("g")
+    //    .attr("class", "node");
+    //  node.append("rect")
+    //    .attr("x", function (d, i) {
+    //      return nodeStart + (i * nodeWidth) + (i * edgeSize);
+    //    })
+    //    .attr("y", function (d) {
+    //      var posY = vSpacing;
+    //      for (var i = 0; i < d[1]; i++) {
+    //        posY += pathHeight + paths[i].sets.length * setHeight;
+    //      }
+    //
+    //      return posY;
+    //    })
+    //    .attr("width", nodeWidth)
+    //    .attr("height", nodeHeight);
+    //  //.attr("fill", "rgb(200,200,200)")
+    //  //.attr("stroke", "rgb(30,30,30)");
+    //
+    //  node.append("text")
+    //    .text(function (d) {
+    //      var text = d[0].properties["name"];
+    //      return getClampedText(text, 7);
+    //    })
+    //    .attr("x", function (d, i) {
+    //      return nodeStart + (i * nodeWidth) + (i * edgeSize) + nodeWidth / 2;
+    //    })
+    //    .attr("y", function (d) {
+    //      var posY = vSpacing + nodeHeight - 5;
+    //      for (var i = 0; i < d[1]; i++) {
+    //        posY += pathHeight + paths[i].sets.length * setHeight;
+    //      }
+    //
+    //      return posY;
+    //    });
+    //
+    //  var edgeGroup = p.append("g")
+    //    .attr("class", "edgeGroup");
+    //
+    //  var edge = edgeGroup.selectAll("g.edge")
+    //    .data(function (path, i) {
+    //      return path.edges.map(function (edge) {
+    //        return [edge, i];
+    //      });
+    //    })
+    //    .enter()
+    //    .append("g")
+    //    .attr("class", "edge");
+    //
+    //  edge.append("line")
+    //    .attr("x1", function (d, i) {
+    //      if (isSourceNodeLeft(paths[d[1]].nodes, d[0], i)) {
+    //        return ( nodeStart + (i + 1) * nodeWidth) + (i * edgeSize);
+    //      } else {
+    //        return ( nodeStart + (i + 1) * nodeWidth) + ((i + 1) * edgeSize);
+    //      }
+    //    })
+    //    .attr("y1", function (d) {
+    //      var posY = vSpacing + nodeHeight / 2;
+    //      for (var i = 0; i < d[1]; i++) {
+    //        posY += pathHeight + paths[i].sets.length * setHeight;
+    //      }
+    //
+    //      return posY;
+    //    })
+    //    .attr("x2", function (d, i) {
+    //      if (isSourceNodeLeft(paths[d[1]].nodes, d[0], i)) {
+    //        return ( nodeStart + (i + 1) * nodeWidth) + ((i + 1) * edgeSize) - arrowWidth;
+    //      } else {
+    //        return ( nodeStart + (i + 1) * nodeWidth) + (i * edgeSize) + arrowWidth;
+    //      }
+    //    })
+    //    .attr("y2", function (d) {
+    //      var posY = vSpacing + nodeHeight / 2;
+    //      for (var i = 0; i < d[1]; i++) {
+    //        posY += pathHeight + paths[i].sets.length * setHeight;
+    //      }
+    //
+    //      return posY;
+    //    })
+    //    .attr("marker-end", "url(#arrowRight)");
+    //
+    //  var setGroup = p.append("g")
+    //    .attr("class", "setGroup");
+    //
+    //  var set = setGroup.selectAll("g.set")
+    //    .data(function (path, i) {
+    //      return path.sets.map(function (myset) {
+    //        return [myset, i];
+    //      });
+    //    })
+    //    .enter()
+    //    .append("g")
+    //    .attr("class", "set");
+    //
+    //  set.append("text")
+    //    .text(function (d) {
+    //      var text = d[0].id;
+    //      return getClampedText(text, 15);
+    //    })
+    //    .attr("x", 0)
+    //    .attr("y", function (d, i) {
+    //      var posY = 2 * vSpacing + nodeHeight + i * setHeight;
+    //      for (var i = 0; i < d[1]; i++) {
+    //        posY += pathHeight + paths[i].sets.length * setHeight;
+    //      }
+    //
+    //      return posY;
+    //    });
+    //
+    //
+    //  set.selectAll("line")
+    //    .data(function (d, i) {
+    //      //This is strange: i is seemingly the absolute set index, not relative to the parent...
+    //      return d[0].relIndices.map(function (item) {
+    //        var numPrevSets = 0;
+    //        for (var pathIndex = 0; pathIndex < d[1]; pathIndex++) {
+    //          numPrevSets += paths[pathIndex].sets.length;
+    //        }
+    //        return [item, i - numPrevSets, d[1]];
+    //      });
+    //    })
+    //    .enter()
+    //    .append("line")
+    //    .attr("x1", function (d) {
+    //      return nodeStart + (d[0] * nodeWidth) + (d[0] * edgeSize) + nodeWidth / 2;
+    //
+    //    })
+    //    .attr("y1", function (d) {
+    //      var posY = 2 * vSpacing + nodeHeight + d[1] * setHeight - 3;
+    //      for (var i = 0; i < d[2]; i++) {
+    //        posY += pathHeight + paths[i].sets.length * setHeight;
+    //      }
+    //
+    //      return posY;
+    //    })
+    //    .attr("x2", function (d) {
+    //      return nodeStart + ((d[0] + 1) * nodeWidth) + ((d[0] + 1) * edgeSize) + nodeWidth / 2;
+    //    })
+    //    .attr("y2", function (d) {
+    //      var posY = 2 * vSpacing + nodeHeight + d[1] * setHeight - 3;
+    //      for (var i = 0; i < d[2]; i++) {
+    //        posY += pathHeight + paths[i].sets.length * setHeight;
+    //      }
+    //
+    //      return posY;
+    //    });
+    //
+    //  set.append("title")
+    //    .text(function (d) {
+    //      var text = d[0].id;
+    //      return getClampedText(text);
+    //    });
+    //
+    //  //path.sets.forEach(function (s) {
+    //  //
+    //  //});
+    //
+    //
+    //  //.attr("text-anchor", "middle")
+    //  //.attr("font-family", "sans-serif")
+    //  //.attr("font-size", "11px")
+    //  //.attr("fill", "rgb(30,30,30)");
+    //}
+    function getPathKey(d) {
+      return d.id;
+    }
+
+    function renderPaths(svg, paths) {
+      var pathHeight = 50;
       var nodeStart = 90;
       var nodeWidth = 50;
       var nodeHeight = 20;
       var vSpacing = 10;
       var edgeSize = 50;
       var arrowWidth = 7;
+      var setHeight = 10;
+
+      svg.selectAll("g.path")
+        .remove();
+
+      var p = svg.selectAll("g.path")
+        .data(paths, getPathKey)
+        .enter()
+        .append("g");
+
+      p.attr("class", "path")
+        .on("click", function (d) {
+          pathListeners.notify(d);
+        })
+        .attr("transform", function (d, i) {
+          var posY = 0;
+          for (var index = 0; index < i; index++) {
+            posY += pathHeight + paths[index].sets.length * setHeight;
+          }
+
+          return "translate(0," + posY + ")";
+        });
 
       var nodeGroup = p.append("g")
         .attr("class", "nodeGroup");
 
       var node = nodeGroup.selectAll("g.node")
-        .data(path.nodes)
+        .data(function (path) {
+          return path.nodes;
+        })
         .enter()
         .append("g")
-        .attr("class", "node");
+        .attr("class", "node")
+        .on("dblclick", function (d) {
+          //sortingManager.sortPaths(svg, [sortingStrategies.getNodePresenceStrategy([d.id]),
+          //  sortingManager.currentStrategyChain]);
+        });
+
       node.append("rect")
         .attr("x", function (d, i) {
           return nodeStart + (i * nodeWidth) + (i * edgeSize);
         })
-        .attr("y", posY + vSpacing)
+        .attr("y", vSpacing)
         .attr("width", nodeWidth)
         .attr("height", nodeHeight);
       //.attr("fill", "rgb(200,200,200)")
@@ -715,82 +1251,93 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
         .attr("x", function (d, i) {
           return nodeStart + (i * nodeWidth) + (i * edgeSize) + nodeWidth / 2;
         })
-        .attr("y", posY + vSpacing + nodeHeight - 5);
+        .attr("y", vSpacing + nodeHeight - 5);
 
       var edgeGroup = p.append("g")
         .attr("class", "edgeGroup");
 
       var edge = edgeGroup.selectAll("g.edge")
-        .data(path.edges)
+        .data(function (path, i) {
+          return path.edges.map(function (edge) {
+            return [edge, i];
+          });
+        })
         .enter()
         .append("g")
         .attr("class", "edge");
 
       edge.append("line")
         .attr("x1", function (d, i) {
-          if (isSourceNodeLeft(path.nodes, d, i)) {
+          if (isSourceNodeLeft(paths[d[1]].nodes, d[0], i)) {
             return ( nodeStart + (i + 1) * nodeWidth) + (i * edgeSize);
           } else {
             return ( nodeStart + (i + 1) * nodeWidth) + ((i + 1) * edgeSize);
           }
         })
-        .attr("y1", posY + vSpacing + nodeHeight / 2)
+        .attr("y1", vSpacing + nodeHeight / 2)
         .attr("x2", function (d, i) {
-          if (isSourceNodeLeft(path.nodes, d, i)) {
+          if (isSourceNodeLeft(paths[d[1]].nodes, d[0], i)) {
             return ( nodeStart + (i + 1) * nodeWidth) + ((i + 1) * edgeSize) - arrowWidth;
           } else {
             return ( nodeStart + (i + 1) * nodeWidth) + (i * edgeSize) + arrowWidth;
           }
         })
-        .attr("y2", posY + vSpacing + nodeHeight / 2)
+        .attr("y2", vSpacing + nodeHeight / 2)
         .attr("marker-end", "url(#arrowRight)");
 
       var setGroup = p.append("g")
         .attr("class", "setGroup");
 
       var set = setGroup.selectAll("g.set")
-        .data(path.sets)
+        .data(function (path, i) {
+          return path.sets.map(function (myset) {
+            return [myset, i];
+          });
+        })
         .enter()
         .append("g")
         .attr("class", "set");
 
       set.append("text")
         .text(function (d) {
-          var text = d.id;
+          var text = d[0].id;
           return getClampedText(text, 15);
         })
         .attr("x", 0)
         .attr("y", function (d, i) {
-          return posY + 2 * vSpacing + nodeHeight + i * 10;
+          return 2 * vSpacing + nodeHeight + i * setHeight;
         });
 
 
       set.selectAll("line")
         .data(function (d, i) {
-          return d.relIndices.map(function (item) {
-            return [item, i];
+          var numPrevSets = 0;
+          for (var pathIndex = 0; pathIndex < d[1]; pathIndex++) {
+            numPrevSets += paths[pathIndex].sets.length;
+          }
+          return d[0].relIndices.map(function (item) {
+            return [item, i - numPrevSets];
           });
         })
         .enter()
         .append("line")
         .attr("x1", function (d) {
           return nodeStart + (d[0] * nodeWidth) + (d[0] * edgeSize) + nodeWidth / 2;
-
         })
         .attr("y1", function (d) {
-          return posY + 2 * vSpacing + nodeHeight + d[1] * 10 - 3;
+          return 2 * vSpacing + nodeHeight + d[1] * setHeight - 3;
         })
-        .attr("x2", function (d, i) {
+        .attr("x2", function (d) {
           return nodeStart + ((d[0] + 1) * nodeWidth) + ((d[0] + 1) * edgeSize) + nodeWidth / 2;
         })
         .attr("y2", function (d) {
-          return posY + 2 * vSpacing + nodeHeight + d[1] * 10 - 3;
+          return 2 * vSpacing + nodeHeight + d[1] * setHeight - 3;
         });
 
       set.append("title")
         .text(function (d) {
-          var text = d.id;
-          return d.id;
+          var text = d[0].id;
+          return getClampedText(text);
         });
 
       //path.sets.forEach(function (s) {
