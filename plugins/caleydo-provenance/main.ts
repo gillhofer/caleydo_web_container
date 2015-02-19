@@ -6,9 +6,10 @@
  */
 import C = require('../caleydo/main');
 import plugins = require('../caleydo/plugin');
-import datatypes = require('../caleydo/datatype');
+import graph = require('../caleydo/graph');
 import idtypes = require('../caleydo/idtype');
 import ranges = require('../caleydo/range');
+import datatypes = require('../caleydo/datatype');
 import session = require('../caleydo/session');
 
 
@@ -28,27 +29,6 @@ export var op = {
   remove : 'remove'
 };
 
-function isType(type: string) {
-  return (edge: ProvenanceEdge) => edge.type === type;
-}
-
-class ProvenanceNode {
-  outgoing : ProvenanceEdge[] = [];
-  incoming : ProvenanceEdge[] = [];
-
-  pid : number = -1;
-
-  constructor(public type: string) {
-
-  }
-
-  persist(id: number) : any {
-    this.pid = id;
-    return {
-
-    };
-  }
-}
 
 export interface IObjectRef<T> {
   name: string;
@@ -97,7 +77,7 @@ function createCompositeCmd(factories : ICmdFunctionFactory[]) {
 }
 
 
-export class ObjectNode<T> extends ProvenanceNode implements IObjectRef<T> {
+export class ObjectNode<T> extends graph.GraphNode implements IObjectRef<T> {
   constructor(public v : T, public name: string, public category = cat.data) {
     super('object');
   }
@@ -114,21 +94,21 @@ export class ObjectNode<T> extends ProvenanceNode implements IObjectRef<T> {
   }
 
   get createdBy() {
-    var r = this.incoming.filter(isType('creates'))[0];
+    var r = this.incoming.filter(graph.isType('creates'))[0];
     return r ? <ActionNode>r.source : null;
   }
 
   get removedBy() {
-    var r = this.incoming.filter(isType('removes'))[0];
+    var r = this.incoming.filter(graph.isType('removes'))[0];
     return r ? <ActionNode>r.source : null;
   }
 
   get requiredBy() {
-    return this.incoming.filter(isType('requires')).map((e) => <ActionNode>e.source);
+    return this.incoming.filter(graph.isType('requires')).map((e) => <ActionNode>e.source);
   }
 
   get partOf() {
-    return this.incoming.filter(isType('consistsOf')).map((e) => <StateNode>e.source);
+    return this.incoming.filter(graph.isType('consistsOf')).map((e) => <StateNode>e.source);
   }
 
   toString() {
@@ -167,7 +147,7 @@ export function action(meta: ActionMetaData, id : string, f : (inputs: IObjectRe
   };
 }
 
-export class ActionNode extends ProvenanceNode {
+export class ActionNode extends graph.GraphNode {
   private inverter : () => IAction;
   onceExecuted = false;
 
@@ -199,7 +179,7 @@ export class ActionNode extends ProvenanceNode {
   }
 
   get inverse() {
-    var r = this.incoming.filter(isType('inverse'))[0];
+    var r = this.incoming.filter(graph.isType('inverse'))[0];
     return r ? <ActionNode>r.source : null;
   }
 
@@ -243,29 +223,29 @@ export class ActionNode extends ProvenanceNode {
   }
 
   get creates() {
-    return this.outgoing.filter(isType('creates')).map((e) => <ObjectNode<any>>e.target);
+    return this.outgoing.filter(graph.isType('creates')).map((e) => <ObjectNode<any>>e.target);
   }
 
   get removes() {
-    return this.outgoing.filter(isType('removes')).map((e) => <ObjectNode<any>>e.target);
+    return this.outgoing.filter(graph.isType('removes')).map((e) => <ObjectNode<any>>e.target);
   }
 
   get requires() {
-    return this.outgoing.filter(isType('requires')).map((e) => <ObjectNode<any>>e.target);
+    return this.outgoing.filter(graph.isType('requires')).map((e) => <ObjectNode<any>>e.target);
   }
 
   get resultsIn() {
-    var r = this.outgoing.filter(isType('resultsIn'))[0];
+    var r = this.outgoing.filter(graph.isType('resultsIn'))[0];
     return r ? <StateNode>r.target : null;
   }
 
   get previous() {
-    var r = this.incoming.filter(isType('next'))[0];
+    var r = this.incoming.filter(graph.isType('next'))[0];
     return r ? <StateNode>r.source : null;
   }
 }
 
-export class StateNode extends ProvenanceNode {
+export class StateNode extends graph.GraphNode {
   constructor(public name: string) {
     super('state');
   }
@@ -281,15 +261,15 @@ export class StateNode extends ProvenanceNode {
   }
 
   get consistsOf() {
-    return this.outgoing.filter(isType('consistsOf')).map((e) => <ObjectNode<any>>e.target);
+    return this.outgoing.filter(graph.isType('consistsOf')).map((e) => <ObjectNode<any>>e.target);
   }
 
   get resultsFrom() {
-    return this.incoming.filter(isType('resultsIn')).map((e) => <ActionNode>e.source);
+    return this.incoming.filter(graph.isType('resultsIn')).map((e) => <ActionNode>e.source);
   }
 
   get next() {
-    return this.outgoing.filter(isType('next')).map((e) => <ActionNode>e.target);
+    return this.outgoing.filter(graph.isType('next')).map((e) => <ActionNode>e.target);
   }
 
   get previousState() {
@@ -323,36 +303,6 @@ export class StateNode extends ProvenanceNode {
 
   toString() {
     return this.name;
-  }
-}
-
-export class ProvenanceEdge {
-  constructor(public type: string, public source: ProvenanceNode, public target: ProvenanceNode) {
-    source.outgoing.push(this);
-    target.incoming.push(this);
-  }
-
-  toString() {
-    return this.source + ' '+this.type + ' '+this.target;
-  }
-
-  persist() {
-    return {
-      type: this.type,
-      source: this.source.pid,
-      source_type : this.source.type,
-      target: this.target.pid,
-      target_type : this.target.type
-    };
-  }
-
-  static restore(p, states, actions, objects) {
-    var m = {
-      object : objects,
-      state : states,
-      action : actions
-    };
-    return new ProvenanceEdge(p.type, m[p.source_type][p.source], m[p.target_type][p.target]);
   }
 }
 
@@ -460,11 +410,10 @@ function createFactory(ids: string[]) {
   });
 }
 
-export class ProvenanceGraph extends datatypes.DataTypeBase {
+export class ProvenanceGraph extends graph.GraphBase {
   actions : ActionNode[] = [];
   objects : ObjectNode<any>[] = [];
   states : StateNode[] = [];
-  links : ProvenanceEdge[] = [];
 
   act : StateNode = null;
   private lastAction: ActionNode = null;
@@ -473,6 +422,7 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
     super(desc);
     this.act = new StateNode('start');
     this.states.push(this.act);
+    this.addNode(this.act);
   }
 
   get dim() {
@@ -492,19 +442,20 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
     var inobjects = inputs.map((i) => this.findOrAddObject(i));
     this.actions.push(r);
     this.fire('add_action', r);
-    inobjects.forEach((i) => this.link(r, 'requires', i));
+    this.addNode(r);
+    inobjects.forEach((i) => this.addEdge(r, 'requires', i));
     return r;
   }
 
   createInverse(action: ActionNode, inverter: () => IAction) {
     var i = inverter.call(action);
     var c = this.createAction(i.meta, i.id, i.f, i.inputs, i.parameter);
-    this.link(action, 'inverse', c);
-    this.link(c, 'inverse', action);
+    this.addEdge(action, 'inverse', c);
+    this.addEdge(c, 'inverse', action);
 
     //create the loop in the states
-    this.link(action.resultsIn, 'next', c);
-    this.link(c, 'resultsIn', action.previous);
+    this.addEdge(action.resultsIn, 'next', c);
+    this.addEdge(c, 'resultsIn', action.previous);
 
     return c;
   }
@@ -522,7 +473,7 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
 
   addObject<T>(value: T, name: string = value ? value.toString(): 'Null', category = cat.data) {
     var r = this.addJustObject(value, name, category);
-    this.link(this.act, 'consistsOf', r);
+    this.addEdge(this.act, 'consistsOf', r);
     return r;
   }
 
@@ -538,6 +489,7 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
     var r = new ObjectNode<T>(value, name, category);
     this.objects.push(r);
     this.fire('add_object', r);
+    this.addObject(r);
     return r;
   }
 
@@ -568,21 +520,15 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
     }
   }
 
-  private link(s : ProvenanceNode, type: string, t : ProvenanceNode) {
-    var l = new ProvenanceEdge(type, s, t);
-    this.links.push(l);
-    this.fire('add_link', l, type, s, t);
-  }
-
   run(action: ActionNode) {
     var current = this.act,
       next : StateNode = action.resultsIn,
       newState = false;
     if (!next) { //create a new state
       newState = true;
-      this.link(current, 'next', action);
+      this.addEdge(current, 'next', action);
       next = this.makeState(action.meta.name + ' result');
-      this.link(action, 'resultsIn', next);
+      this.addEdge(action, 'resultsIn', next);
     }
     this.fire('execute', action);
     return action.execute(this).then((result) => {
@@ -595,11 +541,11 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
       if (firstTime) {
         //create an link outputs
         var created = this.resolve(result.created);
-        created.forEach((c) => this.link(action, 'creates', c));
+        created.forEach((c) => this.addEdge(action, 'creates', c));
         var removed = this.resolve(result.removed);
         removed.forEach((c) => {
           c.v = null; //free reference
-          this.link(action, 'removes', c);
+          this.addEdge(action, 'removes', c);
         });
 
         //update new state
@@ -610,7 +556,7 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
             var i = objs.indexOf(r);
             objs.splice(i, 1);
           });
-          objs.forEach((obj) => this.link(next, 'consistsOf', obj));
+          objs.forEach((obj) => this.addEdge(next, 'consistsOf', obj));
         }
       } else {
         //update creates reference values
@@ -689,6 +635,7 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
     var s= new StateNode(name);
     this.states.push(s);
     this.fire('add_state', s);
+    this.addObject(s);
     return s;
   }
 
@@ -696,19 +643,31 @@ export class ProvenanceGraph extends datatypes.DataTypeBase {
     var r : any = {
       root: this.desc.id
     };
-    r.states = this.states.map((s,i) => s.persist(i));
-    r.objects = this.objects.map((s,i) => s.persist(i));
-    r.actions = this.actions.map((s,i) => s.persist(i));
-    r.links = this.links.map((l) => l.persist());
+    r.nodes = this._nodes.map((s,i) => s.persist(i));
+    r.links = this._edges.map((l) => l.persist());
     return r;
   }
 
   restore(persisted: any) {
     createFactory(persisted.actions.map((action) => action.id)).then((factory) => {
-      this.states = persisted.states.map((s) => StateNode.restore(s));
-      this.objects = persisted.objects.map((s) => ObjectNode.restore(s));
-      this.actions = persisted.actions.map((s) => ActionNode.restore(s, factory));
-      this.links = persisted.links.map((l) => ProvenanceEdge.restore(l, this.states, this.actions, this.objects));
+      this.states = [];
+      this.objects = [];
+      this.actions = [];
+      this._nodes = persisted.nodes.map((s) => {
+        var r = null;
+        if (s.type === 'state') {
+          r = StateNode.restore(s);
+          this.states.push(r);
+        } else if (s.type === 'object') {
+          r = ObjectNode.restore(s);
+          this.objects.push(r);
+        } else if (s.type === 'action') {
+          r = ActionNode.restore(s, factory);
+          this.actions.push(r);
+        }
+        return r;
+      });
+      this._edges = persisted.links.map((l) => graph.GraphEdge.restore(l, this._nodes));
     });
     return this;
   }

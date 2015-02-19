@@ -55,7 +55,7 @@ export class ProvenanceVis extends vis.AVisInstance implements vis.IVisInstance 
     this.data.on('add_action', this.rebind);
     //this.data.on('add_object', this.rebind);
     this.data.on('add_state', this.rebind);
-    this.data.on('add_link', this.rebindLink);
+    this.data.on('add_edge', this.rebindLink);
     this.data.on('switch_action', this.trigger);
   }
 
@@ -65,7 +65,7 @@ export class ProvenanceVis extends vis.AVisInstance implements vis.IVisInstance 
     this.data.off('add_action', this.rebind);
     //this.data.off('add_object', this.rebind);
     this.data.off('add_state', this.rebind);
-    this.data.off('add_link', this.rebindLink);
+    this.data.off('add_edge', this.rebindLink);
     this.data.off('switch_action', this.trigger);
   }
 
