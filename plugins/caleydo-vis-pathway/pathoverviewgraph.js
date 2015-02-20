@@ -1,33 +1,5 @@
-define(['jquery', 'd3', './pathlisteners'], function ($, d3, pathListeners) {
+define(['jquery', 'd3', './listeners'], function ($, d3, listeners) {
     'use strict';
-
-    ////TODO: fetch amount of sets from server
-    //var totalNumSets = 290;
-    //
-    //
-    //var nodeStart = 90;
-    //var nodeWidth = 50;
-    //var nodeHeight = 20;
-    //var vSpacing = 5;
-    //var pathHeight = nodeHeight + 2 * vSpacing;
-    //var edgeSize = 50;
-    //var arrowWidth = 7;
-    //var setHeight = 10;
-    //var pathSpacing = 15;
-    //var pathListeners = {
-    //  listeners: [],
-    //
-    //  add: function (listener) {
-    //    this.listeners.push(listener);
-    //  },
-    //
-    //  notify: function (path) {
-    //    this.listeners.forEach(function (listener) {
-    //      listener(path);
-    //    });
-    //  }
-    //
-    //};
 
     function renderGraph(svg, graph) {
 
@@ -143,8 +115,7 @@ define(['jquery', 'd3', './pathlisteners'], function ($, d3, pathListeners) {
 
       force.on("tick", tick);
 
-
-      pathListeners.add(function (path) {
+      listeners.add(function (path) {
 
         var nodeStep = (w - 2 * (sideSpacing + nodeWidth / 2)) / (path.nodes.length - 1);
         var posX = sideSpacing + nodeWidth / 2;
@@ -159,6 +130,7 @@ define(['jquery', 'd3', './pathlisteners'], function ($, d3, pathListeners) {
         //for (var i = 0; i <= 100; i++) {
         //
         //  var scale = i / 100;
+
 
         path.nodes.forEach(function (fixedNode) {
           graph.nodes.forEach(function (node) {
@@ -203,7 +175,8 @@ define(['jquery', 'd3', './pathlisteners'], function ($, d3, pathListeners) {
         //for(var i = 0; i < 200; i++) tick();
         //force.stop();
 
-      });
+      }, listeners.updateType.PATH_SELECTION);
+
 
     }
 
@@ -370,4 +343,5 @@ define(['jquery', 'd3', './pathlisteners'], function ($, d3, pathListeners) {
 
     }
   }
-);
+)
+;

@@ -1,8 +1,8 @@
 /**
  * Created by Christian on 11.12.2014.
  */
-require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugin', '../caleydo-window/main', '../caleydo/d3util', './pathlisteners', './pathlist', './pathoverviewgraph'],
-  function ($, d3, C, data, plugins, window, utils, pathListeners, pathList, overviewGraph) {
+require(['jquery', 'd3', './listeners', './pathlist', './setlist', './pathoverviewgraph'],
+  function ($, d3, listeners, pathList, setList, overviewGraph) {
     'use strict';
 
     //var jsonPaths = require('./testpaths1.json');
@@ -13,10 +13,9 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
     $(document).ready(function () {
 
 
-
-
         overviewGraph.init();
         pathList.init();
+        setList.init();
 
 
         //  $.ajax({
@@ -168,22 +167,69 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
             paths[i].id = i;
           }
 
-          pathListeners.listeners = [];
-          //allPaths = paths;
-
-          //allPaths.sort(sortingManager.currentComparator);
+          listeners.clear(listeners.updateType.PATH_SELECTION);
+          listeners.clear(listeners.updateType.SET_INFO_UPDATE);
 
 
           if (paths.length > 0) {
+            var allSets = [];
+            var setDict = {};
+
+            paths.forEach(function (path) {
+              addPathSets(path);
+
+              path.sets.forEach(function (s) {
+                var setExists = setDict[s.id];
+                if (!setExists) {
+                  allSets.push(s.id);
+                  setDict[s.id] = true;
+                }
+              });
+
+            });
+
+
+
 
             pathList.render(paths);
-
-            //var pathGraph = getGraphFromPaths(paths);
+            setList.render(paths);
 
             overviewGraph.render(paths);
 
-            //renderGraph(svg2, pathGraph, firstPath);
+            $.ajax({
+              type: 'POST',
+              url: '/api/pathway/setinfo',
+              accepts: 'application/json',
+              contentType: 'application/json',
+              data: JSON.stringify(allSets),
+              success: function (response) {
+                var setInfos = JSON.parse(response);
+                listeners.notify(setInfos, listeners.updateType.SET_INFO_UPDATE);
+              }
+            });
           }
+        }
+
+        function addPathSets(path) {
+          var setDict = {};
+          var setList = [];
+
+          for (var i = 0; i < path.edges.length; i++) {
+            var edge = path.edges[i];
+            edge.properties["pathways"].forEach(function (pathwayId) {
+
+              var mySet = setDict[pathwayId];
+              if (typeof mySet == "undefined") {
+                mySet = {id: pathwayId, relIndices: [i]};
+                setDict[pathwayId] = mySet;
+                setList.push(mySet);
+              } else {
+                mySet.relIndices.push(i);
+              }
+            });
+          }
+
+          path.sets = setList;
         }
 
 
@@ -228,8 +274,6 @@ require(['jquery', 'd3', '../caleydo/main', '../caleydo/data', '../caleydo/plugi
     //  renderPaths(svg, paths);
     //  //$('<h1>' + resp + '</h1>').appendTo('body');
     //});
-
-
 
 
   }

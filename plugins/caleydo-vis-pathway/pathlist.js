@@ -1,5 +1,5 @@
-define(['jquery', 'd3', './pathlisteners'],
-  function ($, d3, pathListeners) {
+define(['jquery', 'd3', './listeners'],
+  function ($, d3, listeners) {
     'use strict';
 
     //var jsonPaths = require('./testpaths1.json');
@@ -258,70 +258,11 @@ define(['jquery', 'd3', './pathlisteners'],
 
     var allPaths = [];
 
-    function displayPaths(svg, paths) {
 
-      var totalHeight = 0;
+    function updateSets(setInfo) {
 
-      var allSets = [];
-      var setDict = {};
+      var svg = d3.select("#pathlist svg");
 
-      paths.forEach(function (path) {
-        addPathSets(path);
-        totalHeight += pathHeight + pathSpacing;
-
-        path.sets.forEach(function (s) {
-          var setExists = setDict[s.id];
-          totalHeight += setHeight;
-          if (!setExists) {
-            allSets.push(s.id);
-            setDict[s.id] = true;
-          }
-        });
-
-      });
-
-      renderPaths(svg, paths);
-
-
-      //paths.forEach(function (path) {
-      //  var p = svg.append("g");
-      //  p.attr("class", "path")
-      //    .on("click", function () {
-      //      pathListeners.notify(path);
-      //    });
-      //
-      //  addPathSets(path);
-      //  renderPath(p, path, posX, posY);
-      //  posY += 50 + path.sets.length * 10;
-      //
-      //  path.sets.forEach(function (s) {
-      //    var setExists = setDict[s.id];
-      //    if (!setExists) {
-      //      allSets.push(s.id);
-      //      setDict[s.id] = true;
-      //    }
-      //  });
-      //});
-
-      svg.attr("height", totalHeight);
-      svg.select("#SetLabelClipPath rect")
-        .attr("height", totalHeight);
-
-      $.ajax({
-        type: 'POST',
-        url: '/api/pathway/setinfo',
-        accepts: 'application/json',
-        contentType: 'application/json',
-        data: JSON.stringify(allSets),
-        success: function (response) {
-
-          var setInfos = JSON.parse(response);
-          updateSets(svg, setInfos);
-        }
-      });
-    }
-
-    function updateSets(svg, setInfo) {
       svg.selectAll("g.pathContainer g.setGroup g.set text")
         .text(function (d) {
           var info = setInfo["path:" + d[0].id];
@@ -354,212 +295,11 @@ define(['jquery', 'd3', './pathlisteners'],
       return text;
     }
 
-    function addPathSets(path) {
-      var setDict = {};
-      var setList = [];
-
-      for (var i = 0; i < path.edges.length; i++) {
-        var edge = path.edges[i];
-        edge.properties["pathways"].forEach(function (pathwayId) {
-
-          var mySet = setDict[pathwayId];
-          if (typeof mySet == "undefined") {
-            mySet = {id: pathwayId, relIndices: [i]};
-            setDict[pathwayId] = mySet;
-            setList.push(mySet);
-          } else {
-            mySet.relIndices.push(i);
-          }
-        });
-      }
-
-      path.sets = setList;
-    }
-
 
     function getPathKey(d) {
       return d.id;
     }
 
-    function renderPaths(svg, paths) {
-
-
-      svg.selectAll("g.pathContainer")
-        .remove();
-
-      var pathContainer = svg.selectAll("g.pathContainer")
-        .data(paths, getPathKey)
-        .enter()
-        .append("g");
-
-      pathContainer.attr("class", "pathContainer")
-        .attr("transform", function (d, i) {
-          var posY = 0;
-          for (var index = 0; index < i; index++) {
-            posY += pathHeight + paths[index].sets.length * setHeight;
-          }
-          posY += i * pathSpacing;
-
-          return "translate(0," + posY + ")";
-        });
-
-      var p = pathContainer.append("g")
-        .attr("class", "path")
-        .on("click", function (d) {
-          pathListeners.notify(d);
-        });
-
-      p.append("rect")
-        .attr("class", "filler")
-        .attr("x", nodeStart)
-        .attr("y", 0)
-        .attr("width", "100%")
-        .attr("height", pathHeight)
-
-      var nodeGroup = p.append("g")
-        .attr("class", "nodeGroup");
-
-      var node = nodeGroup.selectAll("g.node")
-        .data(function (path) {
-          return path.nodes;
-        })
-        .enter()
-        .append("g")
-        .attr("class", "node")
-        .on("dblclick", function (d) {
-          sortingManager.addOrReplace(sortingStrategies.getNodePresenceStrategy([d.id]));
-          sortingManager.sortPaths(svg);
-
-          //sortingManager.sortPaths(svg, [sortingStrategies.getNodePresenceStrategy([d.id]),
-          //  sortingManager.currentStrategyChain]);
-        });
-
-      node.append("rect")
-        .attr("x", function (d, i) {
-          return nodeStart + (i * nodeWidth) + (i * edgeSize);
-        })
-        .attr("y", vSpacing)
-        .attr("width", nodeWidth)
-        .attr("height", nodeHeight);
-      //.attr("fill", "rgb(200,200,200)")
-      //.attr("stroke", "rgb(30,30,30)");
-
-      node.append("text")
-        .text(function (d) {
-          var text = d.properties["name"];
-          return getClampedText(text, 7);
-        })
-        .attr("x", function (d, i) {
-          return nodeStart + (i * nodeWidth) + (i * edgeSize) + nodeWidth / 2;
-        })
-        .attr("y", vSpacing + nodeHeight - 5)
-        .append("title")
-        .text(function (d) {
-          return d.properties["name"];
-        });
-      ;
-
-      var edgeGroup = p.append("g")
-        .attr("class", "edgeGroup");
-
-      var edge = edgeGroup.selectAll("g.edge")
-        .data(function (path, i) {
-          return path.edges.map(function (edge) {
-            return [edge, i];
-          });
-        })
-        .enter()
-        .append("g")
-        .attr("class", "edge");
-
-      edge.append("line")
-        .attr("x1", function (d, i) {
-          if (isSourceNodeLeft(paths[d[1]].nodes, d[0], i)) {
-            return ( nodeStart + (i + 1) * nodeWidth) + (i * edgeSize);
-          } else {
-            return ( nodeStart + (i + 1) * nodeWidth) + ((i + 1) * edgeSize);
-          }
-        })
-        .attr("y1", vSpacing + nodeHeight / 2)
-        .attr("x2", function (d, i) {
-          if (isSourceNodeLeft(paths[d[1]].nodes, d[0], i)) {
-            return ( nodeStart + (i + 1) * nodeWidth) + ((i + 1) * edgeSize) - arrowWidth;
-          } else {
-            return ( nodeStart + (i + 1) * nodeWidth) + (i * edgeSize) + arrowWidth;
-          }
-        })
-        .attr("y2", vSpacing + nodeHeight / 2)
-        .attr("marker-end", "url(#arrowRight)");
-
-      var setGroup = pathContainer.append("g")
-        .attr("class", "setGroup");
-
-      var set = setGroup.selectAll("g.set")
-        .data(function (path, i) {
-          return path.sets.map(function (myset) {
-            return [myset, i];
-          });
-        })
-        .enter()
-        .append("g")
-        .attr("class", "set")
-        .on("dblclick", function (d) {
-          sortingManager.addOrReplace(sortingStrategies.getSetPresenceStrategy([d[0].id]));
-          sortingManager.sortPaths(svg);
-        });
-
-      set.append("rect")
-        .attr("class", "filler")
-        .attr("x", 0)
-        .attr("y", function (d, i) {
-          return 2 * vSpacing + nodeHeight + i * setHeight;
-        })
-        .attr("width", "100%")
-        .attr("height", setHeight)
-
-      set.append("text")
-        .text(function (d) {
-          //var text = d[0].id;
-          //return getClampedText(text, 15);
-          return d[0].id;
-        })
-        .attr("x", 0)
-        .attr("y", function (d, i) {
-          return 2 * vSpacing + nodeHeight + (i + 1) * setHeight;
-        })
-        .attr("clip-path", "url(#SetLabelClipPath)");
-
-
-      set.selectAll("line")
-        .data(function (d, i) {
-          var numPrevSets = 0;
-          for (var pathIndex = 0; pathIndex < d[1]; pathIndex++) {
-            numPrevSets += paths[pathIndex].sets.length;
-          }
-          return d[0].relIndices.map(function (item) {
-            return [item, i - numPrevSets];
-          });
-        })
-        .enter()
-        .append("line")
-        .attr("x1", function (d) {
-          return nodeStart + (d[0] * nodeWidth) + (d[0] * edgeSize) + nodeWidth / 2;
-        })
-        .attr("y1", function (d) {
-          return 2 * vSpacing + nodeHeight + (d[1] + 1) * setHeight - 3;
-        })
-        .attr("x2", function (d) {
-          return nodeStart + ((d[0] + 1) * nodeWidth) + ((d[0] + 1) * edgeSize) + nodeWidth / 2;
-        })
-        .attr("y2", function (d) {
-          return 2 * vSpacing + nodeHeight + (d[1] + 1) * setHeight - 3;
-        });
-
-      set.append("title")
-        .text(function (d) {
-          return d[0].id;
-        });
-    }
 
     function isSourceNodeLeft(nodes, edge, edgeIndex) {
       return nodes[edgeIndex].id === edge.sourceNodeId;
@@ -614,7 +354,6 @@ define(['jquery', 'd3', './pathlisteners'],
         });
 
 
-
       },
 
 
@@ -626,8 +365,231 @@ define(['jquery', 'd3', './pathlisteners'],
 
         if (paths.length > 0) {
           var svg = d3.select("#pathlist svg");
-          displayPaths(svg, paths);
+          this.displayPaths(svg, paths);
         }
+      },
+
+      displayPaths: function (svg, paths) {
+
+
+        svg.selectAll("g.pathContainer")
+          .remove();
+
+        this.renderPaths(svg, paths, 0, 0);
+
+
+        //paths.forEach(function (path) {
+        //  var p = svg.append("g");
+        //  p.attr("class", "path")
+        //    .on("click", function () {
+        //      pathListeners.notify(path);
+        //    });
+        //
+        //  addPathSets(path);
+        //  renderPath(p, path, posX, posY);
+        //  posY += 50 + path.sets.length * 10;
+        //
+        //  path.sets.forEach(function (s) {
+        //    var setExists = setDict[s.id];
+        //    if (!setExists) {
+        //      allSets.push(s.id);
+        //      setDict[s.id] = true;
+        //    }
+        //  });
+        //});
+
+        var totalHeight = this.getTotalHeight(paths);
+
+        svg.attr("height", totalHeight);
+        svg.select("#SetLabelClipPath rect")
+          .attr("height", totalHeight);
+
+        listeners.add(updateSets, listeners.updateType.SET_INFO_UPDATE);
+      },
+
+      getTotalHeight: function(paths) {
+        var totalHeight = 0;
+
+        paths.forEach(function (path) {
+          totalHeight += pathHeight + pathSpacing + path.sets.length * setHeight;
+        });
+        return totalHeight;
+      },
+
+      renderPaths: function (parent, paths, baseTranslateX, baseTranslateY) {
+
+        var pathContainer = parent.selectAll("g.pathContainer")
+          .data(paths, getPathKey)
+          .enter()
+          .append("g");
+
+        pathContainer.attr("class", "pathContainer")
+          .attr("transform", function (d, i) {
+            var posY = baseTranslateY;
+            for (var index = 0; index < i; index++) {
+              posY += pathHeight + paths[index].sets.length * setHeight;
+            }
+            posY += i * pathSpacing;
+
+            return "translate(" + baseTranslateX + "," + posY + ")";
+          });
+
+        var p = pathContainer.append("g")
+          .attr("class", "path")
+          .on("click", function (d) {
+            listeners.notify(d, listeners.updateType.PATH_SELECTION);
+          });
+
+        p.append("rect")
+          .attr("class", "filler")
+          .attr("x", nodeStart)
+          .attr("y", 0)
+          .attr("width", "100%")
+          .attr("height", pathHeight)
+
+        var nodeGroup = p.append("g")
+          .attr("class", "nodeGroup");
+
+        var node = nodeGroup.selectAll("g.node")
+          .data(function (path) {
+            return path.nodes;
+          })
+          .enter()
+          .append("g")
+          .attr("class", "node")
+          .on("dblclick", function (d) {
+            sortingManager.addOrReplace(sortingStrategies.getNodePresenceStrategy([d.id]));
+            sortingManager.sortPaths(parent);
+
+            //sortingManager.sortPaths(svg, [sortingStrategies.getNodePresenceStrategy([d.id]),
+            //  sortingManager.currentStrategyChain]);
+          });
+
+        node.append("rect")
+          .attr("x", function (d, i) {
+            return nodeStart + (i * nodeWidth) + (i * edgeSize);
+          })
+          .attr("y", vSpacing)
+          .attr("width", nodeWidth)
+          .attr("height", nodeHeight);
+        //.attr("fill", "rgb(200,200,200)")
+        //.attr("stroke", "rgb(30,30,30)");
+
+        node.append("text")
+          .text(function (d) {
+            var text = d.properties["name"];
+            return getClampedText(text, 7);
+          })
+          .attr("x", function (d, i) {
+            return nodeStart + (i * nodeWidth) + (i * edgeSize) + nodeWidth / 2;
+          })
+          .attr("y", vSpacing + nodeHeight - 5)
+          .append("title")
+          .text(function (d) {
+            return d.properties["name"];
+          });
+        ;
+
+        var edgeGroup = p.append("g")
+          .attr("class", "edgeGroup");
+
+        var edge = edgeGroup.selectAll("g.edge")
+          .data(function (path, i) {
+            return path.edges.map(function (edge) {
+              return [edge, i];
+            });
+          })
+          .enter()
+          .append("g")
+          .attr("class", "edge");
+
+        edge.append("line")
+          .attr("x1", function (d, i) {
+            if (isSourceNodeLeft(paths[d[1]].nodes, d[0], i)) {
+              return ( nodeStart + (i + 1) * nodeWidth) + (i * edgeSize);
+            } else {
+              return ( nodeStart + (i + 1) * nodeWidth) + ((i + 1) * edgeSize);
+            }
+          })
+          .attr("y1", vSpacing + nodeHeight / 2)
+          .attr("x2", function (d, i) {
+            if (isSourceNodeLeft(paths[d[1]].nodes, d[0], i)) {
+              return ( nodeStart + (i + 1) * nodeWidth) + ((i + 1) * edgeSize) - arrowWidth;
+            } else {
+              return ( nodeStart + (i + 1) * nodeWidth) + (i * edgeSize) + arrowWidth;
+            }
+          })
+          .attr("y2", vSpacing + nodeHeight / 2)
+          .attr("marker-end", "url(#arrowRight)");
+
+        var setGroup = pathContainer.append("g")
+          .attr("class", "setGroup");
+
+        var set = setGroup.selectAll("g.set")
+          .data(function (path, i) {
+            return path.sets.map(function (myset) {
+              return [myset, i];
+            });
+          })
+          .enter()
+          .append("g")
+          .attr("class", "set")
+          .on("dblclick", function (d) {
+            sortingManager.addOrReplace(sortingStrategies.getSetPresenceStrategy([d[0].id]));
+            sortingManager.sortPaths(parent);
+          });
+
+        set.append("rect")
+          .attr("class", "filler")
+          .attr("x", 0)
+          .attr("y", function (d, i) {
+            return 2 * vSpacing + nodeHeight + i * setHeight;
+          })
+          .attr("width", "100%")
+          .attr("height", setHeight)
+
+        set.append("text")
+          .text(function (d) {
+            //var text = d[0].id;
+            //return getClampedText(text, 15);
+            return d[0].id;
+          })
+          .attr("x", 0)
+          .attr("y", function (d, i) {
+            return 2 * vSpacing + nodeHeight + (i + 1) * setHeight;
+          })
+          .attr("clip-path", "url(#SetLabelClipPath)");
+
+
+        set.selectAll("line")
+          .data(function (d, i) {
+            var numPrevSets = 0;
+            for (var pathIndex = 0; pathIndex < d[1]; pathIndex++) {
+              numPrevSets += paths[pathIndex].sets.length;
+            }
+            return d[0].relIndices.map(function (item) {
+              return [item, i - numPrevSets];
+            });
+          })
+          .enter()
+          .append("line")
+          .attr("x1", function (d) {
+            return nodeStart + (d[0] * nodeWidth) + (d[0] * edgeSize) + nodeWidth / 2;
+          })
+          .attr("y1", function (d) {
+            return 2 * vSpacing + nodeHeight + (d[1] + 1) * setHeight - 3;
+          })
+          .attr("x2", function (d) {
+            return nodeStart + ((d[0] + 1) * nodeWidth) + ((d[0] + 1) * edgeSize) + nodeWidth / 2;
+          })
+          .attr("y2", function (d) {
+            return 2 * vSpacing + nodeHeight + (d[1] + 1) * setHeight - 3;
+          });
+
+        set.append("title")
+          .text(function (d) {
+            return d[0].id;
+          });
       }
 
     }
