@@ -251,7 +251,7 @@ define(['jquery', 'd3', './listeners'],
               posY += pathHeight + allPaths[index].sets.length * setHeight + pathSpacing;
             }
             return "translate(0," + posY + ")";
-          })
+          });
       }
     }
 
@@ -375,7 +375,7 @@ define(['jquery', 'd3', './listeners'],
         svg.selectAll("g.pathContainer")
           .remove();
 
-        this.renderPaths(svg, paths, 0, 0);
+        this.renderPaths(svg, paths, 0, 0, true);
 
 
         //paths.forEach(function (path) {
@@ -416,7 +416,8 @@ define(['jquery', 'd3', './listeners'],
         return totalHeight;
       },
 
-      renderPaths: function (parent, paths, baseTranslateX, baseTranslateY) {
+      renderPaths: function (parent, paths, baseTranslateX, baseTranslateY, visible) {
+
 
         var pathContainer = parent.selectAll("g.pathContainer")
           .data(paths, getPathKey)
@@ -432,7 +433,8 @@ define(['jquery', 'd3', './listeners'],
             posY += i * pathSpacing;
 
             return "translate(" + baseTranslateX + "," + posY + ")";
-          });
+          })
+            .attr("visibility", visible ? "visible" : "hidden");
 
         var p = pathContainer.append("g")
           .attr("class", "path")

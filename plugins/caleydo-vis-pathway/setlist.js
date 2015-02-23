@@ -9,7 +9,10 @@ define(['jquery', 'd3', './listeners', './pathlist'],
     var setNodeRadiusX = 40;
     var setNodeRadiusY = 15;
     var setComboHeight = 2 * setNodeRadiusY + 2 * vSpacing;
+    var collapseButtonSize = 16;
+    var collapseButtonSpacing = 5;
 
+    var allSetCombinations = [];
 
     function getSetCombinations(paths) {
 
@@ -78,6 +81,7 @@ define(['jquery', 'd3', './listeners', './pathlist'],
         }
         setCombinations.push({
           id: currentSetId,
+          collapsed: true,
           setIds: combination,
           paths: [path]
         });
@@ -150,6 +154,52 @@ define(['jquery', 'd3', './listeners', './pathlist'],
       return text;
     }
 
+    function updateSetList() {
+      var svg = d3.select("#setlist svg");
+
+      var setComboContainer = svg.selectAll("g.setComboContainer")
+        .transition()
+        .each("start", function (d) {
+          if (d.collapsed) {
+            d3.select(this).selectAll("g.pathContainer")
+              .attr("visibility", d.collapsed ? "hidden" : "visible");
+          }
+        })
+        .attr("class", "setComboContainer")
+        .attr("transform", function (d, i) {
+
+          var posY = 0;
+
+          for (var index = 0; index < i; index++) {
+
+            posY += setContainerSpacing + setComboHeight;
+
+            if (!allSetCombinations[index].collapsed) {
+              var pathsHeight = pathList.getTotalHeight(allSetCombinations[index].paths);
+              posY += pathsHeight;
+            }
+          }
+
+          return "translate(0," + posY + ")";
+        })
+        .each("end", function (d) {
+          if (!d.collapsed) {
+            d3.select(this).selectAll("g.pathContainer")
+              .attr("visibility", d.collapsed ? "hidden" : "visible");
+          }
+        });
+
+
+      //setComboContainer.selectAll("g.pathContainer").
+      //  attr("transform", function (d, i) {
+      //    var posY = 0;
+      //    for (var index = 0; index < i; index++) {
+      //      posY += pathHeight + allPaths[index].sets.length * setHeight + pathSpacing;
+      //    }
+      //    return "translate(0," + posY + ")";
+      //  });
+    }
+
 
     return {
       init: function () {
@@ -198,7 +248,7 @@ define(['jquery', 'd3', './listeners', './pathlist'],
 
 
       render: function (paths) {
-        var setCombinations = getSetCombinations(paths);
+        allSetCombinations = getSetCombinations(paths);
         var svg = d3.select("#setlist svg");
 
         listeners.add(updateSets, listeners.updateType.SET_INFO_UPDATE);
@@ -207,7 +257,7 @@ define(['jquery', 'd3', './listeners', './pathlist'],
           .remove();
 
         var setComboContainer = svg.selectAll("g.setComboContainer")
-          .data(setCombinations, getKey)
+          .data(allSetCombinations, getKey)
           .enter()
           .append("g");
 
@@ -217,8 +267,13 @@ define(['jquery', 'd3', './listeners', './pathlist'],
             var posY = 0;
 
             for (var index = 0; index < i; index++) {
-              var pathsHeight = pathList.getTotalHeight(setCombinations[index].paths);
-              posY += pathsHeight + setContainerSpacing + setComboHeight;
+
+              posY += setContainerSpacing + setComboHeight;
+
+              if (!allSetCombinations[index].collapsed) {
+                var pathsHeight = pathList.getTotalHeight(allSetCombinations[index].paths);
+                posY += pathsHeight;
+              }
             }
 
             return "translate(0," + posY + ")";
@@ -235,7 +290,24 @@ define(['jquery', 'd3', './listeners', './pathlist'],
           .attr("x", 0)
           .attr("y", 0)
           .attr("width", "100%")
-          .attr("height", setComboHeight)
+          .attr("height", setComboHeight);
+
+        setCombination.append("rect")
+          .attr("x", collapseButtonSpacing)
+          .attr("y", (setComboHeight - collapseButtonSize) / 2)
+          .attr("width", collapseButtonSize)
+          .attr("height", collapseButtonSize)
+          .attr("fill", function (d) {
+            return d.collapsed ? "rgb(255,0,0)" : "rgb(0,0,255)"
+          })
+          .on("click", function (d) {
+            d.collapsed = !d.collapsed;
+            d3.select(this).attr("fill", function (d) {
+              return d.collapsed ? "rgb(255,0,0)" : "rgb(0,0,255)"
+            });
+
+            updateSetList();
+          });
 
         var setNodeGroup = setCombination.append("g")
           .attr("class", "setNodeGroup");
@@ -257,7 +329,7 @@ define(['jquery', 'd3', './listeners', './pathlist'],
 
         node.append("ellipse")
           .attr("cx", function (d, i) {
-            return setNodeRadiusX + (i * ((2 * setNodeRadiusX) + setNodeSpacing));
+            return 2 * collapseButtonSpacing + collapseButtonSize + setNodeRadiusX + (i * ((2 * setNodeRadiusX) + setNodeSpacing));
           })
           .attr("cy", vSpacing + setNodeRadiusY)
           .attr("rx", setNodeRadiusX)
@@ -271,7 +343,7 @@ define(['jquery', 'd3', './listeners', './pathlist'],
             return text;
           })
           .attr("x", function (d, i) {
-            return (i * ((2 * setNodeRadiusX) + setNodeSpacing)) + setNodeRadiusX;
+            return 2 * collapseButtonSpacing + collapseButtonSize + (i * ((2 * setNodeRadiusX) + setNodeSpacing)) + setNodeRadiusX;
           })
           .attr("y", vSpacing + setNodeRadiusY + 4);
         node.append("title")
@@ -293,13 +365,13 @@ define(['jquery', 'd3', './listeners', './pathlist'],
           //  posY += pathsHeight + setContainerSpacing + setComboHeight;
           //}
 
-          pathList.renderPaths(d3.select(this), d.paths, 0, setComboHeight);
+          pathList.renderPaths(d3.select(this), d.paths, 0, setComboHeight, !d.collapsed);
         });
 
         var posY = 0;
 
-        for (var index = 0; index < setCombinations.length; index++) {
-          var pathsHeight = pathList.getTotalHeight(setCombinations[index].paths);
+        for (var index = 0; index < allSetCombinations.length; index++) {
+          var pathsHeight = pathList.getTotalHeight(allSetCombinations[index].paths);
           posY += pathsHeight + setContainerSpacing + setComboHeight;
         }
 
