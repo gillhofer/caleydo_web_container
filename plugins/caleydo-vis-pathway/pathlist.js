@@ -1,5 +1,5 @@
-define(['jquery', 'd3', './listeners'],
-  function ($, d3, listeners) {
+define(['jquery', 'd3', './listeners', './sorting'],
+  function ($, d3, listeners, sorting) {
     'use strict';
 
     //var jsonPaths = require('./testpaths1.json');
@@ -18,21 +18,7 @@ define(['jquery', 'd3', './listeners'],
     var setHeight = 10;
     var pathSpacing = 15;
 
-    function SortingStrategy(type) {
-      this.type = type;
-    }
-
-    SortingStrategy.prototype = {
-      STRATEGY_TYPES: {
-        ID: 0,
-        WEIGHT: 1,
-        PRESENCE: 2,
-        UNKNOWN: 3
-      },
-      compare: function (a, b) {
-        return 0;
-      }
-    }
+    var SortingStrategy = sorting.SortingStrategy;
 
     function PathLengthSortingStrategy() {
       SortingStrategy.call(this, SortingStrategy.prototype.STRATEGY_TYPES.WEIGHT);
@@ -47,17 +33,7 @@ define(['jquery', 'd3', './listeners'],
     }
 
 
-    function PathIdSortingStrategy() {
-      SortingStrategy.call(this, SortingStrategy.prototype.STRATEGY_TYPES.ID);
-    }
 
-    PathIdSortingStrategy.prototype = Object.create(SortingStrategy.prototype);
-    PathIdSortingStrategy.prototype.compare = function (a, b) {
-      if (sortingManager.ascending) {
-        return d3.ascending(a.id, b.id);
-      }
-      return d3.descending(a.id, b.id);
-    }
 
 
     function SetCountEdgeWeightSortingStrategy() {
@@ -170,11 +146,12 @@ define(['jquery', 'd3', './listeners'],
 
     SetPresenceSortingStrategy.prototype = Object.create(SortingStrategy.prototype);
 
+    var sortingManager = new sorting.SortingManager(true);
 
     var sortingStrategies = {
       pathLength: new PathLengthSortingStrategy(),
 
-      pathId: new PathIdSortingStrategy(),
+      pathId: new sorting.IdSortingStrategy(sortingManager),
 
       setCountEdgeWeight: new SetCountEdgeWeightSortingStrategy(),
 
@@ -200,62 +177,20 @@ define(['jquery', 'd3', './listeners'],
       }
     }
 
-
-    var sortingManager = {
-
-      ascending: true,
-
-      currentStrategyChain: [sortingStrategies.setCountEdgeWeight, sortingStrategies.pathId],
-      currentComparator: sortingStrategies.getChainComparator([sortingStrategies.setCountEdgeWeight, sortingStrategies.pathId]),
-
-      clearStrategy: function () {
-        this.currentStrategyChain = [];
-        this.currentComparator = undefined;
-      },
-
-      setStrategyChain: function (chain) {
-        this.currentStrategyChain = chain;
-        this.currentComparator = sortingStrategies.getChainComparator(this.currentStrategyChain)
-      },
-
-      // Replaces the first occurrence of an existing strategy of the same strategy type in the chain, or adds it to the
-      // front, if no such strategy exists.
-      addOrReplace: function (strategy) {
-
-        var replaced = false;
-        for (var i = 0; i < this.currentStrategyChain.length; i++) {
-          var currentStrategy = this.currentStrategyChain[i];
-          if (currentStrategy.type == strategy.type) {
-            this.currentStrategyChain[i] = strategy;
-            replaced = true;
-          }
-        }
-        if (!replaced) {
-          this.currentStrategyChain.unshift(strategy);
-        }
-        this.setStrategyChain(this.currentStrategyChain);
-      },
-
-      sortPaths: function (svg, strategyChain) {
-        this.setStrategyChain(strategyChain || this.currentStrategyChain);
-
-        allPaths.sort(this.currentComparator);
-
-        svg.selectAll("g.pathContainer")
-          .sort(this.currentComparator)
-          .transition()
-          .attr("transform", function (d, i) {
-            var posY = 0;
-            for (var index = 0; index < i; index++) {
-              posY += pathHeight + allPaths[index].sets.length * setHeight + pathSpacing;
-            }
-            return "translate(0," + posY + ")";
-          });
-      }
-    }
+    sortingManager.setStrategyChain([sortingStrategies.setCountEdgeWeight, sortingStrategies.pathId]);
 
 
     var allPaths = [];
+
+    function getTransformFunction(paths) {
+      return function (d, i) {
+        var posY = 0;
+        for (var index = 0; index < i; index++) {
+          posY += pathHeight + paths[index].sets.length * setHeight + pathSpacing;
+        }
+        return "translate(0," + posY + ")";
+      };
+    }
 
 
     function updateSets(setInfo) {
@@ -337,7 +272,7 @@ define(['jquery', 'd3', './listeners'],
         $(sortButton).on("click", function () {
           var that = this;
           sortingManager.ascending = !this.checked;
-          sortingManager.sortPaths(svg);
+          sortingManager.sort(allPaths, svg, "g.pathContainer", getTransformFunction(allPaths));
         });
 
         var selectSortingStrategy = $('<select>').prependTo('div.outer')[0];
@@ -345,10 +280,10 @@ define(['jquery', 'd3', './listeners'],
         $(selectSortingStrategy).append($("<option value='1'>Path Length</option>"));
         $(selectSortingStrategy).on("change", function () {
           if (this.value == '0') {
-            sortingManager.sortPaths(svg, [sortingStrategies.setCountEdgeWeight, sortingStrategies.pathId]);
+            sortingManager.sort(allPaths, svg, "g.pathContainer", getTransformFunction(allPaths), [sortingStrategies.setCountEdgeWeight, sortingStrategies.pathId]);
           }
           if (this.value == '1') {
-            sortingManager.sortPaths(svg, [sortingStrategies.pathLength, sortingStrategies.pathId]);
+            sortingManager.sort(allPaths, svg, "g.pathContainer", getTransformFunction(allPaths), [sortingStrategies.pathLength, sortingStrategies.pathId]);
           }
         });
 
@@ -360,10 +295,12 @@ define(['jquery', 'd3', './listeners'],
 
         allPaths = paths;
 
+
         allPaths.sort(sortingManager.currentComparator);
 
         if (paths.length > 0) {
           var svg = d3.select("#pathlist svg");
+          sortingManager.sort(paths, svg, "g.pathContainer", getTransformFunction(paths));
           this.displayPaths(svg, paths);
         }
       },
@@ -406,7 +343,7 @@ define(['jquery', 'd3', './listeners'],
         listeners.add(updateSets, listeners.updateType.SET_INFO_UPDATE);
       },
 
-      getTotalHeight: function(paths) {
+      getTotalHeight: function (paths) {
         var totalHeight = 0;
 
         paths.forEach(function (path) {
@@ -433,7 +370,7 @@ define(['jquery', 'd3', './listeners'],
 
             return "translate(" + baseTranslateX + "," + posY + ")";
           })
-            .attr("visibility", visible ? "visible" : "hidden");
+          .attr("visibility", visible ? "visible" : "hidden");
 
         var p = pathContainer.append("g")
           .attr("class", "path")
@@ -460,7 +397,8 @@ define(['jquery', 'd3', './listeners'],
           .attr("class", "node")
           .on("dblclick", function (d) {
             sortingManager.addOrReplace(sortingStrategies.getNodePresenceStrategy([d.id]));
-            sortingManager.sortPaths(parent);
+            sortingManager.sort(paths, parent, "g.pathContainer", getTransformFunction(paths));
+
 
             //sortingManager.sortPaths(svg, [sortingStrategies.getNodePresenceStrategy([d.id]),
             //  sortingManager.currentStrategyChain]);
@@ -537,7 +475,7 @@ define(['jquery', 'd3', './listeners'],
           .attr("class", "set")
           .on("dblclick", function (d) {
             sortingManager.addOrReplace(sortingStrategies.getSetPresenceStrategy([d[0].id]));
-            sortingManager.sortPaths(parent);
+            sortingManager.sort(paths, parent, "g.pathContainer", getTransformFunction(paths));
           });
 
         set.append("rect")

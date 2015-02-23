@@ -1,5 +1,5 @@
-define(['jquery', 'd3', './listeners', './pathlist'],
-  function ($, d3, listeners, pathList) {
+define(['jquery', 'd3', './listeners', './pathlist', './sorting'],
+  function ($, d3, listeners, pathList, sorting) {
     'use strict';
 
 
@@ -13,6 +13,27 @@ define(['jquery', 'd3', './listeners', './pathlist'],
     var collapseButtonSpacing = 10;
 
     var allSetCombinations = [];
+
+    function NumPathsSortingStrategy() {
+      sorting.SortingStrategy.call(this, sorting.SortingStrategy.prototype.STRATEGY_TYPES.WEIGHT);
+    }
+
+    NumPathsSortingStrategy.prototype = Object.create(sorting.SortingStrategy.prototype);
+    NumPathsSortingStrategy.prototype.compare = function (a, b) {
+      if (sortingManager.ascending) {
+        return d3.ascending(a.paths.length, b.paths.length);
+      }
+      return d3.descending(a.paths.length, b.paths.length);
+    }
+
+    var sortingManager = new sorting.SortingManager(true);
+
+    var sortingStrategies = {
+      setId: new sorting.IdSortingStrategy(sortingManager),
+      numPaths: new NumPathsSortingStrategy()
+    };
+
+    sortingManager.setStrategyChain([sortingStrategies.numPaths, sortingStrategies.setId]);
 
     function getSetCombinations(paths) {
 
@@ -166,22 +187,7 @@ define(['jquery', 'd3', './listeners', './pathlist'],
           }
         })
         .attr("class", "setComboContainer")
-        .attr("transform", function (d, i) {
-
-          var posY = 0;
-
-          for (var index = 0; index < i; index++) {
-
-            posY += setContainerSpacing + setComboHeight;
-
-            if (!allSetCombinations[index].collapsed) {
-              var pathsHeight = pathList.getTotalHeight(allSetCombinations[index].paths);
-              posY += pathsHeight;
-            }
-          }
-
-          return "translate(0," + posY + ")";
-        })
+        .attr("transform", getTransformFunction(allSetCombinations))
         .each("end", function (d) {
           if (!d.collapsed) {
             d3.select(this).selectAll("g.pathContainer")
@@ -218,6 +224,25 @@ define(['jquery', 'd3', './listeners', './pathlist'],
       svg.attr("height", posY);
     }
 
+    function getTransformFunction(setCombinations) {
+      return function (d, i) {
+
+        var posY = 0;
+
+        for (var index = 0; index < i; index++) {
+
+          posY += setContainerSpacing + setComboHeight;
+
+          if (!setCombinations[index].collapsed) {
+            var pathsHeight = pathList.getTotalHeight(setCombinations[index].paths);
+            posY += pathsHeight;
+          }
+        }
+
+        return "translate(0," + posY + ")";
+      }
+    }
+
 
     return {
       init: function () {
@@ -239,6 +264,14 @@ define(['jquery', 'd3', './listeners', './pathlist'],
           .attr("orient", "auto")
           .append("path")
           .attr("d", "M 0 0 L 10 5 L 0 10 z");
+
+        var sortButton = $('<input>').prependTo('div.outer2')[0];
+        $(sortButton).attr("type", "checkbox");
+        $(sortButton).on("click", function () {
+          var that = this;
+          sortingManager.ascending = !this.checked;
+          sortingManager.sort(allSetCombinations, svg, "g.setComboContainer", getTransformFunction(allSetCombinations));
+        });
 
         //
         //var sortButton = $('<input>').prependTo('div.outer')[0];
@@ -269,10 +302,14 @@ define(['jquery', 'd3', './listeners', './pathlist'],
         allSetCombinations = getSetCombinations(paths);
         var svg = d3.select("#setlist svg");
 
-        listeners.add(updateSets, listeners.updateType.SET_INFO_UPDATE);
-
         svg.selectAll("g.setComboContainer")
           .remove();
+
+        sortingManager.sort(allSetCombinations, svg, "g.setComboContainer", getTransformFunction(allSetCombinations));
+
+        listeners.add(updateSets, listeners.updateType.SET_INFO_UPDATE);
+
+
 
         var setComboContainer = svg.selectAll("g.setComboContainer")
           .data(allSetCombinations, getKey)
@@ -280,22 +317,7 @@ define(['jquery', 'd3', './listeners', './pathlist'],
           .append("g");
 
         setComboContainer.attr("class", "setComboContainer")
-          .attr("transform", function (d, i) {
-
-            var posY = 0;
-
-            for (var index = 0; index < i; index++) {
-
-              posY += setContainerSpacing + setComboHeight;
-
-              if (!allSetCombinations[index].collapsed) {
-                var pathsHeight = pathList.getTotalHeight(allSetCombinations[index].paths);
-                posY += pathsHeight;
-              }
-            }
-
-            return "translate(0," + posY + ")";
-          });
+          .attr("transform", getTransformFunction(allSetCombinations));
 
         var setCombination = setComboContainer.append("g")
           .attr("class", "setCombination")
@@ -313,9 +335,9 @@ define(['jquery', 'd3', './listeners', './pathlist'],
         setCombination.append("text")
           .attr("class", "collapseIcon")
           .attr("x", collapseButtonSpacing)
-          .attr("y", setComboHeight -vSpacing - setNodeRadiusY + 5)
-          .text( function (d) {
-            return d.collapsed ?  "\uf0da": "\uf0dd";
+          .attr("y", setComboHeight - vSpacing - setNodeRadiusY + 5)
+          .text(function (d) {
+            return d.collapsed ? "\uf0da" : "\uf0dd";
           })
           .on("click", function (d) {
             d.collapsed = !d.collapsed;
