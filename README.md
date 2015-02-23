@@ -1,6 +1,9 @@
 # caleydo-web
 
 ## Prerequesites 
+
+### All platforms:
+Set up github ssh for authentication, see [this on how to](https://help.github.com/articles/generating-ssh-keys/)
 ### Mac
 1. Install XCode commandline tools (gcc & co)
 
