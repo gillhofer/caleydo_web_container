@@ -244,7 +244,6 @@ define(['jquery', 'd3', './listeners'],
         svg.selectAll("g.pathContainer")
           .sort(this.currentComparator)
           .transition()
-          .duration(500)
           .attr("transform", function (d, i) {
             var posY = 0;
             for (var index = 0; index < i; index++) {
