@@ -1,8 +1,12 @@
 # caleydo-web
 
+## Prerequesites 
+### Mac
+1. Install XCode commandline tools (gcc & co)
+
 ## Installation as standalone version (w/o caleydo-web-server)
 
-1. Install [node.js](http://www.nodejs.org).
+1. Install [node.js](http://www.nodejs.org). (don't use brew on Mac, go to the website)
 2. Clone the repository ```git clone git@github.com:Caleydo/caleydo-web.git```.
 3. Install grunt and bower ```npm install -g bower grunt-cli``` (might have to be run using ```sudo```).
 4. Install requirements ```npm install``` (might have to be run using ```sudo```).
