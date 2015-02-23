@@ -144,7 +144,7 @@ export class ProvenanceVis extends vis.AVisInstance implements vis.IVisInstance 
     this.data.actions.map((f) => this.add(f));
     this.data.states.map((f) => this.add(f));
     //this.data.objects.map((f) => this.add(f));
-    this.data.links.map((l) => this.addLink(l));
+    this.data._edges.map((l) => this.addLink(l));
 
     return $svg;
   }

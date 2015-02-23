@@ -20,6 +20,14 @@
         "module" : "caleydo-provenance/vis"
       },
       {
+        "type": "vis",
+        "id": "caleydo-vis-provenance-subway",
+        "name": "Provenance Subway Graph",
+        "filter": "provenance_graph",
+        "folder" : "caleydo-provenance",
+        "module" : "caleydo-provenance/subway"
+      },
+      {
         "type" : "actionFactory",
         "id" : "idtype-selection",
         "folder" : "caleydo-provenance",
