@@ -11,7 +11,7 @@ define(['jquery', 'd3', './pathlist', './setlist'],
 
       init: function () {
         var svg = d3.select("#pathlist").append("svg");
-        var viewTypeDiv = d3.select("div.outer").insert("div", ":first-child");
+        var viewTypeDiv = d3.select("#listView").insert("div", ":first-child");
         var that = this;
 
         var pathListWidgetDiv = viewTypeDiv.append("div");

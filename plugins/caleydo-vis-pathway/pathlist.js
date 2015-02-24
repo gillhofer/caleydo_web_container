@@ -239,13 +239,7 @@ define(['jquery', 'd3', './listeners', './sorting', './setinfo'],
     return {
 
       appendWidgets: function (parent, svg) {
-        var sortButton = $('<input>').appendTo(parent)[0];
-        $(sortButton).attr("type", "checkbox");
-        $(sortButton).on("click", function () {
-          var that = this;
-          sortingManager.ascending = !this.checked;
-          sortingManager.sort(allPaths, svg, "g.pathContainer", getTransformFunction(allPaths));
-        });
+
 
         var selectSortingStrategy = $('<select>').appendTo(parent)[0];
         $(selectSortingStrategy).append($("<option value='0'>Set Count Edge Weight</option>"));
@@ -257,6 +251,14 @@ define(['jquery', 'd3', './listeners', './sorting', './setinfo'],
           if (this.value == '1') {
             sortingManager.sort(allPaths, svg, "g.pathContainer", getTransformFunction(allPaths), [sortingStrategies.pathLength, sortingStrategies.pathId]);
           }
+        });
+
+        var sortButton = $('<input>').appendTo(parent)[0];
+        $(sortButton).attr("type", "checkbox");
+        $(sortButton).on("click", function () {
+          var that = this;
+          sortingManager.ascending = !this.checked;
+          sortingManager.sort(allPaths, svg, "g.pathContainer", getTransformFunction(allPaths));
         });
       },
 

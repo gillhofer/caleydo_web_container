@@ -144,7 +144,7 @@ require(['jquery', 'd3', './listeners', './listview', './setlist', './pathovervi
         //  loadPaths(paths);
         //} );
 
-        var selectPaths = $('<select>').prependTo('div.outer')[0];
+        var selectPaths = $('<select>').prependTo('#listView')[0];
 
         $(selectPaths).append($("<option value='testpaths1.json'>20 paths from node 1800 to node 1713</option>"));
         $(selectPaths).append($("<option value='testpaths2.json'>50 paths from node 1800 to node 1713</option>"));

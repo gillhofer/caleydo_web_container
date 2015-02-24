@@ -143,7 +143,7 @@ define(['jquery', 'd3', './listeners', './pathlist', './sorting', './setinfo'],
 
     function updateSets(setInfo) {
 
-      var svg = d3.select("#setlist svg");
+      var svg = d3.select("#pathlist svg");
 
       svg.selectAll("g.setNode text")
         .text(function (d) {
