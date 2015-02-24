@@ -20,17 +20,48 @@ define(['jquery', 'd3', './listeners', './pathlist', './sorting', './setinfo'],
 
     NumPathsSortingStrategy.prototype = Object.create(sorting.SortingStrategy.prototype);
     NumPathsSortingStrategy.prototype.compare = function (a, b) {
+      //reversed for now
       if (sortingManager.ascending) {
-        return d3.ascending(a.paths.length, b.paths.length);
+        return d3.descending(a.paths.length, b.paths.length);
       }
-      return d3.descending(a.paths.length, b.paths.length);
+      return d3.ascending(a.paths.length, b.paths.length);
+    };
+
+    function SetNodePresenceSortingStrategy(setIds) {
+      sorting.SortingStrategy.call(this, sorting.SortingStrategy.prototype.STRATEGY_TYPES.PRESENCE);
+      this.compare = function (a, b) {
+        var numNodesA = 0;
+        var numNodesB = 0;
+        setIds.forEach(function (setId) {
+          a.setIds.forEach(function (id) {
+            if (id === setId) {
+              numNodesA++;
+            }
+          });
+
+          b.setIds.forEach(function (id) {
+            if (id === setId) {
+              numNodesB++;
+            }
+          });
+        });
+
+        //Inverse definition of ascending and descending, as more nodes should be ranked higher
+        if (sortingManager.ascending) {
+          return d3.descending(numNodesA, numNodesB);
+        }
+        return d3.ascending(numNodesA, numNodesB);
+      }
     }
 
     var sortingManager = new sorting.SortingManager(true);
 
     var sortingStrategies = {
       setId: new sorting.IdSortingStrategy(sortingManager),
-      numPaths: new NumPathsSortingStrategy()
+      numPaths: new NumPathsSortingStrategy(),
+      getSetNodePrensenceSortingStrategy: function(setIds) {
+        return new SetNodePresenceSortingStrategy(setIds);
+      }
     };
 
     sortingManager.setStrategyChain([sortingStrategies.numPaths, sortingStrategies.setId]);
@@ -78,7 +109,7 @@ define(['jquery', 'd3', './listeners', './pathlist', './sorting', './setinfo'],
       function addSetToCombo(path, currentEdgeIndex, currentSetCombination, mySet) {
         var combo = currentSetCombination;
         if (currentSetCombination.length === 0 || (currentSetCombination.length > 0 && currentSetCombination[currentSetCombination.length - 1] !== mySet)) {
-          combo = currentSetCombination.slice(0)
+          combo = currentSetCombination.slice(0);
           combo.push(mySet);
         }
         nextEdge(path, currentEdgeIndex + 1, combo);
@@ -377,8 +408,9 @@ define(['jquery', 'd3', './listeners', './pathlist', './sorting', './setinfo'],
           .append("g")
           .attr("class", "setNode")
           .on("dblclick", function (d) {
-            //sortingManager.addOrReplace(sortingStrategies.getNodePresenceStrategy([d.id]));
-            //sortingManager.sortPaths(svg);
+            sortingManager.addOrReplace(sortingStrategies.getSetNodePrensenceSortingStrategy([d]));
+            sortingManager.sort(allSetCombinations, parent, "g.setComboContainer", getTransformFunction(allSetCombinations));
+
 
             //sortingManager.sortPaths(svg, [sortingStrategies.getNodePresenceStrategy([d.id]),
             //  sortingManager.currentStrategyChain]);
