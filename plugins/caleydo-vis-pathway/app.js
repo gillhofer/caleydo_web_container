@@ -1,8 +1,8 @@
 /**
  * Created by Christian on 11.12.2014.
  */
-require(['jquery', 'd3', './listeners', './pathlist', './setlist', './pathoverviewgraph'],
-  function ($, d3, listeners, pathList, setList, overviewGraph) {
+require(['jquery', 'd3', './listeners', './listview', './setlist', './pathoverviewgraph', './setinfo'],
+  function ($, d3, listeners, listView, setList, overviewGraph, setInfo) {
     'use strict';
 
     //var jsonPaths = require('./testpaths1.json');
@@ -14,8 +14,8 @@ require(['jquery', 'd3', './listeners', './pathlist', './setlist', './pathovervi
 
 
         overviewGraph.init();
-        pathList.init();
-        setList.init();
+        listView.init();
+        //setList.init();
 
 
         //  $.ajax({
@@ -191,22 +191,24 @@ require(['jquery', 'd3', './listeners', './pathlist', './setlist', './pathovervi
 
 
 
-            pathList.render(paths);
-            setList.render(paths);
+            listView.render(paths);
+            //setList.render(paths);
 
             overviewGraph.render(paths);
 
-            $.ajax({
-              type: 'POST',
-              url: '/api/pathway/setinfo',
-              accepts: 'application/json',
-              contentType: 'application/json',
-              data: JSON.stringify(allSets),
-              success: function (response) {
-                var setInfos = JSON.parse(response);
-                listeners.notify(setInfos, listeners.updateType.SET_INFO_UPDATE);
-              }
-            });
+            setInfo.fetch(allSets);
+
+            //$.ajax({
+            //  type: 'POST',
+            //  url: '/api/pathway/setinfo',
+            //  accepts: 'application/json',
+            //  contentType: 'application/json',
+            //  data: JSON.stringify(allSets),
+            //  success: function (response) {
+            //    var setInfos = JSON.parse(response);
+            //    listeners.notify(setInfos, listeners.updateType.SET_INFO_UPDATE);
+            //  }
+            //});
           }
         }
 

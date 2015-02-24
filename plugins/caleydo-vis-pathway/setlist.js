@@ -1,5 +1,5 @@
-define(['jquery', 'd3', './listeners', './pathlist', './sorting'],
-  function ($, d3, listeners, pathList, sorting) {
+define(['jquery', 'd3', './listeners', './pathlist', './sorting', './setinfo'],
+  function ($, d3, listeners, pathList, sorting, setInfo) {
     'use strict';
 
 
@@ -175,10 +175,9 @@ define(['jquery', 'd3', './listeners', './pathlist', './sorting'],
       return text;
     }
 
-    function updateSetList() {
-      var svg = d3.select("#setlist svg");
+    function updateSetList(parent) {
 
-      var setComboContainer = svg.selectAll("g.setComboContainer")
+      var setComboContainer = parent.selectAll("g.setComboContainer")
         .transition()
         .each("start", function (d) {
           if (d.collapsed) {
@@ -195,7 +194,7 @@ define(['jquery', 'd3', './listeners', './pathlist', './sorting'],
           }
         });
 
-      updateListHeight();
+      updateListHeight(parent);
       //setComboContainer.selectAll("g.pathContainer").
       //  attr("transform", function (d, i) {
       //    var posY = 0;
@@ -206,7 +205,7 @@ define(['jquery', 'd3', './listeners', './pathlist', './sorting'],
       //  });
     }
 
-    function updateListHeight() {
+    function updateListHeight(svg) {
       var posY = 0;
 
       for (var index = 0; index < allSetCombinations.length; index++) {
@@ -220,8 +219,9 @@ define(['jquery', 'd3', './listeners', './pathlist', './sorting'],
         posY += setContainerSpacing + setComboHeight;
 
       }
-      var svg = d3.select("#setlist svg");
       svg.attr("height", posY);
+      svg.select("#SetLabelClipPath rect")
+        .attr("height", posY);
     }
 
     function getTransformFunction(setCombinations) {
@@ -245,12 +245,22 @@ define(['jquery', 'd3', './listeners', './pathlist', './sorting'],
 
 
     return {
-      init: function () {
+      appendWidgets: function(parent, svg) {
+        var sortButton = $('<input>').appendTo(parent)[0];
+        $(sortButton).attr("type", "checkbox");
+        $(sortButton).on("click", function () {
+          var that = this;
+          sortingManager.ascending = !this.checked;
+          sortingManager.sort(allSetCombinations, svg, "g.setComboContainer", getTransformFunction(allSetCombinations));
+        });
+      },
+
+      init: function (svg) {
 
         var w = 800;
         var h = 800;
 
-        var svg = d3.select("#setlist").append("svg")
+        //var svg = d3.select("#setlist").append("svg")
         svg.attr("width", w)
           .attr("height", h);
         svg.append("marker")
@@ -264,14 +274,14 @@ define(['jquery', 'd3', './listeners', './pathlist', './sorting'],
           .attr("orient", "auto")
           .append("path")
           .attr("d", "M 0 0 L 10 5 L 0 10 z");
+        svg.append("clipPath")
+          .attr("id", "SetLabelClipPath")
+          .append("rect")
+          .attr("x", 0)
+          .attr("y", 0)
+          .attr("width", 90)
+          .attr("height", 10);
 
-        var sortButton = $('<input>').prependTo('div.outer2')[0];
-        $(sortButton).attr("type", "checkbox");
-        $(sortButton).on("click", function () {
-          var that = this;
-          sortingManager.ascending = !this.checked;
-          sortingManager.sort(allSetCombinations, svg, "g.setComboContainer", getTransformFunction(allSetCombinations));
-        });
 
         //
         //var sortButton = $('<input>').prependTo('div.outer')[0];
@@ -297,21 +307,31 @@ define(['jquery', 'd3', './listeners', './pathlist', './sorting'],
 
       },
 
+      removeGuiElements: function (parent) {
+        var svg = d3.select("#pathlist svg");
 
-      render: function (paths) {
-        allSetCombinations = getSetCombinations(paths);
-        var svg = d3.select("#setlist svg");
-
-        svg.selectAll("g.setComboContainer")
+        parent.selectAll("g.setComboContainer")
           .remove();
 
-        sortingManager.sort(allSetCombinations, svg, "g.setComboContainer", getTransformFunction(allSetCombinations));
+        parent.select("#arrowRight").remove();
+        parent.select("#SetLabelClipPath").remove();
+      },
+
+
+      render: function (paths, parent) {
+        allSetCombinations = getSetCombinations(paths);
+
+
+        parent.selectAll("g.setComboContainer")
+          .remove();
+
+        sortingManager.sort(allSetCombinations, parent, "g.setComboContainer", getTransformFunction(allSetCombinations));
 
         listeners.add(updateSets, listeners.updateType.SET_INFO_UPDATE);
 
 
 
-        var setComboContainer = svg.selectAll("g.setComboContainer")
+        var setComboContainer = parent.selectAll("g.setComboContainer")
           .data(allSetCombinations, getKey)
           .enter()
           .append("g");
@@ -343,7 +363,7 @@ define(['jquery', 'd3', './listeners', './pathlist', './sorting'],
             d.collapsed = !d.collapsed;
             d3.select(this).text(d.collapsed ? "\uf0da" : "\uf0dd");
 
-            updateSetList();
+            updateSetList(parent);
           });
 
         var setNodeGroup = setCombination.append("g")
@@ -376,7 +396,15 @@ define(['jquery', 'd3', './listeners', './pathlist', './sorting'],
 
         node.append("text")
           .text(function (d) {
-            var text = d;
+
+            var info = setInfo.get(d);
+
+
+            if (typeof info === "undefined") {
+              return d;
+            }
+            var text = getClampedText(info.properties["name"], 14);
+
             return text;
           })
           .attr("x", function (d, i) {
@@ -385,7 +413,11 @@ define(['jquery', 'd3', './listeners', './pathlist', './sorting'],
           .attr("y", vSpacing + setNodeRadiusY + 4);
         node.append("title")
           .text(function (d) {
-            return d;
+            var info = setInfo.get(d);
+            if (typeof info === "undefined") {
+              return d;
+            }
+            return info.properties["name"];
           });
 
         //setComboContainer.attr("class", "setComboContainer")
@@ -404,7 +436,7 @@ define(['jquery', 'd3', './listeners', './pathlist', './sorting'],
 
           pathList.renderPaths(d3.select(this), d.paths, 0, setComboHeight, !d.collapsed);
         });
-        updateListHeight();
+        updateListHeight(parent);
       }
 
     }

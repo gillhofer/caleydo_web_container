@@ -1,5 +1,5 @@
-define(['jquery', 'd3', './listeners', './sorting'],
-  function ($, d3, listeners, sorting) {
+define(['jquery', 'd3', './listeners', './sorting', './setinfo'],
+  function ($, d3, listeners, sorting, setInfo) {
     'use strict';
 
     //var jsonPaths = require('./testpaths1.json');
@@ -31,9 +31,6 @@ define(['jquery', 'd3', './listeners', './sorting'],
       }
       return d3.descending(a.edges.length, b.edges.length);
     }
-
-
-
 
 
     function SetCountEdgeWeightSortingStrategy() {
@@ -240,12 +237,35 @@ define(['jquery', 'd3', './listeners', './sorting'],
     }
 
     return {
-      init: function () {
+
+      appendWidgets: function (parent, svg) {
+        var sortButton = $('<input>').appendTo(parent)[0];
+        $(sortButton).attr("type", "checkbox");
+        $(sortButton).on("click", function () {
+          var that = this;
+          sortingManager.ascending = !this.checked;
+          sortingManager.sort(allPaths, svg, "g.pathContainer", getTransformFunction(allPaths));
+        });
+
+        var selectSortingStrategy = $('<select>').appendTo(parent)[0];
+        $(selectSortingStrategy).append($("<option value='0'>Set Count Edge Weight</option>"));
+        $(selectSortingStrategy).append($("<option value='1'>Path Length</option>"));
+        $(selectSortingStrategy).on("change", function () {
+          if (this.value == '0') {
+            sortingManager.sort(allPaths, svg, "g.pathContainer", getTransformFunction(allPaths), [sortingStrategies.setCountEdgeWeight, sortingStrategies.pathId]);
+          }
+          if (this.value == '1') {
+            sortingManager.sort(allPaths, svg, "g.pathContainer", getTransformFunction(allPaths), [sortingStrategies.pathLength, sortingStrategies.pathId]);
+          }
+        });
+      },
+
+      init: function (svg) {
 
         var w = 800;
         var h = 800;
 
-        var svg = d3.select("#pathlist").append("svg")
+        //var svg = d3.select("#pathlist").append("svg")
         svg.attr("width", w)
           .attr("height", h);
         svg.append("marker")
@@ -267,41 +287,29 @@ define(['jquery', 'd3', './listeners', './sorting'],
           .attr("width", 90)
           .attr("height", 10);
 
-        var sortButton = $('<input>').prependTo('div.outer')[0];
-        $(sortButton).attr("type", "checkbox");
-        $(sortButton).on("click", function () {
-          var that = this;
-          sortingManager.ascending = !this.checked;
-          sortingManager.sort(allPaths, svg, "g.pathContainer", getTransformFunction(allPaths));
-        });
+      },
 
-        var selectSortingStrategy = $('<select>').prependTo('div.outer')[0];
-        $(selectSortingStrategy).append($("<option value='0'>Set Count Edge Weight</option>"));
-        $(selectSortingStrategy).append($("<option value='1'>Path Length</option>"));
-        $(selectSortingStrategy).on("change", function () {
-          if (this.value == '0') {
-            sortingManager.sort(allPaths, svg, "g.pathContainer", getTransformFunction(allPaths), [sortingStrategies.setCountEdgeWeight, sortingStrategies.pathId]);
-          }
-          if (this.value == '1') {
-            sortingManager.sort(allPaths, svg, "g.pathContainer", getTransformFunction(allPaths), [sortingStrategies.pathLength, sortingStrategies.pathId]);
-          }
-        });
+      removeGuiElements: function (parent) {
 
+        parent.selectAll("g.pathContainer")
+          .remove();
 
+        parent.select("#arrowRight").remove();
+        parent.select("#SetLabelClipPath").remove();
       },
 
 
-      render: function (paths) {
+      render: function (paths, parent) {
 
         allPaths = paths;
 
 
-        allPaths.sort(sortingManager.currentComparator);
-
         if (paths.length > 0) {
-          var svg = d3.select("#pathlist svg");
-          sortingManager.sort(paths, svg, "g.pathContainer", getTransformFunction(paths));
-          this.displayPaths(svg, paths);
+
+          parent.selectAll("g.pathContainer")
+            .remove();
+          sortingManager.sort(paths, parent, "g.pathContainer", getTransformFunction(paths));
+          this.displayPaths(parent, paths);
         }
       },
 
@@ -491,7 +499,12 @@ define(['jquery', 'd3', './listeners', './sorting'],
           .text(function (d) {
             //var text = d[0].id;
             //return getClampedText(text, 15);
-            return d[0].id;
+
+            var info = setInfo.get(d[0].id);
+            if (typeof info === "undefined") {
+              return d[0].id;
+            }
+            return info.properties["name"];
           })
           .attr("x", 0)
           .attr("y", function (d, i) {
@@ -527,7 +540,11 @@ define(['jquery', 'd3', './listeners', './sorting'],
 
         set.append("title")
           .text(function (d) {
-            return d[0].id;
+            var info = setInfo.get(d[0].id);
+            if (typeof info === "undefined") {
+              return d[0].id;
+            }
+            return info.properties["name"];
           });
       }
 
