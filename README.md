@@ -7,6 +7,10 @@ Set up github ssh for authentication, see [this on how to](https://help.github.c
 ### Mac
 1. Install XCode commandline tools (gcc & co)
 
+### Win
+1. Ensure to run mingw/gitbash as admin (before starting vagrant)
+
+
 ## Installation as standalone version (w/o caleydo-web-server)
 
 1. Install [node.js](http://www.nodejs.org). (don't use brew on Mac, go to the website)
