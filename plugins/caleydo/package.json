@@ -21,6 +21,11 @@
         "type": "datatype",
         "id": "vector",
         "module": "caleydo/vector"
+      },
+      {
+        "type": "datatype",
+        "id": "stratification",
+        "module": "caleydo/stratification"
       }
     ]
   }
