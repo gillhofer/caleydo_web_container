@@ -232,17 +232,22 @@ export function distributeLayout(horizontal:boolean, defaultValue:number, paddin
 //-------------
 //   bottom
 
-export function borderLayout(horizontal:boolean, gap:number, percentages = { top: 0.2, left: 0.2, right: 0.2, bottom: 0.2 }, padding : IPadding  = no_padding) {
+export function borderLayout(horizontal:boolean, gap:number, percentages = {
+  top: 0.2,
+  left: 0.2,
+  right: 0.2,
+  bottom: 0.2
+}, padding:IPadding = no_padding) {
   function BorderLayout(elems:ILayoutElem[], w:number, h:number, parent:ILayoutElem) {
     w -= padding.left + padding.right;
     h -= padding.top + padding.bottom;
     var x = padding.top, y = padding.left, wc = w, hc = h;
     var pos = {
       top: [],
-      center : [],
-      left : [],
+      center: [],
+      left: [],
       right: [],
-      bottom : []
+      bottom: []
     };
     elems.forEach((elem) => {
       var border = elem.layoutOption('border', 'center');
@@ -254,11 +259,11 @@ export function borderLayout(horizontal:boolean, gap:number, percentages = { top
 
     if (pos.top.length > 0) {
       y += h * percentages.top;
-      hc -= h*percentages.top;
+      hc -= h * percentages.top;
       flowLayout(true, gap)(pos.top, w, h * percentages.top, parent);
     }
     if (pos.bottom.length > 0) {
-      hc -= h*percentages.bottom;
+      hc -= h * percentages.bottom;
       flowLayout(true, gap)(pos.bottom, w, h * percentages.bottom, parent);
     }
     if (pos.left.length > 0) {
