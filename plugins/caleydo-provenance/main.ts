@@ -485,7 +485,6 @@ export class ProvenanceGraph extends graph.GraphBase {
     var r = new ObjectNode<T>(value, name, category);
     this.objects.push(r);
     this.fire('add_object', r);
-    this.addObject(r);
     return r;
   }
 
