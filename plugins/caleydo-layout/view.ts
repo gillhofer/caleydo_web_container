@@ -16,8 +16,6 @@ export interface IViewDesc extends plugins.IPluginDesc {
 }
 
 export interface IView extends layouts.ILayoutElem, events.IEventHandler {
-  desc : IViewDesc;
-
   data : datatypes.IDataType[];
   idtypes : idtypes.IDType[];
 
@@ -26,7 +24,7 @@ export interface IView extends layouts.ILayoutElem, events.IEventHandler {
 export class AView extends events.EventHandler implements IView {
   private _layoutOptions : any = {};
 
-  constructor(public desc: IViewDesc) {
+  constructor() {
     super();
   }
 
