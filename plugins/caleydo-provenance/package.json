@@ -2,7 +2,6 @@
   "name" : "caleydo-provenance",
   "version": "0.0.1",
   "dependencies": {
-    "cytoscape": "~2.3.8"
   },
   "caleydo" : {
     "plugins": [
