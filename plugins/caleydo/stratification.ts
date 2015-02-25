@@ -20,7 +20,7 @@ export interface IStratificationLoader {
 
 function createRangeFromGroups(name: string, groups: any[]) {
   ranges.composite(name, groups.map((g) => {
-    var r = new ranges.Range1DGroup(g.name, 'gray');
+    var r = new ranges.Range1DGroup(g.name, g.color || 'gray');
     r.setList(g.range);
     return r;
   }));

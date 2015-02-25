@@ -14,7 +14,9 @@ var available = plugins.list('datatype');
  * load all descriptions and store them in a promise
  * @type {C.IPromise<datatypes.IDataType[]>}
  */
-var loader : C.IPromise<datatypes.IDataType[]> = C.getAPIJSON('/dataset').then(function (descs) {
+var loader : C.IPromise<datatypes.IDataType[]> = C.getAPIJSON('/dataset', {
+  ws : C.hash.getProp('ws', '')
+}).then(function (descs) {
   //load descriptions and create data out of them
   return <any> C.all(descs.map((desc) => transformEntry(desc))).then((datas) => {
     var r = {};

@@ -422,3 +422,68 @@ export interface IPersistable {
    */
   restore(persisted:any) : IPersistable;
 }
+
+/**
+ * manages the hash location property helper
+ */
+class HashProperties {
+  private map: any = {};
+
+  constructor(private value : string) {
+    this.parse(value);
+  }
+
+
+  getProp(name: string, default_ : string) {
+    if (this.map.hasOwnProperty(name)) {
+      return this.map[name];
+    }
+    return default_;
+  }
+
+  setProp(name: string, value: string, update = true) {
+    this.map[name] = value;
+    if (update) {
+      this.update();
+    }
+  }
+
+  private update() {
+    location.hash = this.toString();
+  }
+
+  private parse(v : string) {
+    this.map = {}; //reset
+    var parts = v.split(/[&=]/),
+      i = 0, p = null,
+      key = null;
+    while (i < parts.length) {
+      p = parts[i];
+      while (p[p.length-1] === '%' || p[p.length-1] === '$') {
+        i++;
+        p += (p[p.length -1] === '%' ? '=' : '&' ) + parts[i];
+      }
+      if (key) {
+        this.map[key] = p;
+        key = null;
+      } else {
+        key = p; //next round
+      }
+      i++;
+    }
+  }
+
+  private escape(v: string) {
+    return v.replace(/&/g,'$&').replace(/=/g,'%=');
+  }
+
+  toString() {
+    var r = [];
+    Object.keys(this.map).forEach((key) => {
+      r.push(key, '=', this.escape(this.map[key]));
+    });
+    return r.join('&');
+  }
+}
+
+export var hash = new HashProperties(location.hash);
