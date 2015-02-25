@@ -1,8 +1,19 @@
 # caleydo-web
 
+## Prerequesites 
+
+### All platforms
+Set up github ssh for authentication, see [this on how to](https://help.github.com/articles/generating-ssh-keys/)
+### Mac
+1. Install XCode commandline tools (gcc & co)
+
+### Win
+1. Ensure to run mingw/gitbash as admin (before starting vagrant)
+
+
 ## Installation as standalone version (w/o caleydo-web-server)
 
-1. Install [node.js](http://www.nodejs.org).
+1. Install [node.js](http://www.nodejs.org). (don't use brew on Mac, go to the website)
 2. Clone the repository ```git clone git@github.com:Caleydo/caleydo-web.git```.
 3. Install grunt and bower ```npm install -g bower grunt-cli``` (might have to be run using ```sudo```).
 4. Install requirements ```npm install``` (might have to be run using ```sudo```).
