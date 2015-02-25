@@ -151,27 +151,23 @@ export class ActionNode extends graph.GraphNode {
   private inverter : () => IAction;
   onceExecuted = false;
 
-  constructor(public meta: ActionMetaData, private f_id : string, private f : (inputs: IObjectRef<any>[], parameters: any, graph: ProvenanceGraph) => ICmdResult, public parameter: any = {}) {
+  constructor(public meta: ActionMetaData, public f_id : string, private f : (inputs: IObjectRef<any>[], parameters: any, graph: ProvenanceGraph) => ICmdResult, public parameter: any = {}) {
     super('action');
   }
 
   persist(id: number) {
     var r = super.persist(id);
     r.meta = this.meta;
-    r.id = this.id;
+    r.f_id = this.f_id;
     r.parameter = this.parameter;
     r.onceExecuted = this.onceExecuted;
     return r;
   }
 
   static restore(r, factory: ICmdFunctionFactory) {
-    var a = new ActionNode(ActionMetaData.restore(r.meta), r.id, factory(r.id), r.parameter);
+    var a = new ActionNode(ActionMetaData.restore(r.meta), r.f_id, factory(r.f_id), r.parameter);
     a.onceExecuted = r.onceExecuted;
     return a;
-  }
-
-  get id() {
-    return this.f_id;
   }
 
   toString() {
@@ -323,16 +319,16 @@ class CompositeActionCompressor implements  IActionCompressor {
     return this.choose(id) != null;
   }
   toKey(action: ActionNode) : string {
-    return this.choose(action.id).toKey(action);
+    return this.choose(action.f_id).toKey(action);
   }
   select(actions: ActionNode[]) : ActionNode {
-    return this.choose(actions[0].id).select(actions);
+    return this.choose(actions[0].f_id).select(actions);
   }
 }
 
 function createCompressor(path: ActionNode[]) {
   var toload = plugins.list('actionCompressor').filter((plugin) => {
-    return path.some((action) => action.id.match(plugin.matches) != null);
+    return path.some((action) => action.f_id.match(plugin.matches) != null);
   });
   return plugins.load(toload).then((loaded) => {
     return new CompositeActionCompressor(loaded.map((l) => l.factory()));
@@ -347,7 +343,7 @@ export function compress(path: ActionNode[]) {
     var group = {};
     path.forEach((action) => {
       var key;
-      if (compressor.matches(action.id)) {
+      if (compressor.matches(action.f_id)) {
         key = compressor.toKey(action);
         if (!group.hasOwnProperty(key)) {
           group[key] = [action];

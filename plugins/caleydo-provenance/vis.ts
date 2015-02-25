@@ -211,9 +211,9 @@ export class ProvenanceVis extends vis.AVisInstance implements vis.IVisInstance 
       });
     }).call(this.node_drag);
     nodes.filter((d) => d._.type === 'action')
-      .select('path').attr('class', (d) => d._.meta.category);
+      .select('path').attr('class', (d) => 'fill '+d._.meta.category);
     nodes.filter((d) => d._.type === 'object')
-      .select('path').attr('class', (d) => d._.category);
+      .select('path').attr('class', (d) => 'fill '+d._.category);
     nodes.filter((d) => d._.type === 'state')
       .classed('last', (d) => d._ === this.data.act);
 

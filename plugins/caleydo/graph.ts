@@ -15,14 +15,14 @@ export class GraphNode {
 
   pid = -1;
 
-  constructor(public type: string) {
+  constructor(public type: string, public id = C.uniqueId('graph_node'))  {
 
   }
 
-  persist(id: number) : any {
-    this.pid = id;
+  persist(pid: number) : any {
+    this.pid = pid;
     return {
-
+      id : this.id
     };
   }
 }
@@ -74,7 +74,7 @@ export class GraphBase extends datatypes.DataTypeBase {
   }
 }
 
-export interface IGraph {
+export interface IGraph extends datatypes.IDataType {
   nodes(): C.IPromise<GraphNode[]>;
   edges(): C.IPromise<GraphEdge[]>;
 }

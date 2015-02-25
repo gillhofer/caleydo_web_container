@@ -2,6 +2,65 @@
  * Created by Samuel Gratzl on 01.09.2014.
  */
 
+.provenance-graph-vis, .provenance-subway-vis {
+  .data {
+    &.fill {
+      fill: green;
+    }
+    &:not(.fill) {
+      stroke: green;
+    }
+  }
+  .selection {
+    &.fill {
+      fill: orange;
+    }
+    &:not(.fill) {
+      stroke: orange;
+    }
+  }
+  .visual {
+    &.fill {
+      fill: yellow;
+    }
+    &:not(.fill) {
+      stroke: yellow;
+    }
+  }
+  .layout {
+    &.fill {
+      fill: blue;
+    }
+    &:not(.fill) {
+      stroke: blue;
+    }
+  }
+  .logic {
+    &.fill {
+      fill: gray;
+    }
+    &:not(.fill) {
+      stroke: gray;
+    }
+  }
+  .custom {
+    &.fill {
+      fill: white;
+    }
+    &:not(.fill) {
+      stroke: white;
+    }
+  }
+  .annotation {
+    &.fill {
+      fill: lightblue;
+    }
+    &:not(.fill) {
+      stroke: lightblue;
+    }
+  }
+}
+
 //by convention create a namespace for your own plugin
 .provenance-graph-vis {
   text.action {
@@ -16,27 +75,7 @@
   .node {
 
     path {
-      &.data {
-        fill: green;
-      }
-      &.selection {
-        fill: orange;
-      }
-      &.visual {
-        fill: yellow;
-      }
-      &.layout {
-        fill: blue;
-      }
-      &.logic {
-        fill: gray;
-      }
-      &.custom {
-        fill: white;
-      }
-      &.annotation {
-        fill: lightblue;
-      }
+
     }
 
     &.state {
@@ -78,5 +117,20 @@
     &.consistsOf {
       stroke: blue;
     }
+  }
+}
+
+.provenance-subway-vis {
+  .state {
+    opacity: 0.1;
+    &.act {
+      opacity: 1
+    }
+  }
+  .action {
+
+  }
+  .object {
+    stroke-width: 2;
   }
 }
