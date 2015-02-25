@@ -64,6 +64,8 @@ export function defineVis(name: string, defaultOptions : any, initialSize : any,
       this.init(data);
     }
     this.$node = build.call(this, this.$parent, this.data, this.size);
+    this.$node.datum(data);
+    this.$node.node().__vis__ = this;
   }
   VisTechnique.prototype.toString = () => name;
   VisTechnique.prototype.option = function(name, value) {

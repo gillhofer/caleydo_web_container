@@ -149,6 +149,10 @@ export interface IVisInstance extends C.IPersistable, events.IEventHandler, ILoc
   destroy();
 }
 
+export function assignVis(node: Element, vis: IVisInstance) {
+  (<any>node).__vis__ = vis;
+}
+
 /**
  * base class for an visualization
  */

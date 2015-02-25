@@ -32,6 +32,10 @@ export interface IDataType extends idtypes.SelectAble, C.IPersistable {
   idView(idRange?: ranges.Range) : C.IPromise<IDataType>;
 }
 
+
+export function assignData(node: Element, data: IDataType) {
+  (<any>node).__data__ = data;
+}
 /**
  * dummy data type just holding the description
  */

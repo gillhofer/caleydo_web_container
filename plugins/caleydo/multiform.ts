@@ -78,6 +78,8 @@ export class MultiForm extends vis.AVisInstance implements vis.IVisInstance, IMu
     }, options);
     this.parent = d3.select(parent).append('div').attr('class', 'multiform');
     this.node = this.parent.node();
+    this.parent.datum(data);
+    vis.assignVis(this.node, this);
     //find all suitable plugins
     this.visses = vis.list(data);
 
@@ -250,6 +252,11 @@ class GridElem implements C.IPersistable {
   constructor(public range: ranges.Range, public pos : number[], public data: datatypes.IDataType) {
   }
 
+  setcontent($c : D3.Selection) {
+    this.$content = $c;
+    this.$content.datum(this.data);
+  }
+
   subrange(r : ranges.Range) {
     var ri = this.range.intersect(r);
     return this.range.indexOf(ri);
@@ -306,6 +313,7 @@ class GridElem implements C.IPersistable {
 
   build(plugin: any) {
     this.actVis = plugin.factory(this.data, this.$content.node());
+    vis.assignVis(this.$content.node(), this.actVis);
     return this.actVis;
   }
 
@@ -361,6 +369,8 @@ export class MultiFormGrid extends vis.AVisInstance implements vis.IVisInstance,
     }, options);
     this.parent = d3.select(parent).append('div').attr('class', 'multiformgrid');
     this.node = this.parent.node();
+    this.parent.datum(data);
+    vis.assignVis(this.node, this);
     //find all suitable plugins
     this.visses = vis.list(data);
 
@@ -414,7 +424,7 @@ export class MultiFormGrid extends vis.AVisInstance implements vis.IVisInstance,
     this.$content = p;
     //create groups for all grid elems
     //TODO how to layout as a grid
-    this.grid.forEach((elem) => elem.$content = p.append('div').attr('class', 'content'));
+    this.grid.forEach((elem) => elem.setContent(p.append('div').attr('class', 'content')));
     //switch to first
     this.switchTo(<any>this.options.initialVis);
   }
