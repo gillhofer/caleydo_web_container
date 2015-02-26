@@ -8,6 +8,9 @@ import provenance = require('./main');
 import d3 = require('d3');
 import vis = require('../caleydo/vis');
 
+function translate(x = 0, y = 0) {
+  return 'translate('+(x || 0)+','+(y || 0)+')';
+}
 
 export class SubwayVis extends vis.AVisInstance implements vis.IVisInstance {
   private $node:D3.Selection;
@@ -24,8 +27,8 @@ export class SubwayVis extends vis.AVisInstance implements vis.IVisInstance {
   };
   private nodes = [];
   private links = [];
-  private line = d3.svg.line().interpolate('linear-closed').x(C.getter(0)).y(C.getter(1));
-  private yscale = d3.scale.linear();
+  //private line = d3.svg.line().interpolate('linear-closed').x(C.getter(0)).y(C.getter(1));
+  //private yscale = d3.scale.linear();
 
   constructor(public data:provenance.ProvenanceGraph, public parent:Element, private options:any) {
     super();
@@ -105,16 +108,16 @@ export class SubwayVis extends vis.AVisInstance implements vis.IVisInstance {
 
 
   private build($parent:D3.Selection) {
-    var size = this.size,
-      scale = this.options.scale;
+    var size = this.size;
+    //  scale = this.options.scale;
     var $svg = $parent.append('svg').attr({
       width: size[0],
       height: size[1],
       'class' : 'provenance-subway-vis'
     }).style('transform', 'rotate(' + this.options.rotate + 'deg)');
 
-    var $defs = $svg.append('defs');
-    var $g = $svg.append('g').attr('transform', 'scale(' + scale[0] + ',' + scale[1] + ')');
+    //var $defs = $svg.append('defs');
+    //var $g = $svg.append('g').attr('transform', 'scale(' + scale[0] + ',' + scale[1] + ')');
 
     $svg.append('g').attr('class', 'actions');
     $svg.append('g').attr('class', 'objects');
@@ -150,8 +153,7 @@ export class SubwayVis extends vis.AVisInstance implements vis.IVisInstance {
   }
 
   private update() {
-    var s = this.rawSize,
-      graph = this.data,
+    var graph = this.data,
       states = graph.states,
       act = graph.act,
       pathtosource = act.path;
