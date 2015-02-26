@@ -154,16 +154,15 @@ export interface IMatrixLoader {
 
 
 function viaAPILoader() {
-  var _data = undefined;
+  var _loader = undefined;
   return (desc) => {
-    if (_data) { //in the cache
-      return C.resolved(_data);
+    if (_loader) { //in the cache
+      return _loader;
     }
-    return C.getAPIJSON('/dataset/'+desc.id).then(function (data) {
+    return _loader = C.getAPIJSON('/dataset/'+desc.id).then(function (data) {
       data.rowIds = ranges.list(data.rowIds);
       data.colIds = ranges.list(data.colIds);
       data.ids = ranges.list(data.rowIds.dim(0), data.colIds.dim(0));
-      _data = data; //store cache
       return data;
     });
   };
