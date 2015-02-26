@@ -29,7 +29,7 @@ export interface IRangeElem {
  * @returns {number}
  */
 function fix(v:number, size:number) {
-  return v < 0 ? (size + 1 - v) : v;
+  return v < 0 ? (size + 1 + v) : v;
 }
 
 export class RangeElem implements IRangeElem {
