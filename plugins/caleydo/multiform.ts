@@ -517,7 +517,7 @@ export class MultiFormGrid extends vis.AVisInstance implements vis.IVisInstance,
     }
     return C.all(inElems.map((elem) => elem.g.actVis.locate(elem.r))).then((locations) => {
       //shift the locations according to grid position
-      locations = locations.map((loc, i) => loc ? loc.shift(inElems[i].pos) : loc).filter((loc) => !!loc);
+      locations = locations.map((loc, i) => loc ? loc.shift(inElems[i].pos) : loc).filter((loc) => loc != null);
       //merge into a single one
       var base = locations[0].aabb(),
         x = base.x, y = base.y, x2 = base.x2, y2 = base.y2;

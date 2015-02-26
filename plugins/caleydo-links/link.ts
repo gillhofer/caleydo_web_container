@@ -426,10 +426,11 @@ export class LinkContainer {
   }
 
   push(...elems : IDataVis[]) {
+    var idTypeFilter = this.options.idTypeFilter || C.constantTrue;
     elems.forEach((elem) => {
       var w = new VisWrapper(elem, this.dirtyEvents);
       this.arr.push(w);
-      var idtypes = w.idtypes.slice();
+      var idtypes = w.idtypes.filter((idtype, i) => idTypeFilter(idtype, i, elem));
       //update all links
       this.links.forEach((l) => {
         l.push(w);

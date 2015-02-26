@@ -20,8 +20,8 @@ exports.list = function () {
 };
 
 function convertToStratification(data) {
-  var d = data.slice(1).map(function (row) {
-      return { row : row[0], cluster : row[1] };
+  var d = data.slice(1).map(function (row, i) {
+      return { row : i, cluster : row[1] };
     });
   d = d.sort(function(a,b) { return a.cluster - b.cluster}); //sort by cluster;
   var clusters = {
