@@ -19,7 +19,35 @@ exports.list = function () {
   return datasetIndex;
 };
 
-function convertData(data) {
+function convertToStratification(data) {
+  var d = data.slice(1).map(function (row) {
+      return { row : row[0], cluster : row[1] };
+    });
+  d = d.sort(function(a,b) { return a.cluster - b.cluster}); //sort by cluster;
+  var clusters = {
+
+  };
+  d.forEach(function(di) {
+    var c = di.cluster;
+    if (clusters.hasOwnProperty(c)) {
+      clusters[c].push(di.row);
+    } else {
+      clusters[c] = [di.row];
+    }
+  });
+  clusters = Object.keys(clusters).map(function(clustername) {
+    return { name: clustername, range : clusters[clustername] };
+  });
+  return {
+    rows: d.map(function(di) { return di.row}),
+    groups: clusters
+  };
+}
+
+function convertData(desc, data) {
+  if (desc.type === 'stratification') {
+    return convertToStratification(data);
+  }
   return matrix.create({
     cols: data[0].slice(1),
     rows: data.slice(1).map(function (row) {
@@ -56,6 +84,6 @@ exports.load = function (desc, callback) {
     .on('end', function () {
       //console.log(dataset);
       console.log('Successfully parsed dataset ' + desc.name + ' from ' + (datasetBasePath + desc.path) + '!');
-      callback(convertData(dataset));
+      callback(convertData(desc, dataset));
     });
 };
