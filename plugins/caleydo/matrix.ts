@@ -100,7 +100,7 @@ function flatten(arr : any[][], indices: ranges.Range, select: number = 0) {
   return {
     data : r,
     indices: indices.dim(select).repeat(dim[1-select])
-  }
+  };
 }
 
 /**

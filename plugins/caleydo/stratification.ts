@@ -8,7 +8,7 @@ import ranges = require('./range');
 import idtypes = require('./idtype');
 import datatypes = require('./datatype');
 import vector = require('./vector');
-import math = require('./math');
+
 
 export interface IStratificationLoader {
   (desc: datatypes.IDataDescription) : C.IPromise<{
@@ -93,11 +93,10 @@ export class Stratification extends datatypes.DataTypeBase {
     if (this._v) {
       return this._v;
     }
-    this._v = this.load().then((data) => new StratificationVector(this, data.range, this.desc))
+    this._v = this.load().then((data) => new StratificationVector(this, data.range, this.desc));
   }
 
   range() {
-    var that = this;
     return this.load().then(function (data) {
       return data.range;
     });
@@ -143,7 +142,7 @@ export class StratificationVector extends vector.VectorBase implements vector.IV
     this.valuetype = {
       type: 'categorical',
       categories: range.groups.map((g) => {
-        return { name : g.name, color: g.color }
+        return { name : g.name, color: g.color };
       })
     };
     this.desc = {
