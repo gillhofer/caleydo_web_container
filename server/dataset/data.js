@@ -21,7 +21,7 @@ exports.list = function () {
 
 function convertToStratification(data) {
   var d = data.slice(1).map(function (row, i) {
-      return { row : i, cluster : row[1] };
+      return { row: row[0], i : i, cluster : row[1] };
     });
   d = d.sort(function(a,b) { return a.cluster - b.cluster}); //sort by cluster;
   var clusters = {
@@ -30,9 +30,9 @@ function convertToStratification(data) {
   d.forEach(function(di) {
     var c = di.cluster;
     if (clusters.hasOwnProperty(c)) {
-      clusters[c].push(di.row);
+      clusters[c].push(di.i);
     } else {
-      clusters[c] = [di.row];
+      clusters[c] = [di.i];
     }
   });
   clusters = Object.keys(clusters).map(function(clustername) {
