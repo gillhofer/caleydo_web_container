@@ -56,7 +56,7 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-too
 
   exports.Histogram = d3utils.defineVis('HistogramVis', function (data) {
     return {
-      nbins: Math.round(Math.sqrt(data.length)),
+      nbins: Math.round(Math.sqrt(data.desc.type === 'matrix' ? data.ncol * data.nrow : data.length)),
       totalHeight: true
     };
   }, [200, 100], function ($parent, data, size) {

@@ -8,6 +8,7 @@ import ranges = require('./range');
 import idtypes = require('./idtype');
 import datatypes = require('./datatype');
 import vector = require('./vector');
+import math = require('./math');
 
 export interface IMatrix extends datatypes.IDataType {
   /**
@@ -78,6 +79,28 @@ export interface IMatrix extends datatypes.IDataType {
    * @param range
    */
   data(range?:ranges.Range) : C.IPromise<any[][]>;
+
+  stats() : C.IPromise<math.IStatistics>;
+
+  hist(bins? : number, containedIds? : number) : C.IPromise<math.IHistogram>;
+}
+
+function flatten(arr : any[][], indices: ranges.Range, select: number = 0) {
+  var r = [], dim = [arr.length, arr[0].length];
+  if (select === 0) {
+    r = r.concat.apply(r, arr);
+  } else {
+    //stupid slicing
+    for(var i = 0; i < dim[1]; ++i) {
+      arr.forEach((ai) => {
+        r.push(ai[i]);
+      });
+    }
+  }
+  return {
+    data : r,
+    indices: indices.dim(select).repeat(dim[1-select])
+  }
 }
 
 /**
@@ -108,11 +131,39 @@ export class MatrixBase extends idtypes.SelectAble {
     return this.dim[1];
   }
 
+  get indices() : ranges.Range {
+    return ranges.range([0, this.nrow], [0, this.ncol]);
+  }
+
+  data() : C.IPromise<any[]> {
+    throw new Error('not implemented');
+  }
+
   view(range:ranges.Range = ranges.all()) : IMatrix {
     if (range.isAll) {
       return this._root;
     }
     return new MatrixView(this._root, range);
+  }
+
+  stats() : C.IPromise<math.IStatistics> {
+    return this.data().then((d) => math.computeStats.apply(math,d));
+  }
+
+  hist(bins? : number, containedIds = 0) : C.IPromise<math.IHistogram> {
+    var v = this._root.valuetype;
+    return this.data().then((d) => {
+      var flat = flatten(d, this.indices, containedIds);
+      switch(v.type) {
+        case 'categorical':
+          return math.categoricalHist(flat.data, flat.indices, flat.data.length, v.categories.map((d) => typeof d === 'string' ? d : d.name));
+        case 'real':
+        case 'int':
+          return math.hist(flat.data, flat.indices, flat.data.length, bins ? bins : Math.round(Math.sqrt(this.length)), v.range);
+        default:
+          return null; //cant create hist for unique objects or other ones
+      }
+    });
   }
 
   idView(idRange:ranges.Range = ranges.all()) : C.IPromise<IMatrix> {

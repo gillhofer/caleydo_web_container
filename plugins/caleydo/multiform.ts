@@ -235,7 +235,7 @@ export class MultiForm extends vis.AVisInstance implements vis.IVisInstance, IMu
         if (this.actDesc !== vis) { //changed in the meanwhile
           return null;
         }
-        this.actVis = plugin.factory(this.data, this.$content.node());
+        this.actVis = plugin.factory(this.data, this.$content.node(), this.options[vis.id] || {});
         this.fire('changed', vis, bak);
         return this.actVis;
       });

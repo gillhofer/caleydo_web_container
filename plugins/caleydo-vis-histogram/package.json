@@ -11,7 +11,7 @@
         "id": "caleydo-vis-histogram",
         "name": "Histogram",
         "icon": "icon.png",
-        "filter": [ "vector", "(categorical|real|int)" ]
+        "filter": [ "(vector|matrix)", "(categorical|real|int)" ]
       },
       {
         "type": "vis",

@@ -117,9 +117,9 @@ class Statistics implements IStatistics {
   }
 }
 
-export function computeStats(arr: IIterable<number>) : IStatistics {
+export function computeStats(...arr: IIterable<number>[]) : IStatistics {
   var r = new Statistics();
-  arr.forEach(r.push,r);
+  arr.forEach((a) => a.forEach(r.push,r));
   return r;
 }
 
@@ -169,7 +169,7 @@ class AHistogram implements IHistogram {
   }
 
   range(bin:number) {
-    return this.ranges_[bin];
+    return this.ranges_ ? this.ranges_[bin] : null;
   }
 
   get missing() {
@@ -181,24 +181,37 @@ class AHistogram implements IHistogram {
   }
 
   pushAll(arr: IIterable<any>, indices: ranges.Range1D, size: number) {
-    var it = indices.iter(size);
     var binindex = [], missingindex = [];
     for(var i = this.bins-1; i>=0; --i) {
       binindex.push([]);
     }
-    arr.forEach((x) => {
-      var index = it.next();
-      var bin = this.binOf(x);
-      if (bin < 0) {
-        this.missing_ ++;
-        missingindex.push(index);
-      } else {
-        this.bins_[bin]++;
-        binindex[bin].push(index);
-      }
-    });
-    this.ranges_ = binindex.map((d) => ranges.list(d.sort()));
-    this.missingRange_ = ranges.list(missingindex.sort());
+    if (indices) {
+      var it = indices.iter(size);
+      arr.forEach((x) => {
+        var index = it.next();
+        var bin = this.binOf(x);
+        if (bin < 0) {
+          this.missing_++;
+          missingindex.push(index);
+        } else {
+          this.bins_[bin]++;
+          binindex[bin].push(index);
+        }
+      });
+      this.ranges_ = binindex.map((d) => ranges.list(d.sort()));
+      this.missingRange_ = ranges.list(missingindex.sort());
+    } else {
+      arr.forEach((x) => {
+        var bin = this.binOf(x);
+        if (bin < 0) {
+          this.missing_++;
+        } else {
+          this.bins_[bin]++;
+        }
+      });
+      this.ranges_ = null;
+      this.missingRange_ = null;
+    }
   }
 
   forEach(callbackfn: (value: number, index: number) => void, thisArg?: any) {

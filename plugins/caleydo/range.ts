@@ -333,6 +333,18 @@ export class Range1D {
     return this.arr.length === 1 && this.arr[0].from === 0 && this.arr[0].step === 1;
   }
 
+  repeat(ntimes = 1) {
+    if (ntimes === 1) {
+      return this;
+    }
+    var r = this.arr.slice();
+    //push n times
+    for(var i = 1; i < ntimes; ++i) {
+      r.push.apply(r, this.arr);
+    }
+    return new Range1D(r);
+  }
+
   /**
    * combines this range with another and returns a new one
    * this = (1,3,4), sub = (2) -> (2)
