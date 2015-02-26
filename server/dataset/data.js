@@ -23,7 +23,11 @@ function convertToStratification(data) {
   var d = data.slice(1).map(function (row, i) {
       return { row: row[0], i : i, cluster : row[1] };
     });
-  d = d.sort(function(a,b) { return a.cluster - b.cluster}); //sort by cluster;
+  d = d.sort(function(a,b) {
+    var r = a.cluster - b.cluster;
+    return r === 0 ? a.row - b.row : r;
+  }); //sort by cluster;
+  console.log(JSON.stringify(d,null,' '));
   var clusters = {
 
   };
@@ -38,8 +42,9 @@ function convertToStratification(data) {
   clusters = Object.keys(clusters).map(function(clustername) {
     return { name: clustername, range : clusters[clustername] };
   });
+  console.log(JSON.stringify(clusters,null,' '));
   return {
-    rows: d.map(function(di) { return di.row}),
+    rows: data.slice(1).map(function(di) { return di[0]}),
     groups: clusters
   };
 }
