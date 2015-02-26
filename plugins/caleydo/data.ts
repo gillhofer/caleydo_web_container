@@ -39,6 +39,7 @@ function transformEntry(desc) {
   if (desc === undefined) {
     return desc;
   }
+
   //find matching type
   var plugin = available.filter((p) => p.name === desc.type);
   //no type there create a dummy one

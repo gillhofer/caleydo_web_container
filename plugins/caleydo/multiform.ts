@@ -318,7 +318,7 @@ class GridElem implements C.IPersistable {
   }
 
   get location() {
-    var offset = $(this.$content.node()).position();
+    var offset = $(this.$content.node()).offset();
     return {
       x : offset.left,
       y : offset.top
@@ -422,16 +422,18 @@ export class MultiFormGrid extends vis.AVisInstance implements vis.IVisInstance,
 
     //create content
     this.$content = p;
+    var wrap = this.options.wrap || C.identity;
     //create groups for all grid elems
     //TODO how to layout as a grid
     if (this.dims.length === 1) {
-      this.grid.forEach((elem) => elem.setContent(p.append('div').attr('class', 'content row')));
+      this.grid.forEach((elem) => elem.setContent(wrap(p.append('div').attr('class', 'content row'), elem.data, elem.range)));
     } else {
       var ndim = this.dimSizes;
       for(var i = 0; i < ndim[0]; ++i) {
         var row = p.append('div').attr('class', 'row');
         for(var j = 0; j < ndim[1]; ++j) {
-          this.grid[i*ndim[1] + j].setContent(row.append('div').attr('class', 'content').style('display','inline-block'));
+          var elem = this.grid[i*ndim[1] + j];
+          elem.setContent(wrap(row.append('div').attr('class', 'content').style('display','inline-block'), elem.data, elem.range));
         }
       }
     }
@@ -491,6 +493,13 @@ export class MultiFormGrid extends vis.AVisInstance implements vis.IVisInstance,
       var s = this.size;
       return C.resolved(geom.rect(0,0,s[0], s[1]));
     }
+    var parentLoc = $(this.$content.node()).offset();
+    function relativePos(pos) {
+      return {
+        x : pos.x - parentLoc.left,
+        y : pos.y - parentLoc.top
+      };
+    }
     function filterTo() {
       var inElems = [], i : number, matched, g : GridElem;
 
@@ -501,7 +510,7 @@ export class MultiFormGrid extends vis.AVisInstance implements vis.IVisInstance,
         if (!matched.isNone) { //direct group hit
           inElems.push({
             g: g,
-            pos: g.location,
+            pos: relativePos(g.location),
             r : matched
           });
         }
