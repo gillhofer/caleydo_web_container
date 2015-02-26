@@ -252,7 +252,7 @@ class GridElem implements C.IPersistable {
   constructor(public range: ranges.Range, public pos : number[], public data: datatypes.IDataType) {
   }
 
-  setcontent($c : D3.Selection) {
+  setContent($c : D3.Selection) {
     this.$content = $c;
     this.$content.datum(this.data);
   }
