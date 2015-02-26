@@ -53,6 +53,8 @@ export class HeatMap extends vis.AVisInstance implements vis.IVisInstance {
     this.options.rotate = 0;
     this.colorer = toScale(value).domain(this.options.domain).range(this.options.color);
     this.$node = this.build(d3.select(parent));
+    this.$node.datum(data);
+    this.$node.node().__vis__ = this;
   }
 
   get rawSize() {
@@ -217,6 +219,8 @@ export class HeatMap1D extends vis.AVisInstance implements vis.IVisInstance {
     this.options.rotate = 0;
     this.colorer = toScale(value).domain(this.options.domain).range(this.options.color);
     this.$node = this.build(d3.select(parent));
+    this.$node.datum(data);
+    this.$node.node().__vis__ = this;
   }
 
   get rawSize() {
