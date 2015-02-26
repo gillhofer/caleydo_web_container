@@ -67,7 +67,12 @@ router.route('/')
     next();
   })
   .get(function (req, res) {
-    res.json(datasetIndex);
+    console.log(req.query.ws);
+    var ws = req.query.ws || '';
+    var data = datasetIndex.filter(function(item) {
+      return (!item.ws && ws === '') || (item.ws && item.ws.match(ws));
+    });
+    res.json(data);
   });
 
 

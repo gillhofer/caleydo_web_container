@@ -429,8 +429,11 @@ export interface IPersistable {
 class HashProperties {
   private map: any = {};
 
-  constructor(private value : string) {
-    this.parse(value);
+  constructor() {
+    this.map = history.state;
+    if (!this.map) {
+      this.parse(location.hash);
+    }
   }
 
 
@@ -449,11 +452,14 @@ class HashProperties {
   }
 
   private update() {
-    location.hash = this.toString();
+    history.pushState(this.map, 'State '+Date.now(), '#'+this.toString());
   }
 
   private parse(v : string) {
     this.map = {}; //reset
+    if (v[0] === '#') {
+      v = v.slice(1);
+    }
     var parts = v.split(/[&=]/),
       i = 0, p = null,
       key = null;
@@ -486,4 +492,4 @@ class HashProperties {
   }
 }
 
-export var hash = new HashProperties(location.hash);
+export var hash = new HashProperties();
