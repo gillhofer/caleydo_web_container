@@ -237,6 +237,7 @@
   },
   {
     "name": "D1 Row KMeans 2",
+    "origin" : "D1",
     "path": "random/d1.2.csv",
     "separator" : "\t",
     "size": [100],
@@ -247,6 +248,7 @@
   },
   {
     "name": "D1 Row KMeans 3",
+    "origin" : "D1",
     "path": "random/d1.3.csv",
     "separator" : "\t",
     "size": [100],
@@ -257,6 +259,7 @@
   },
   {
     "name": "D1 Row KMeans 4",
+    "origin" : "D1",
     "path": "random/d1.4.csv",
     "separator" : "\t",
     "size": [100],
@@ -267,6 +270,7 @@
   },
   {
     "name": "D1 Row KMeans 5",
+    "origin" : "D1",
     "path": "random/d1.5.csv",
     "separator" : "\t",
     "size": [100],
@@ -277,6 +281,7 @@
   },
   {
     "name": "D2 Row KMeans 2",
+    "origin" : "D2",
     "path": "random/d2.2.csv",
     "separator" : "\t",
     "size": [100],
@@ -287,6 +292,7 @@
   },
   {
     "name": "D2 Row KMeans 3",
+    "origin" : "D2",
     "path": "random/d2.3.csv",
     "separator" : "\t",
     "size": [100],
@@ -297,6 +303,7 @@
   },
   {
     "name": "D2 Row KMeans 4",
+    "origin" : "D2",
     "path": "random/d2.4.csv",
     "separator" : "\t",
     "size": [100],
@@ -307,6 +314,7 @@
   },
   {
     "name": "D2 Row KMeans 5",
+    "origin" : "D2",
     "path": "random/d2.5.csv",
     "separator" : "\t",
     "size": [100],
@@ -317,6 +325,7 @@
   },
   {
     "name": "D3 Row KMeans 2",
+    "origin" : "D3",
     "path": "random/d3.2.csv",
     "separator" : "\t",
     "size": [100],
@@ -327,6 +336,7 @@
   },
   {
     "name": "D3 Row KMeans 3",
+    "origin" : "D3",
     "path": "random/d3.3.csv",
     "separator" : "\t",
     "size": [100],
@@ -337,6 +347,7 @@
   },
   {
     "name": "D3 Row KMeans 4",
+    "origin" : "D3",
     "path": "random/d3.4.csv",
     "separator" : "\t",
     "size": [100],
@@ -347,6 +358,7 @@
   },
   {
     "name": "D3 Row KMeans 5",
+    "origin" : "D3",
     "path": "random/d3.5.csv",
     "separator" : "\t",
     "size": [100],
@@ -357,6 +369,7 @@
   },
   {
     "name": "D1 Column KMeans 3",
+    "origin" : "D1",
     "path": "random/d1t.3.csv",
     "separator" : "\t",
     "size": [20],
@@ -367,6 +380,7 @@
   },
   {
     "name": "D2 Column KMeans 3",
+    "origin" : "D2",
     "path": "random/d2t.3.csv",
     "separator" : "\t",
     "size": [20],
@@ -377,6 +391,7 @@
   },
   {
     "name": "D3 Column KMeans 3",
+    "origin" : "D3",
     "path": "random/d3t.3.csv",
     "separator" : "\t",
     "size": [20],

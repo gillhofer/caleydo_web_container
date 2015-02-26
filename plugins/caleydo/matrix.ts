@@ -337,7 +337,7 @@ class TransposedMatrix extends MatrixBase  implements IMatrix {
   }
 
   data(range:ranges.Range = ranges.all()) {
-    return this.t.data(range ? range.swap() : undefined);
+    return this.t.data(range ? range.swap() : undefined).then((data : any[][]) => datatypes.transpose(data));
   }
 }
 
@@ -396,7 +396,7 @@ class MatrixView extends MatrixBase implements IMatrix {
   }
 
   data(range: ranges.Range = ranges.all()) {
-    return this._root.data(this.range.preMultiply(range, this._root.dim)).then((data : any[][]) => datatypes.transpose(data));
+    return this._root.data(this.range.preMultiply(range, this._root.dim));
   }
 
   view(range: ranges.Range = ranges.all()) {

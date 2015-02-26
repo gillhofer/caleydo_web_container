@@ -424,7 +424,17 @@ export class MultiFormGrid extends vis.AVisInstance implements vis.IVisInstance,
     this.$content = p;
     //create groups for all grid elems
     //TODO how to layout as a grid
-    this.grid.forEach((elem) => elem.setContent(p.append('div').attr('class', 'content')));
+    if (this.dims.length === 1) {
+      this.grid.forEach((elem) => elem.setContent(p.append('div').attr('class', 'content row')));
+    } else {
+      var ndim = this.dimSizes;
+      for(var i = 0; i < ndim[0]; ++i) {
+        var row = p.append('div').attr('class', 'row');
+        for(var j = 0; j < ndim[1]; ++j) {
+          this.grid[i*ndim[1] + j].setContent(row.append('div').attr('class', 'content').style('display','inline-block'));
+        }
+      }
+    }
     //switch to first
     this.switchTo(<any>this.options.initialVis);
   }
