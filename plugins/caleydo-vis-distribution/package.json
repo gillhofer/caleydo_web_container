@@ -1,0 +1,52 @@
+{
+  "name": "caleydo-vis-histogram",
+  "version": "0.0.1",
+  "dependencies": {
+    "d3": "~3.4.11"
+  },
+  "caleydo": {
+    "plugins": [
+      {
+        "type": "vis",
+        "id": "caleydo-vis-histogram",
+        "folder": "caleydo-vis-distribution",
+        "name": "Histogram",
+        "icon": "icon.png",
+        "filter": [
+          "(vector|matrix)",
+          "(categorical|real|int)"
+        ]
+      },
+      {
+        "type": "vis",
+        "id": "caleydo-vis-mosaic",
+        "folder": "caleydo-vis-distribution",
+        "name": "Mosaic",
+        "factory": "createMosaic",
+        "icon": "icon_mosaic.png",
+        "sizeDependsOnDataDimension": [
+          false,
+          true
+        ],
+        "scaling": "height-only",
+        "filter": [
+          "vector",
+          "categorical"
+        ]
+      },
+      {
+        "type": "vis",
+        "id": "caleydo-vis-pie",
+        "folder": "caleydo-vis-distribution",
+        "name": "Pie",
+        "factory": "createPie",
+        "icon": "icon_pie.png",
+        "scaling": "aspect",
+        "filter": [
+          "vector",
+          "categorical"
+        ]
+      }
+    ]
+  }
+}

@@ -12,6 +12,7 @@ export interface IRangeElem {
   size(size?:number):number;
   clone() : IRangeElem;
   invert(index:number, size?:number);
+  __iterator__: Iterator.IIterator<number>;
   iter(size?:number):Iterator.IIterator<number>;
   toString();
   from: number;
@@ -106,6 +107,10 @@ export class RangeElem implements IRangeElem {
     return Iterator.range(fix(this.from, size), fix(this.to, size), this.step);
   }
 
+  get __iterator__() {
+    return this.iter();
+  }
+
   contains(value:number, size?:number) {
     var f = fix(this.from, size);
     var t = fix(this.to, size);
@@ -186,6 +191,10 @@ export class SingleRangeElem implements IRangeElem {
 
   iter(size?:number):Iterator.IIterator<number> {
     return Iterator.single(fix(this.from, size));
+  }
+
+  get __iterator__() {
+    return this.iter();
   }
 
   toString() {
@@ -580,6 +589,10 @@ export class Range1D {
       return Iterator.forList(this.arr.map((d) => (<any>d).from));
     }
     return Iterator.concat.apply(Iterator, this.arr.map((d) => d.iter(size)));
+  }
+
+  get __iterator__() {
+    return this.iter();
   }
 
   asList(size?:number):number[] {

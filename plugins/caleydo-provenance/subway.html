@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+  <style>
+    svg {
+      shape-rendering : "geometricPrecision"
+    }
+    .state:hover {
+      fill: orange;
+      opacity: 1 !important;
+    }
+    .state {
+      fill: gray;
+      opacity: 0.1;
+    }
+    .state.multi {
+      opacity: 1;
+    }
+    .state.last {
+      fill: black;
+      opacity: 1;
+    }
+    .state:not(.active) {
+      opacity: 0.2;
+    }
+    .state:not(.last):not(.multi) {
+      opacity: 0.05;
+    }
+    .object {
+      fill: none;
+      stroke: black;
+      stroke-width: 2;
+    }
+    .object.visual {
+      stroke: #7581ff;
+    }
+    .object.data {
+      stroke: #5ed463;
+    }
+    .object.selection {
+      stroke: #ffca54;
+    }
+    .action.visual {
+      fill: blue;
+    }
+    .action.data {
+      fill: green;
+    }
+    .action.selection {
+      fill: orange;
+    }
+  </style>
+</head>
+<body>
+  <script src="http://d3js.org/d3.v3.js"></script>
+  <script>
+
+    function translate(x, y) {
+      return 'translate('+(x || 0)+','+(y || 0)+')';
+    }
+    function transform(x, y, rotate, scaleX, scaleY) {
+      var t= d3.transform('');
+      t.translate = [x || 0, y || 0];
+      t.rotate = rotate|| 0;
+      t.scale = [scaleX || 1, scaleY || 1];
+      return t;
+    }
+
+    var provGraphX = {
+      nodes : [ //time order by array order except for prev link
+        { type : 'action', name: 'D1A', category: 'data', operation: 'create', links: { creates: 'D1'} },
+        { type : 'object', name: 'D1', category: 'data' },
+        { type : 'action', name: 'D2V1A', category: 'visual', operation: 'create', links: { creates: 'D1V', requires: 'D1'} },
+        { type : 'object', name: 'D1V', category: 'visual' },
+
+        { type : 'action', name: 'D2A', category: 'data', operation: 'create', links: { creates: 'D2'} },
+        { type : 'object', name: 'D2', category: 'data' },
+        { type : 'action', name: 'D2V1A', category: 'visual', operation: 'create', links: { creates: 'D2V1', requires: 'D2'} },
+        { type : 'object', name: 'D2V1', category: 'visual' },
+
+        { type : 'action', name: 'S2', category: 'selection', operation: 'update', links: { creates: 'S'} },
+        { type : 'object', name: 'S', category: 'selection' },
+
+        { type : 'action', name: 'D2A2', category: 'data', operation: 'update', links: { requires: 'D2'} },
+        { type : 'action', name: 'D2V1A2', category: 'visual', operation: 'update', links: { requires: 'D2V1'} },
+
+        { type : 'action', name: 'D1V1A', category: 'visual', operation: 'create', links: { creates: 'D1V2', requires: 'D1'} },
+        { type : 'object', name: 'D1V2', category: 'visual' },
+        { type : 'action', name: 'D1V1A', category: 'visual', operation: 'update', links: { requires: 'D1V2'} },
+
+        { type : 'action', name: 'S1', category: 'selection', operation: 'update', links: { requires: 'S' } },
+
+        { type : 'action', name: 'D2V2A', category: 'visual', operation: 'remove', links: { removes: 'D2V1'} },
+        { type : 'action', name: 'S3', category: 'selection', operation: 'update', links: { requires: 'S' } },
+        { type : 'action', name: 'D2V2A', category: 'visual', operation: 'remove', links: { removes: 'D1V2'} },
+        { type : 'action', name: 'D1A3', category: 'data', operation: 'remove', links: { removes: 'D1'} },
+
+        { type : 'action', name: 'D3A', category: 'data', operation: 'create', links: { prev: 'S1', creates: 'D3' } },
+        { type : 'object', name: 'D3', category: 'data' },
+        { type : 'action', name: 'D3V1', category: 'visual', operation: 'create', links: { creates: 'D3V1', requires: 'D3'} },
+        { type : 'object', name: 'D3V1', category: 'visual' },
+        { type : 'action', name: 'D1V1A2', category: 'visual', operation: 'update', links: { requires: 'D3V1'} },
+        { type : 'action', name: 'S4', category: 'selection', operation: 'update', links: { requires: 'S' } },
+        { type : 'action', name: 'D1V1A3', category: 'visual', operation: 'update', links: {  requires: 'D3V1'} },
+
+        //data, visual, selection, layout
+        /*{
+         type : 'action', //object, action, state
+         category : '', //data, visual, selection, layout
+         operation: '', //create, update, remove
+         name: ''
+         },*/
+      ]
+    };
+
+    function toGraph(graph) {
+      var byName = {};
+      graph.nodes.forEach(function(g) {
+        byName[g.name] = g;
+      });
+      //resolve links
+      graph.nodes.forEach(function(g, i) {
+        if (g.links) {
+          Object.keys(g.links).forEach(function(k) {
+            var v = g.links[k];
+            if (Array.isArray(v)) {
+              v = v.map(function(vi) { return byName[vi] });
+            } else {
+              v = byName[v];
+            }
+            g.links[k] = v;
+          })
+        } else {
+          g.links = {};
+        }
+      });
+      function state(action) {
+        var r= { type: 'state', name: action?action.name: 'start', links: { from: action, to: [], next : [], consistsOf : []}};
+        if (action) {
+          action.links.leadsTo = r;
+        }
+        r.desc = 'State '+ r.name;
+        return r;
+      }
+      var actions = graph.nodes.filter(function(g) { return g.type === 'action' });
+
+      var objs = graph.nodes.filter(function(g) { return g.type === 'object' });
+      objs.forEach(function(o) {
+        o.links.usedBy = [];
+        o.links.partOf = [];
+        o.desc = o.category + ' ' + o.name;
+      });
+      //every action leads to new state
+      var states = [state(null)].concat(actions.map(function(a) { return state(a) }));
+      //create object links
+      actions.forEach(function(a, i) {
+        if (a.links.requires) { //requires
+          if (!Array.isArray(a.links.requires)) {
+            a.links.requires = [a.links.requires];
+          }
+          a.links.requires.forEach(function(o) { o.links.usedBy.push(a) })
+        } else {
+          a.links.requires = [];
+        }
+        if (a.links.creates) { //creates
+          if (!Array.isArray(a.links.creates)) {
+            a.links.creates = [a.links.creates];
+          }
+          a.links.creates.forEach(function(o) {o.links.createdBy = a })
+        } else {
+          a.links.creates = [];
+        }
+        if (a.links.removes) { //removes
+          if (!Array.isArray(a.links.removes)) {
+            a.links.removes = [a.links.removes];
+          }
+          a.links.requires.push.apply(a.links.requires, a.links.removes);
+          a.links.removes.forEach(function(o) { o.links.removedBy = a })
+        } else {
+          a.links.removes = [];
+        }
+        if (a.links.prev) { //create prev link
+          a.links.prev = a.links.prev.links.leadsTo;
+        } else {
+          a.links.prev = i > 0 ? actions[i-1].links.leadsTo : states[0];
+        }
+        a.links.prev.links.to.push(a); //to link
+
+        var d = a.name + ' ';
+        if (a.operation === 'create') {
+          d += 'creating '+ a.category + ' '+a.links.creates.map(getter('name')).join(', ');
+        } else if (a.operation === 'update') {
+          d += 'updates ' + a.category + ' '+a.links.requires.map(getter('name')).join(', ');
+        } else {
+          d += 'removes '+ a.category + ' '+a.links.removes.map(getter('name')).join(', ');
+        }
+        a.desc = d;
+
+      });
+      states.slice(1).forEach(function(s) {
+        s.links.prev = s.links.from.links.prev;
+        s.links.prev.links.next.push(s);
+        var r = s.links.prev.links.consistsOf.slice();
+        r.push.apply(r, s.links.from.links.creates);
+        s.links.from.links.removes.forEach(function(rem) {
+          r.splice(r.indexOf(rem),1);
+        });
+        s.links.consistsOf = r;
+        r.forEach(function(o) {
+          o.links.partOf.push(s);
+        });
+        s.desc = s.name;
+      });
+
+      return {
+        states: states,
+        actions: actions,
+        objects: objs
+      };
+    }
+
+    var g = toGraph(provGraphX);
+
+    function getter(name) {
+      return function(d) { return d[name]; };
+    }
+    var size = [1000, 800];
+    var $svg = d3.select('body').append('svg').attr({
+      width: size[0],
+      height: size[1]
+    }).append('g').attr('transform',transform(20,20, 0, 1.2,1.2));
+
+    //fins the path to the root
+    function findPath(p) {
+      var prev = p.links.prev;
+      var r = [];
+      if (prev) {
+        r = findPath(prev);
+      }
+      r.push(p);
+      return r;
+    }
+    var lineShift = 5, stateStep = 15;
+
+    function layoutGraph(g, act, size) {
+      var path = findPath(act);
+
+
+      //move the path
+      path.slice(1).forEach(function(p) {
+        var prev = p.links.prev;
+        if (prev.links.next.length > 1) { //move me to the front
+          var at = prev.links.next.indexOf(p);
+          prev.links.next.splice(at, 1);
+          prev.links.next.unshift(p);
+        }
+      });
+
+      g.states.forEach(function (s,i) {
+        s.clazz = '';
+        s.clazz += s.links.next.length == 0? ' last' : '';
+        if (path.indexOf(s) >= 0) { //highlight active path
+          s.clazz += ' active';
+        }
+        if (s.links.to.length > 1) { //highlight the multi branch points
+          s.clazz += ' multi';
+        }
+        s.x = s.links.prev ? s.links.prev.x + stateStep : 20;
+        s.y = s.links.prev ? s.links.prev.y + s.links.prev.links.next.indexOf(s) * 80 : 0;
+        s.height = 5 + s.links.consistsOf.length * lineShift;
+      });
+
+      g.actions.forEach(function (a, i) {
+        a.clazz = a.category + ' '+ a.operation;
+        a.x = a.links.prev.x + stateStep/2;
+        a.y = a.links.prev.y;
+        var range = [100,0];
+        if (a.links.requires.length > 0) {
+          range = d3.extent(a.links.requires, function (d) {
+            return a.links.prev.links.consistsOf.indexOf(d)
+          });
+        }
+        if (a.links.creates.length > 0) {
+          var r = d3.extent(a.links.creates, function(d) {
+            return a.links.leadsTo.links.consistsOf.indexOf(d);
+          });
+          range[0] = Math.min(range[0], r[0]);
+          range[1] = Math.max(range[1], r[1]);
+        }
+        a.y += range[0] * lineShift;
+        a.span = range[0] === range[1] ? 1 : range[1]-range[0] + 1;
+      });
+
+      g.objects.forEach(function(o) {
+        o.clazz = o.category;
+        o.d = [];
+        var last = null;
+        function toY(s) {
+          if (s.links.consistsOf) {
+            return s.y + s.links.consistsOf.indexOf(o) * lineShift;
+          }
+          if (s.span > 1) {
+            return s.y + (s.span-1) * lineShift;
+          }
+          return s.y;
+        }
+        function toX(s) {
+          return s.x;
+        }
+        function line(a, b) {
+          if (a !== last) {
+            o.d.push('M'+ (toY(a)+4) + ','+ (toX(a) + 2));
+          }
+          last = b;
+          o.d.push('L'+ (toY(b)+4) + ','+ (toX(b) + 2));
+        }
+        line(o.links.createdBy, o.links.partOf[0]);
+        o.links.partOf.slice(1).forEach(function(s) {
+          line(s.links.prev, s);
+        });
+        if (o.links.removedBy) {
+          line(o.links.removedBy.links.prev, o.links.removedBy);
+        }
+        o.d = o.d.join(' ');
+      });
+    }
+
+    var actState = null;
+
+    function jumpTo(state) {
+      var p = findPath(actState);
+      var target = findPath(state),
+        i;
+      if ((i = p.indexOf(state)) >= 0) { //no branch switch
+        movePath(state, (p.length - i -1));
+        return;
+      }
+      if ((i = target.indexOf(actState)) >= 0) {
+        moveTrain(state, (target.length - i -1));
+        return;
+      }
+      //intermediate animation for the path to follow
+      //find common
+      i = 0;
+      while (p[i] === target[i]) {
+        i++;
+      }
+      if (i === 0) { //error
+
+      } else {
+        moveTrain(p[i-1], p.length - i -1).each('end', function() {
+          moveTrain(state, target.length - i - 1).each('end', function() {
+            layoutGraph(g, state, size);
+            update(state);
+          })
+        });
+      }
+    }
+
+    function moveRect(sel) {
+      sel.attr({
+        y: getter('x'),
+        x: getter('y'),
+        width: getter('height')
+      })
+    }
+
+    function movePath(path) {
+      var t = $svg.select('.train');
+      var p = moveTrain(path[0]);
+      path.slice(1).forEach(function(pi) {
+        p = p.transition().each(function(d) {
+          d3.select(this).datum(pi);
+        }).call(moveRect);
+      });
+      return p;
+    }
+
+    function moveTrain(act, factor) {
+      var bak = actState;
+      actState = act;
+      var $train = $svg.selectAll('.train').data([act]);
+      $train.enter().append('rect').attr({
+        height: 5,
+        rx: 3,
+        ry: 3,
+        'class': 'train'
+      });
+      return $train.transition().duration(200 * (factor || 1)).call(moveRect);
+    }
+
+    function update(act) {
+      var $objects = $svg.selectAll('.object').data(g.objects);
+      $objects.enter().append('path').append('title');
+      $objects.transition().attr({
+        d: getter('d'),
+        'class': function (d) {
+          return 'object ' + (d.clazz || '')
+        }
+      }).select('title').text(getter('desc'));
+      var $actions = $svg.selectAll('.action').data(g.actions);
+      $actions.enter().append('g').append('path').append('title');
+      $actions.transition().attr({
+        transform: function(d) { return transform(d.y, d.x) },
+        'class': function (d) {
+          return 'action ' + (d.clazz || '')
+        }
+      }).select('path').attr('d', function(d) {
+        var y = lineShift * d.span-3;
+        return 'M4,0 L0,2 L5,4 L'+y+',4 L'+(y+5)+',2 L'+y+',0 Z';
+      }).select('title').text(getter('desc'));
+      var $states = $svg.selectAll('.state').data(g.states);
+      $states.enter().append('rect').attr({
+        height: 5,
+        rx: 3,
+        ry: 3
+      }).on('click', jumpTo).append('title');
+      $states.transition().attr({
+        y: getter('x'),
+        x: getter('y'),
+        width: getter('height'),
+        'class': function (d) {
+          return 'state ' + (d.clazz || '')
+        }
+      }).select('title').text(getter('desc'));
+
+      moveTrain(act);
+    }
+
+    layoutGraph(g, g.states[g.states.length-1], [1000, 800]);
+    update(g.states[g.states.length-1]);
+
+
+  </script>
+</body>
+</html>
