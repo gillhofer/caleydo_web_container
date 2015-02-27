@@ -610,6 +610,13 @@ export class Range1D {
     return Range1D.from(r);
   }
 
+  removeDuplicates(size?:number): Range1D {
+    var arr = this.iter().asList();
+    arr = arr.sort();
+    arr = arr.filter((di, i) => di !== arr[i-1]); //same value as before, remove
+    return Range1D.from(arr);
+  }
+
   /**
    * reverts the order of this range
    */

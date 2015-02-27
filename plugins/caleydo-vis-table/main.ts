@@ -36,7 +36,7 @@ export class Table extends vis.AVisInstance implements vis.IVisInstance {
         break;
     }
     this.$node.datum(data);
-    this.$node.node().__vis__ = this;
+    vis.assignVis(this.$node.node(), this);
   }
 
   get rawSize() {

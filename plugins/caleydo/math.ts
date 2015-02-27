@@ -198,8 +198,9 @@ class AHistogram implements IHistogram {
           binindex[bin].push(index);
         }
       });
-      this.ranges_ = binindex.map((d) => ranges.list(d.sort()));
-      this.missingRange_ = ranges.list(missingindex.sort());
+      //build range and remove duplicates
+      this.ranges_ = binindex.map((d) => ranges.list(d.sort().filter((di, i, a) => di !== a[i-1])));
+      this.missingRange_ = ranges.list(missingindex.sort().filter((di, i, a) => di !== a[i-1]));
     } else {
       arr.forEach((x) => {
         var bin = this.binOf(x);
