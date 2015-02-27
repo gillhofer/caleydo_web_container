@@ -119,7 +119,7 @@ class Link {
     this.id = toId(a, b);
   }
 
-  update($g : D3.Selection) {
+  update($g : D3.Selection): C.IPromise<void> {
     var a = this.a,
       b = this.b,
       al = a.location.aabb(),
@@ -134,15 +134,20 @@ class Link {
       bl = al;
       al = tmp;
     }
-
+    if (this.options.animate) {
+      $g.transition().duration(100).style('opacity', 0);
+    }
     if (!this.shouldRender(a, al, b, bl)) {
       this.render([], $g);
+      if (this.options.animate) {
+        $g.transition().duration(100).style('opacity', 1);
+      }
       return;
     }
     var f = this.options.reprs[Math.abs(this.mode($g))-1]
       .load()
       .then((plugin) => plugin.factory(this, a, al, b, bl));
-    f.then((llinks) => {
+    return f.then((llinks) => {
       if (this.options.interactive !== false) {
         llinks.unshift({ //add a background
           clazz: 'rel-back',
@@ -151,6 +156,10 @@ class Link {
         });
       }
       this.render(llinks, $g);
+      if (this.options.animate) {
+        $g.transition().duration(100).style('opacity', 1);
+      }
+      return null;
     });
   }
 
@@ -283,7 +292,8 @@ class LinkIDTypeContainer {
     this.$node = d3.select(parent).append('svg');
     this.$node.style({
       left: '0px',
-      top: '0px'
+      top: '0px',
+      opacity: 1
     });
     this.$node.append('g');
     C.onDOMNodeRemoved(this.$node.node(), this.destroy, this);
@@ -292,6 +302,13 @@ class LinkIDTypeContainer {
   private selectionUpdate(type:string, selected: ranges.Range, added: ranges.Range, removed: ranges.Range) {
     //TODO
     this.renderAll();
+  }
+
+  hide() {
+    this.$node.select('g').selectAll('g').transition().duration(100).style('opacity',0);
+  }
+  show() {
+    this.$node.select('g').selectAll('g').transition().duration(100).style('opacity',1);
   }
 
   private changed(elem: VisWrapper) {
@@ -332,6 +349,8 @@ class LinkIDTypeContainer {
     this.$node.select('g').attr('transform', 'translate(' + (-l.x) + ',' + (-l.y) + ')');
   }
 
+
+
   private prepareCombinations() {
     var $root = this.$node.select('g');
     var combinations = [];
@@ -347,13 +366,18 @@ class LinkIDTypeContainer {
       }
     }
     var $combi = $root.selectAll('g').data(combinations, (l) => l.id);
-    $combi.enter().append('g').attr('data-id', (l) => l.id);
+    $combi.enter().append('g').attr('data-id', (l) => l.id).style('opacity',1);
     $combi.exit().remove();
+  }
+
+  update() {
+    return this.renderAll();
   }
 
   private renderAll() {
     var $root = this.$node.select('g');
     var i , j, ai, aj, l = this.arr.length;
+    var promises = [];
     for(i = 0; i < l ; ++i) {
       ai = this.arr[i];
       for(j = 1; j < l; ++j) {
@@ -361,10 +385,11 @@ class LinkIDTypeContainer {
         var id = toId(ai, aj);
         var $g = $root.select('g[data-id="' + id + '"]');
         $g.each(function(link) {
-          link.update(d3.select(this));
+          promises.push(link.update(d3.select(this)));
         });
       }
     }
+    return C.all(promises);
   }
 
   private render(elem: VisWrapper) {
@@ -373,31 +398,33 @@ class LinkIDTypeContainer {
     this.prepareCombinations();
     var $root = this.$node.select('g');
 
+    var promises = [];
     this.arr.forEach((o) => {
       if (o !== elem) {
         var id = toId(o, elem);
         $root.select('g[data-id="' + id + '"]').each(function(link) {
-          link.update(d3.select(this));
+          promises.push(link.update(d3.select(this)));
         });
       }
     });
+    return C.all(promises);
   }
 
   private destroy() {
     this.idtype.off('select', this.listener);
   }
 
-  push(elem: VisWrapper) {
+  push(elem: VisWrapper, triggerUpdate = true) {
     var idtypes = elem.idtypes;
     if (idtypes.indexOf(this.idtype) >= 0) {
       this.arr.push(elem);
       elem.callbacks.push(this.change);
-      if (this.arr.length > 1) {
+      if (this.arr.length > 1 && triggerUpdate) {
         this.render(elem);
       }
     }
   }
-  remove(elem: VisWrapper) {
+  remove(elem: VisWrapper, triggerUpdate = true) {
     var index = this.arr.indexOf(elem);
     if (index >= 0) {
       this.arr.splice(index, 1);
@@ -422,18 +449,39 @@ export class LinkContainer {
     parent.appendChild(this.node);
     this.node.classList.add('link-container');
     C.onDOMNodeRemoved(this.node, this.destroy, this);
-    this.options.reprs = plugins.list('link-representation').sort((a, b) => b.granularity - a.granularity);
+    this.options = C.mixin({
+      reprs : plugins.list('link-representation').sort((a, b) => b.granularity - a.granularity),
+      animate: true,
+      idTypeFilter : C.constantTrue
+    }, this.options);
   }
 
-  push(...elems : IDataVis[]) {
-    var idTypeFilter = this.options.idTypeFilter || C.constantTrue;
+  hide() {
+    this.links.forEach((l) => l.hide());
+  }
+  show() {
+    this.links.forEach((l) => l.show());
+  }
+
+  update() {
+    this.links.forEach((l) => l.update());
+  }
+
+  push(update: boolean, ...elems : IDataVis[]);
+  push(elem: IDataVis, ...elems : IDataVis[]);
+  push(arg: any, ...elems: IDataVis[]) {
+    var triggerUpdate = arg !== false;
+    if (typeof arg !== 'boolean') {
+      elems.unshift(<IDataVis>arg);
+    }
+    var idTypeFilter = this.options.idTypeFilter;
     elems.forEach((elem) => {
       var w = new VisWrapper(elem, this.dirtyEvents);
       this.arr.push(w);
       var idtypes = w.idtypes.filter((idtype, i) => idTypeFilter(idtype, i, elem));
       //update all links
       this.links.forEach((l) => {
-        l.push(w);
+        l.push(w, triggerUpdate);
         var index = idtypes.indexOf(l.idtype);
         if (index >= 0) {
           idtypes.splice(index, 1);
@@ -442,20 +490,26 @@ export class LinkContainer {
       //add missing idtypes
       idtypes.forEach((idtype) => {
         var n = new LinkIDTypeContainer(idtype, this.node, this.options);
-        n.push(w);
+        n.push(w, triggerUpdate);
         this.links.push(n);
       });
     });
   }
 
-  remove(elem: IDataVis) {
+  remove(update: boolean, elem: IDataVis);
+  remove(elem: IDataVis);
+  remove(arg : any, elem?: IDataVis) {
+    var triggerUpdate = arg !== false;
+    if (typeof arg !== 'boolean') {
+      elem = <IDataVis>arg;
+    }
     var index = C.indexOf(this.arr, (w) => w.vis === elem);
     if (index < 0) {
       return false;
     }
     var w = this.arr[index];
     w.destroy();
-    this.links = this.links.filter((l) => l.remove(w));
+    this.links = this.links.filter((l) => l.remove(w, triggerUpdate));
     this.arr.splice(index, 1);
     return true;
   }

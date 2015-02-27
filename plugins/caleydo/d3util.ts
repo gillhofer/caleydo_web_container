@@ -9,6 +9,13 @@ import geom = require('./geom');
 import d3 = require('d3');
 'use strict';
 
+export function transform(x = 0, y = 0, rotate = 0, scaleX = 1, scaleY = 1) {
+  var t= d3.transform('');
+  t.translate = [x, y];
+  t.rotate = rotate;
+  t.scale = [scaleX, scaleY];
+  return t;
+}
 /**
  * utility function to handle selections
  * @param data

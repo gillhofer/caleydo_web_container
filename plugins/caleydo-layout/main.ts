@@ -2,9 +2,10 @@
  * Created by Samuel Gratzl on 15.12.2014.
  */
 import geom = require('../caleydo/geom');
+import C = require('../caleydo/main');
 
 export interface ILayoutElem {
-  setBounds(x:number, y:number, w:number, h:number);
+  setBounds(x:number, y:number, w:number, h:number) : C.IPromise<void>;
 
   getBounds(): geom.Rect;
 
@@ -49,6 +50,7 @@ class HTMLLayoutElem extends ALayoutElem implements ILayoutElem {
     style.top = y + unit;
     style.width = w + unit;
     style.height = h + unit;
+    return null;
   }
 
   getBounds() {
@@ -84,7 +86,7 @@ export var no_padding = {
 };
 
 export interface ILayout {
-  (elems:ILayoutElem[], w:number, h:number, parent:ILayoutElem) : boolean;
+  (elems:ILayoutElem[], w:number, h:number, parent:ILayoutElem) : C.IPromise<boolean>;
 }
 
 function isDefault(v:number) {
@@ -95,22 +97,30 @@ function grab(v_def:number, v:number) {
   return isDefault(v_def) ? v : v_def;
 }
 
+function waitFor(promises : C.IPromise<any>[], redo: boolean = false) {
+  promises = promises.filter((p) => p != null);
+  if (promises.length === 0) {
+    return C.resolved(redo);
+  } else if (promises.length === 1) {
+    return promises[0].then(() => redo);
+  }
+  return C.all(promises).then(() => redo);
+}
+
 export function layers(elems:ILayoutElem[], w:number, h:number, parent:ILayoutElem) {
-  elems.forEach((elem) => {
+  return waitFor(elems.map((elem) => {
     var x = grab(elem.layoutOption('prefX', Number.NaN), 0);
     var y = grab(elem.layoutOption('prefY', Number.NaN), 0);
-    elem.setBounds(x, y, w - x, h - y);
-  });
-  return false;
+    return elem.setBounds(x, y, w - x, h - y);
+  }));
 }
 
 export function flowLayout(horizontal:boolean, gap:number, padding = {top: 0, left: 0, right: 0, bottom: 0}) {
-  function setSize(w:number, h:number, child:ILayoutElem, value:number) {
-    var loc = child.getBounds().xy;
+  function getSize(w:number, h:number, child:ILayoutElem, value:number) {
     if (horizontal) {
-      child.setBounds(loc.x, loc.y, value, grab(child.layoutOption('prefHeight', Number.NaN), h));
+      return [value, grab(child.layoutOption('prefHeight', Number.NaN), h)];
     } else {
-      child.setBounds(loc.x, loc.y, grab(child.layoutOption('prefWidth', Number.NaN), w), value);
+      return [grab(child.layoutOption('prefWidth', Number.NaN), w), value];
     }
   }
 
@@ -137,31 +147,32 @@ export function flowLayout(horizontal:boolean, gap:number, padding = {top: 0, le
     var unboundedSpace = (freeSpace - fixUsed - freeSpace * ratioSum / ratioMax) / unbound;
 
     // set all sizes
-    elems.forEach((elem) => {
+    var sizes = elems.map((elem) => {
       var fix = elem.layoutOption(horizontal ? 'prefWidth' : 'prefHeight', Number.NaN);
       var ratio = elem.layoutOption('ratio', Number.NaN);
       if (isDefault(fix) && isDefault(ratio)) {
-        setSize(w, h, elem, unboundedSpace);
+        return getSize(w, h, elem, unboundedSpace);
       } else if (fix >= 0) {
-        setSize(w, h, elem, fix);
+        return getSize(w, h, elem, fix);
       } else { // (ratio > 0)
         var value = (ratio / ratioMax) * freeSpace;
-        setSize(w, h, elem, value);
+        return getSize(w, h, elem, value);
       }
     });
     // set all locations
     var x_acc = padding.left;
     var y_acc = padding.top;
-    elems.forEach((elem) => {
-      var s = elem.getBounds().size;
-      elem.setBounds(x_acc, y_acc, s.x, s.y);
+    var promises = [];
+    elems.forEach((elem, i) => {
+      var s = sizes[i];
+      promises.push(elem.setBounds(x_acc, y_acc, s[0], s[1]));
       if (horizontal) {
-        x_acc += s.x + gap;
+        x_acc += s[0] + gap;
       } else {
-        y_acc += s.y + gap;
+        y_acc += s[1] + gap;
       }
     });
-    return false;
+    return waitFor(promises);
   }
 
   return FlowLayout;
@@ -170,9 +181,9 @@ export function flowLayout(horizontal:boolean, gap:number, padding = {top: 0, le
 export function distributeLayout(horizontal:boolean, defaultValue:number, padding = no_padding) {
   function setBounds(x, y, w:number, h:number, child:ILayoutElem, value:number) {
     if (horizontal) {
-      child.setBounds(x, y, value, grab(child.layoutOption('prefHeight', Number.NaN), h));
+      return child.setBounds(x, y, value, grab(child.layoutOption('prefHeight', Number.NaN), h));
     } else {
-      child.setBounds(x, y, grab(child.layoutOption('prefWidth', Number.NaN), w), value);
+      return child.setBounds(x, y, grab(child.layoutOption('prefWidth', Number.NaN), w), value);
     }
   }
 
@@ -204,19 +215,20 @@ export function distributeLayout(horizontal:boolean, defaultValue:number, paddin
       }
     }
 
+    var promises = [];
     elems.forEach((elem) => {
       var fix = elem.layoutOption(horizontal ? 'prefWidth' : 'prefHeight', Number.NaN);
       if (isDefault(fix)) {
         fix = defaultValue;
       }
-      setBounds(x_acc, y_acc, w, h, elem, fix);
+      promises.push(setBounds(x_acc, y_acc, w, h, elem, fix));
       if (horizontal) {
         x_acc += fix + gap;
       } else {
         y_acc += fix + gap;
       }
     });
-    return false;
+    return waitFor(promises);
   }
 
   return DistributeLayout;
@@ -257,27 +269,30 @@ export function borderLayout(horizontal:boolean, gap:number, percentages = {
       pos[border].push(pos);
     });
 
+    var promises = [];
     if (pos.top.length > 0) {
       y += h * percentages.top;
       hc -= h * percentages.top;
-      flowLayout(true, gap)(pos.top, w, h * percentages.top, parent);
+      promises.push(flowLayout(true, gap)(pos.top, w, h * percentages.top, parent));
     }
     if (pos.bottom.length > 0) {
       hc -= h * percentages.bottom;
-      flowLayout(true, gap)(pos.bottom, w, h * percentages.bottom, parent);
+      promises.push(flowLayout(true, gap)(pos.bottom, w, h * percentages.bottom, parent));
     }
     if (pos.left.length > 0) {
       x += w * percentages.left;
       wc -= w * percentages.left;
-      flowLayout(false, gap)(pos.left, w * percentages.left, hc, parent);
+      promises.push(flowLayout(false, gap)(pos.left, w * percentages.left, hc, parent));
     }
     if (pos.right.length > 0) {
       wc -= w * percentages.right;
-      flowLayout(false, gap)(pos.right, w * percentages.right, hc, parent);
+      promises.push(flowLayout(false, gap)(pos.right, w * percentages.right, hc, parent));
     }
     if (pos.center.length > 0) {
-      flowLayout(true, gap)(pos.center, wc, hc, parent);
+      promises.push(flowLayout(true, gap)(pos.center, wc, hc, parent));
     }
+
+    return waitFor(promises);
   }
 
   return BorderLayout;

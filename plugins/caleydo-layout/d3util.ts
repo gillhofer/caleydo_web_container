@@ -3,7 +3,8 @@
  */
 
 import d3 = require('d3');
-import layout = require('./main');
+import layout = require('./main')
+import C = require('../caleydo/main');
 import geom = require('../caleydo/geom');
 'use strict';
 
@@ -19,6 +20,7 @@ class SVGTransformLayoutElem extends layout.ALayoutElem implements layout.ILayou
     t.scale.x = w / this.rawWidth;
     t.scale.y = h / this.rawHeight;
     this.$elem.attr('transform', t);
+    return null;
   }
 
   getBounds() {
@@ -39,6 +41,7 @@ class SVGRectLayoutElem extends layout.ALayoutElem implements layout.ILayoutElem
       width: w,
       height: h
     });
+    return null;
   }
 
   getBounds() {
@@ -49,9 +52,11 @@ class SVGRectLayoutElem extends layout.ALayoutElem implements layout.ILayoutElem
 
 class HTMLLayoutElem extends layout.ALayoutElem implements layout.ILayoutElem {
   private $node : D3.Selection;
+  private targetBounds : geom.Rect = null;
+
   constructor(node:HTMLElement, options:any = {}) {
-    this.$node = d3.select(node);
     super(options);
+    this.$node = d3.select(node);
   }
 
   setBounds(x:number, y:number, w:number, h:number) {
@@ -69,16 +74,28 @@ class HTMLLayoutElem extends layout.ALayoutElem implements layout.ILayoutElem {
       t.call(extra);
     }
     extra = this.layoutOption('onSetBounds', null);
-    if(extra) {
-      if (doAnimate) {
-        t.each('end', extra);
-      } else {
-        extra();
-      }
+    if (doAnimate) {
+      this.targetBounds =  geom.rect(x,y,w,h);
+      var d : C.IPromise<void> = C.promised<void>((resolve) => {
+        t.each('end', () => {
+          this.targetBounds = null;
+          if (extra) {
+            extra();
+          }
+          resolve(true);
+        });
+      });
+      return d;
+    } else if (extra) {
+      extra();
+      return null;
     }
   }
 
   getBounds() {
+    if (this.targetBounds) { //in an animation
+      return this.targetBounds;
+    }
     var unit = this.layoutOption('unit', 'px'),
       style = (<HTMLElement>this.$node.node()).style;
     function v(f: string) {

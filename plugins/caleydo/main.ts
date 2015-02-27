@@ -110,6 +110,18 @@ export function isUndefined(obj:any) {
 }
 
 /**
+ * binds the given function to the given context / this arg
+ * @param f
+ * @param thisArg
+ * @returns {function(): any}
+ */
+export function bind(f : () => any, thisArg : any, ...args: any[]) {
+  return () => {
+    return f.apply(thisArg ? thisArg : this, args.concat(argList(arguments)));
+  };
+}
+
+/**
  * getter generator by name or index
  * @param attr
  */
