@@ -137,7 +137,7 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-too
           return yscale(d.v);
         }
       });
-      that.fire('built');
+      that.markReady();
       data.selections().then(function (selected) {
         l(null, 'selected', selected);
       });
@@ -367,7 +367,7 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-too
       //fade in animation
       $m.transition().duration(o.duration).delay(function(d,i) { return i * o.duration;}).style('opacity',1);
 
-      that.fire('built');
+      that.markReady();
       data.selections().then(function (selected) {
         l(null, 'selected', selected);
       });

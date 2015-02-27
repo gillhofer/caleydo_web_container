@@ -165,7 +165,7 @@ export class HeatMap extends vis.AVisInstance implements vis.IVisInstance {
         $cols.exit().remove();
       });
       $rows.exit().remove();
-      this.fire('built');
+      this.markReady();
     });
     var l = function (event, type, selected) {
       $g.selectAll('rect').classed('select-' + type, false);

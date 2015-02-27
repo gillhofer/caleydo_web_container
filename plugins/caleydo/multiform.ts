@@ -228,6 +228,7 @@ export class MultiForm extends vis.AVisInstance implements vis.IVisInstance, IMu
     //switch and trigger event
     var bak = this.actDesc;
     this.actDesc = vis;
+    this.markReady(false);
     this.fire('change', vis, bak);
     this.actVis = null;
     this.actVisPromise = null;
@@ -239,7 +240,7 @@ export class MultiForm extends vis.AVisInstance implements vis.IVisInstance, IMu
           return null;
         }
         this.actVis = plugin.factory(this.data, this.$content.node(), C.mixin({}, this.options.all, this.options[vis.id] || {}));
-        this.actVis.on('built', () => this.fire('built'));
+        this.actVis.on('ready', () => this.markReady());
         this.fire('changed', vis, bak);
         return this.actVis;
       });
@@ -654,6 +655,7 @@ export class MultiFormGrid extends vis.AVisInstance implements vis.IVisInstance,
     //switch and trigger event
     var bak = this.actDesc;
     this.actDesc = vis;
+    this.markReady(false);
     this.fire('change', vis, bak);
     this.actVisPromise = null;
 
@@ -668,10 +670,10 @@ export class MultiFormGrid extends vis.AVisInstance implements vis.IVisInstance,
         });
         var c = r.length;
         r.forEach((ri) => {
-          ri.on('built', () => {
+          ri.on('ready', () => {
             c--;
             if (c === 0) { //all built
-              this.fire('built');
+              this.markReady();
             }
           });
         });

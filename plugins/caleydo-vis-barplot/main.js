@@ -75,7 +75,7 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo/geo
           return xscale(d);
         }
       });
-      that.fire('built');
+      that.markReady();
       data.selections().then(function (selected) {
         l(null, 'selected', selected);
       });

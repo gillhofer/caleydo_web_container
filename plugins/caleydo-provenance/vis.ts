@@ -48,7 +48,7 @@ export class ProvenanceVis extends vis.AVisInstance implements vis.IVisInstance 
 
     this.bind();
     this.update();
-    this.fire('built');
+    this.markReady();
     this.force.on('tick', () => this.tick());
   }
 

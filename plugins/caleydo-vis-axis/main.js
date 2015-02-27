@@ -52,7 +52,7 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/d3util', 'css!./style'],
       $p.enter().append('circle').attr('r', o.r).on('click', onClick);
       $p.exit().remove();
       $p.attr(cxy, s);
-      that.fire('built');
+      that.markReady();
     });
     return $svg;
   }, {

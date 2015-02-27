@@ -48,7 +48,7 @@ define(['exports', 'd3', '../caleydo-tooltip/main', '../caleydo/main', '../caley
         y2: '90%',
         'class': 'mean'
       });
-      that.fire('built');
+      that.markReady();
     });
 
     return $svg;

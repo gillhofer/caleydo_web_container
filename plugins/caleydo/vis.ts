@@ -158,6 +158,7 @@ export function assignVis(node: Element, vis: IVisInstance) {
  */
 export class AVisInstance extends events.EventHandler {
   id = C.uniqueId('vis');
+  private _built = false;
 
   option(name: string, value?: any) {
     //dummy
@@ -169,6 +170,17 @@ export class AVisInstance extends events.EventHandler {
 
   persist() {
     return null;
+  }
+
+  get isBuilt() {
+    return this._built;
+  }
+
+  markReady(built: boolean = true) {
+    this._built = built;
+    if (built) {
+      this.fire('ready');
+    }
   }
 
   locate(...range:ranges.Range[]) {

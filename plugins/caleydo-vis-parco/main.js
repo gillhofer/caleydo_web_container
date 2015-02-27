@@ -60,7 +60,7 @@ define(['exports', 'd3', 'd3.parcoords', '../caleydo/main'], function (exports, 
       pc.render();
       pc.reorderable();
       pc.brushable();
-      that.fire('built');
+      that.markReady();
     });
 
     var l = function (event, type, selected) {
