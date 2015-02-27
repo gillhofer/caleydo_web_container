@@ -27,7 +27,7 @@ function convertToStratification(data) {
     var r = a.cluster - b.cluster;
     return r === 0 ? a.row - b.row : r;
   }); //sort by cluster;
-  console.log(JSON.stringify(d,null,' '));
+  //console.log(JSON.stringify(d,null,' '));
   var clusters = {
 
   };
@@ -42,7 +42,7 @@ function convertToStratification(data) {
   clusters = Object.keys(clusters).map(function(clustername) {
     return { name: clustername, range : clusters[clustername] };
   });
-  console.log(JSON.stringify(clusters,null,' '));
+  //console.log(JSON.stringify(clusters,null,' '));
   return {
     rows: data.slice(1).map(function(di) { return di[0]}),
     groups: clusters
