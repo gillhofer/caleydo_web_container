@@ -31,6 +31,7 @@ app.get(contextPath, function (req, res, next) {
         text.push('<li><a href="/' + app + '/">' + app + '</a></li>');
       });
       text.push('</li></body></html>');
+      res.contentType('text/javascript');
       res.send(text.join('\n'));
     }
   });
