@@ -135,12 +135,12 @@ class Link {
       al = tmp;
     }
     if (this.options.animate) {
-      $g.transition().duration(100).style('opacity', 0);
+      $g.transition().duration(this.options.duration).style('opacity', 0);
     }
     if (!this.shouldRender(a, al, b, bl)) {
       this.render([], $g);
       if (this.options.animate) {
-        $g.transition().duration(100).style('opacity', 1);
+        $g.transition().duration(this.options.duration).style('opacity', 1);
       }
       return;
     }
@@ -157,7 +157,7 @@ class Link {
       }
       this.render(llinks, $g);
       if (this.options.animate) {
-        $g.transition().duration(100).style('opacity', 1);
+        $g.transition().duration(this.options.duration).style('opacity', 1);
       }
       return null;
     });
@@ -305,10 +305,10 @@ class LinkIDTypeContainer {
   }
 
   hide() {
-    this.$node.select('g').selectAll('g').transition().duration(100).style('opacity',0);
+    this.$node.select('g').selectAll('g').transition().duration(this.options.duration).style('opacity',0);
   }
   show() {
-    this.$node.select('g').selectAll('g').transition().duration(100).style('opacity',1);
+    this.$node.select('g').selectAll('g').transition().duration(this.options.duration).style('opacity',1);
   }
 
   private changed(elem: VisWrapper) {
@@ -366,8 +366,12 @@ class LinkIDTypeContainer {
       }
     }
     var $combi = $root.selectAll('g').data(combinations, (l) => l.id);
-    $combi.enter().append('g').attr('data-id', (l) => l.id).style('opacity',1);
-    $combi.exit().remove();
+    $combi.enter().append('g').attr('data-id', (l) => l.id).style('opacity',this.options.animate ? 0 : 1);
+    if (this.options.animate) {
+      $combi.exit().transition().duration(this.options.duration).style('opacity', 0).remove();
+    } else {
+      $combi.exit().remove();
+    }
   }
 
   update() {
@@ -452,6 +456,7 @@ export class LinkContainer {
     this.options = C.mixin({
       reprs : plugins.list('link-representation').sort((a, b) => b.granularity - a.granularity),
       animate: true,
+      duration: 100,
       idTypeFilter : C.constantTrue
     }, this.options);
   }
