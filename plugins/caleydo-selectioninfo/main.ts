@@ -14,17 +14,27 @@ export class SelectionIDType {
   private $div: D3.Selection;
   private $ul : D3.Selection;
 
-  constructor(public idType: idtypes.IDType, parent: D3.Selection, private options = {}) {
-    this.options = C.mixin({}, options);
+  constructor(public idType: idtypes.IDType, parent: D3.Selection, private options : any = {}) {
+    this.options = C.mixin({
+    }, options);
     idType.on('select', this.l);
     this.$div = parent.append('div');
-    this.$div.append('span').text(idType.name);
+    this.$div.append('span').text(idType.name).style('cursor','pointer').attr('title','click to clear selection');
+    if (this.options.addClear) {
+      this.$div.select('span').on('click', () => {
+        this.options.selectionTypes.forEach((s) => idType.clear(s));
+      });
+    }
     this.$ul = this.$div.append('ul');
-    this.update(idtypes.defaultSelectionType, idType.selections(idtypes.defaultSelectionType));
-    this.update(idtypes.hoverSelectionType, idType.selections(idtypes.hoverSelectionType));
+
+    this.options.selectionTypes.forEach((s) => this.update(s, idType.selections(s)));
   }
 
   private update(type: string, selection: ranges.Range) {
+    if (!this.options.filterSelectionTypes(type)) {
+      return;
+    }
+
     this.$div.classed('no-selection-' + type, selection.isNone);
     if (selection.isNone) {
       this.$ul.selectAll('li.select-'+type).remove();
@@ -52,7 +62,11 @@ export class SelectionInfo {
   };
 
   constructor(public parent:HTMLElement, private options = {}) {
-    this.options = C.mixin({}, options);
+    this.options = C.mixin({
+      addClear : true,
+      selectionTypes: [ idtypes.defaultSelectionType, idtypes.hoverSelectionType],
+      filterSelectionTypes : C.constantTrue
+    }, options);
     this.build(d3.select(parent));
   }
 
