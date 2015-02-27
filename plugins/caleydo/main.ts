@@ -69,6 +69,7 @@ export function all(promises:any[]):IPromise<Array<any>> {
  * @see {@link http://api.jquery.com/jQuery.getJSON/}
  */
 export var getJSON = $.getJSON;
+export var ajax = $.ajax;
 
 export function getAPIJSON(url, ...args:any[]):IPromise<any> {
   //convert to full url
