@@ -276,6 +276,7 @@ export class Matrix extends MatrixBase implements IMatrix {
     });
   }
 
+
   /**
    * return the column ids of the matrix
    * @returns {*}
@@ -375,6 +376,13 @@ class TransposedMatrix extends MatrixBase  implements IMatrix {
   }
   rowIds(range:ranges.Range = ranges.all()) {
     return this.t.colIds(range ? range.swap() : undefined);
+  }
+
+  view(range:ranges.Range = ranges.all()) : IMatrix {
+    if (range.isAll) {
+      return this;
+    }
+    return new MatrixView(this._root, range.swap()).t;
   }
 
   size() {
