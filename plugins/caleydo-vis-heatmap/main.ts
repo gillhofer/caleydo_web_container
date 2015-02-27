@@ -47,7 +47,8 @@ export class HeatMap extends vis.AVisInstance implements vis.IVisInstance {
     this.options = C.mixin({
       initialScale: 10,
       color: defaultColor(value),
-      domain: defaultDomain(value)
+      domain: defaultDomain(value),
+      duration : 200
     }, options);
     this.options.scale = [this.options.initialScale,this.options.initialScale];
     this.options.rotate = 0;
@@ -164,6 +165,7 @@ export class HeatMap extends vis.AVisInstance implements vis.IVisInstance {
         $cols.exit().remove();
       });
       $rows.exit().remove();
+      this.fire('built');
     });
     var l = function (event, type, selected) {
       $g.selectAll('rect').classed('select-' + type, false);

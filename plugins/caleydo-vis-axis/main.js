@@ -8,7 +8,7 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/d3util', 'css!./style'],
     orient: 'left',
     r: 2
   }, [50, 300], function ($parent, data, size) {
-    var o = this.options;
+    var o = this.options, that = this;
     var $svg = $parent.append("svg").attr({
       width: size[0],
       height: size[1],
@@ -52,6 +52,7 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/d3util', 'css!./style'],
       $p.enter().append('circle').attr('r', o.r).on('click', onClick);
       $p.exit().remove();
       $p.attr(cxy, s);
+      that.fire('built');
     });
     return $svg;
   }, {

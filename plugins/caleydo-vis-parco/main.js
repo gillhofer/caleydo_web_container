@@ -5,6 +5,7 @@ define(['exports', 'd3', 'd3.parcoords', '../caleydo/main'], function (exports, 
   exports.ParCo = d3utils.defineVis('ParCo', {
     margin: { top: 24, right: 0, bottom: 12, left: 0 }
   }, [360, 150], function build($parent, data, size) {
+    var that = this;
     var $base = $parent.append('div').classed('parcoords', true).style({
       width: size[0] + 'px',
       height: size[1] + 'px'
@@ -59,6 +60,7 @@ define(['exports', 'd3', 'd3.parcoords', '../caleydo/main'], function (exports, 
       pc.render();
       pc.reorderable();
       pc.brushable();
+      that.fire('built');
     });
 
     var l = function (event, type, selected) {

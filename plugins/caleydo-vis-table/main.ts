@@ -114,6 +114,7 @@ export class Table extends vis.AVisInstance implements vis.IVisInstance {
         $row.exit().remove();
       });
       $rows.exit().remove();
+      this.fire('built');
     });
 
     return $table;

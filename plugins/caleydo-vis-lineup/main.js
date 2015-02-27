@@ -67,6 +67,7 @@ define(['exports', 'd3', '../caleydo/main', 'lineupjs', '../caleydo/d3util', 'fo
         that.fire('selected', row ? row._id : null);
       });
       that.lineup.startVis();
+      that.fire('built');
     });
     return $div;
   }, {

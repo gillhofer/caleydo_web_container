@@ -83,8 +83,10 @@ export function getAPIJSON(url, ...args:any[]):IPromise<any> {
  * @param {Object} b
  * @returns {Object} a with extended b
  */
-export function mixin(a, b) {
-  return $.extend(a, a, b);
+export function mixin(a, ...bs : any[]) {
+  bs.unshift(a);
+  bs.unshift(a);
+  return $.extend.apply($, bs);
 }
 
 //wrap function wrap jquery which may be overwritten replaced sometimes

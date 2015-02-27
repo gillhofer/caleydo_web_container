@@ -74,7 +74,10 @@ export class MultiForm extends vis.AVisInstance implements vis.IVisInstance, IMu
   constructor(public data:datatypes.IDataType, parent:Element, private options : any = {}) {
     super();
     this.options = C.mixin({
-      initialVis : 0
+      initialVis : 0,
+      all : { //options to all visses
+
+      },
     }, options);
     this.parent = d3.select(parent).append('div').attr('class', 'multiform');
     this.node = this.parent.node();
@@ -235,7 +238,8 @@ export class MultiForm extends vis.AVisInstance implements vis.IVisInstance, IMu
         if (this.actDesc !== vis) { //changed in the meanwhile
           return null;
         }
-        this.actVis = plugin.factory(this.data, this.$content.node(), this.options[vis.id] || {});
+        this.actVis = plugin.factory(this.data, this.$content.node(), C.mixin({}, this.options.all, this.options[vis.id] || {}));
+        this.actVis.on('built', () => this.fire('built'));
         this.fire('changed', vis, bak);
         return this.actVis;
       });
@@ -661,6 +665,15 @@ export class MultiFormGrid extends vis.AVisInstance implements vis.IVisInstance,
         }
         var r = this.grid.map((elem) => {
           return elem.build(plugin);
+        });
+        var c = r.length;
+        r.forEach((ri) => {
+          ri.on('built', () => {
+            c--;
+            if (c === 0) { //all built
+              this.fire('built');
+            }
+          });
         });
         this.fire('changed', vis, bak);
         return r;

@@ -29,6 +29,7 @@ define(['exports', 'd3', '../caleydo-tooltip/main', '../caleydo/main', '../caley
       d: 'M0,0 L0,$ M0,§ L%,§ M%,0 L%,$'.replace(/%/g, size[0]).replace(/\$/g, size[1]).replace(/\§/g, size[1] / 2),
       'class': 'axis'
     });
+    var that = this;
     data.stats().then(function (stats) {
       var text = createText(stats);
 
@@ -47,6 +48,7 @@ define(['exports', 'd3', '../caleydo-tooltip/main', '../caleydo/main', '../caley
         y2: '90%',
         'class': 'mean'
       });
+      that.fire('built');
     });
 
     return $svg;

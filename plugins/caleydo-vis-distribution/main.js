@@ -57,7 +57,8 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-too
   exports.Histogram = d3utils.defineVis('HistogramVis', function (data) {
     return {
       nbins: Math.round(Math.sqrt(data.desc.type === 'matrix' ? data.ncol * data.nrow : data.length)),
-      totalHeight: true
+      totalHeight: true,
+      duration: 200
     };
   }, [200, 100], function ($parent, data, size) {
     var o = this.options, that = this;
@@ -93,10 +94,11 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-too
         y: function (d) {
           return yscale(yscale.domain()[1] - d.v);
         },
-        height: function (d) {
-          return yscale(d.v);
-        }
+        height: 0
       });
+      $m.transition().duration(o.duration).attr('height', function (d) {
+          return yscale(d.v);
+        });
       $m.exit().remove();
     };
     data.on('select', l);
@@ -135,6 +137,7 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-too
           return yscale(d.v);
         }
       });
+      that.fire('built');
       data.selections().then(function (selected) {
         l(null, 'selected', selected);
       });
@@ -165,7 +168,8 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-too
 
   exports.Mosaic = d3utils.defineVis('MosaicVis', {
     width: 20,
-    initialScale: 10
+    initialScale: 10,
+    duration: 200
   }, function (data) {
     return [this.options.width, data.dim[0]];
   }, function ($parent, data, size) {
@@ -199,7 +203,8 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-too
         height: function (d) {
           return d.v;
         }
-      });
+      }).style('opacity',0);
+      $m.transition().duration(o.duration).style('opacity',1);
       $m.exit().remove();
     };
     data.on('select', l);
@@ -233,6 +238,7 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-too
           return d.color;
         }
       });
+      that.fire('built');
       data.selections().then(function (selected) {
         l(null, 'selected', selected);
       });
@@ -283,7 +289,8 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-too
 
   exports.Pie = d3utils.defineVis('Pie', {
     radius: 50,
-    innerRadius: 0
+    innerRadius: 0,
+    duration: 200
   }, function () {
     var r = this.options.radius;
     return [r * 2, r * 2];
@@ -298,8 +305,8 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-too
     var $data = $base.append('g');
     var $highlight = $base.append('g').style('pointer-events', 'none').classed('select-selected', true);
 
-    var scale = that.scale = d3.scale.linear().range([0, 2 * Math.PI]);
-    var arc = d3.svg.arc().innerRadius(o.innerRadius).outerRadius(o.radius)
+    var scale = this.scale = d3.scale.linear().range([0, 2 * Math.PI]);
+    var arc = this.arc = d3.svg.arc().innerRadius(o.innerRadius).outerRadius(o.radius)
       .startAngle(function (d) {
         return scale(d.start);
       })
@@ -330,7 +337,7 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-too
 
     data.hist().then(function (hist) {
       that.hist = hist;
-      var total = hist.count;
+      var total = o.total || hist.count;
       scale.domain([0, total]);
       var hist_data = that.hist_data = [], prev = 0, cats = that.data.desc.value.categories;
       hist.forEach(function (b, i) {
@@ -356,9 +363,11 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-too
         });
       $m.attr('d', arc).attr('fill', function (d) {
         return d.color;
-      });
+      }).style('opacity',0);
+      //fade in animation
+      $m.transition().duration(o.duration).delay(function(d,i) { return i * o.duration;}).style('opacity',1);
 
-
+      that.fire('built');
       data.selections().then(function (selected) {
         l(null, 'selected', selected);
       });
@@ -381,7 +390,16 @@ define(['exports', 'd3', '../caleydo/main', '../caleydo/idtype', '../caleydo-too
       });
     },
     updatedOption: function (name, value) {
+      if (name === 'innerRadius' || name === 'radius' || name === 'total') {
+        this.updateVis();
+      }
+    },
+    updateVis : function() {
+      var o = this.options;
+      this.arc.innerRadius(o.innerRadius).outerRadius(o.radius);
+      this.scale.domain([0, o.total || this.hist.count]);
 
+      $svg.selectAll('path').transition().attr('d', this.arc);
     },
     transform: function (scale, rotate) {
       var bak = {
