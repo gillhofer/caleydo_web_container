@@ -4,59 +4,45 @@
 
 .provenance-graph-vis, .provenance-subway-vis {
   .data {
+    stroke: green;
     &.fill {
       fill: green;
     }
-    &:not(.fill) {
-      stroke: green;
-    }
   }
   .selection {
+    stroke: orange;
     &.fill {
       fill: orange;
     }
-    &:not(.fill) {
-      stroke: orange;
-    }
   }
   .visual {
-    &.fill {
-      fill: yellow;
-    }
-    &:not(.fill) {
-      stroke: yellow;
-    }
-  }
-  .layout {
+    stroke: blue;
     &.fill {
       fill: blue;
     }
-    &:not(.fill) {
-      stroke: blue;
+  }
+  .layout {
+    stroke: #02c9ff;
+    &.fill {
+      fill: #02c9ff;
     }
   }
   .logic {
+    stroke: gray;
     &.fill {
       fill: gray;
     }
-    &:not(.fill) {
-      stroke: gray;
-    }
   }
   .custom {
+    stroke: white;
     &.fill {
       fill: white;
     }
-    &:not(.fill) {
-      stroke: white;
-    }
   }
   .annotation {
+    stroke: lightblue;
     &.fill {
       fill: lightblue;
-    }
-    &:not(.fill) {
-      stroke: lightblue;
     }
   }
 }
@@ -122,9 +108,12 @@
 
 .provenance-subway-vis {
   .state {
-    opacity: 0.1;
+    opacity: 0.01;
     &.act {
       opacity: 1
+    }
+    &:hover {
+      opacity: 1;
     }
   }
   .action {

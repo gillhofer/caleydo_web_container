@@ -50,8 +50,10 @@ export class GraphEdge {
   }
 }
 
-export function isType(type: string) {
-  return (edge: GraphEdge) => edge.type === type;
+export function isType(type: string);
+export function isType(type: RegExp);
+export function isType(type: any) {
+  return (edge: GraphEdge) => type instanceof RegExp ? type.test(edge.type) : edge.type === type;
 }
 
 export class GraphBase extends datatypes.DataTypeBase {

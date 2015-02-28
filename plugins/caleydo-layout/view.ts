@@ -38,6 +38,7 @@ export class AView extends events.EventHandler implements IView {
 
   setBounds(x:number, y:number, w:number, h:number) {
     //implement
+    return null;
   }
 
   getBounds(): geom.Rect {

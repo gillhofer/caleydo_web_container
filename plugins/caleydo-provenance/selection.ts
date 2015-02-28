@@ -5,6 +5,7 @@
 import idtypes = require('../caleydo/idtype');
 import events = require('../caleydo/event');
 import provenance = require('./main');
+import C = require('../caleydo/main');
 import ranges = require('../caleydo/range');
 
 function select(inputs:provenance.IObjectRef<any>[], parameter:any):provenance.ICmdResult {
@@ -71,7 +72,7 @@ class SelectionTypeRecorder {
     return this.l(event, this.type, sel, added, removed, old);
   };
 
-  constructor(private idtype:idtypes.IDType, private graph:provenance.ProvenanceGraph, private type?:string) {
+  constructor(private idtype:idtypes.IDType, private graph:provenance.ProvenanceGraph, private type?:string, private options : any = {}) {
     this.enable();
   }
 
@@ -101,10 +102,15 @@ class SelectionTypeRecorder {
 export class SelectionRecorder {
   private handler:SelectionTypeRecorder[] = [];
   private adder = (event, idtype) => {
-    this.handler.push(new SelectionTypeRecorder(idtype, this.graph, this.type));
+    if (this.options.filter(idtype)) {
+      this.handler.push(new SelectionTypeRecorder(idtype, this.graph, this.type, this.options));
+    }
   };
 
-  constructor(private graph:provenance.ProvenanceGraph, private type?:string) {
+  constructor(private graph:provenance.ProvenanceGraph, private type?:string, private options : any = {}) {
+    this.options = C.mixin({
+      filter: C.constantTrue
+    }, this.options);
     events.on('register.idtype', this.adder);
     idtypes.list().forEach((d) => {
       this.adder(null, d);
@@ -119,8 +125,8 @@ export class SelectionRecorder {
 }
 
 
-export function create(graph:provenance.ProvenanceGraph, type?:string) {
-  return new SelectionRecorder(graph, type);
+export function create(graph:provenance.ProvenanceGraph, type?:string, options: any = {}) {
+  return new SelectionRecorder(graph, type, options);
 }
 
 export function createCmd(id:string) {

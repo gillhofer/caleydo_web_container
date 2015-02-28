@@ -218,24 +218,28 @@ export class ActionNode extends graph.GraphNode {
     return true;
   }
 
-  get creates() {
+  get uses() : ObjectNode<any>[] {
+    return this.outgoing.filter(graph.isType(/(creates|removes|requires)/)).map((e) => <ObjectNode<any>>e.target);
+  }
+
+  get creates() : ObjectNode<any>[] {
     return this.outgoing.filter(graph.isType('creates')).map((e) => <ObjectNode<any>>e.target);
   }
 
-  get removes() {
+  get removes() : ObjectNode<any>[] {
     return this.outgoing.filter(graph.isType('removes')).map((e) => <ObjectNode<any>>e.target);
   }
 
-  get requires() {
+  get requires() : ObjectNode<any>[] {
     return this.outgoing.filter(graph.isType('requires')).map((e) => <ObjectNode<any>>e.target);
   }
 
-  get resultsIn() {
+  get resultsIn() : StateNode {
     var r = this.outgoing.filter(graph.isType('resultsIn'))[0];
     return r ? <StateNode>r.target : null;
   }
 
-  get previous() {
+  get previous() : StateNode {
     var r = this.incoming.filter(graph.isType('next'))[0];
     return r ? <StateNode>r.source : null;
   }
@@ -256,19 +260,19 @@ export class StateNode extends graph.GraphNode {
     return new StateNode(r.name);
   }
 
-  get consistsOf() {
+  get consistsOf() : ObjectNode<any>[] {
     return this.outgoing.filter(graph.isType('consistsOf')).map((e) => <ObjectNode<any>>e.target);
   }
 
-  get resultsFrom() {
+  get resultsFrom() : ActionNode[] {
     return this.incoming.filter(graph.isType('resultsIn')).map((e) => <ActionNode>e.source);
   }
 
-  get next() {
+  get next() : ActionNode[] {
     return this.outgoing.filter(graph.isType('next')).map((e) => <ActionNode>e.target);
   }
 
-  get previousState() {
+  get previousState() : StateNode {
     if (this.name === 'start') { //root has no previous
       return null;
     }
@@ -279,7 +283,7 @@ export class StateNode extends graph.GraphNode {
     return null;
   }
 
-  get path() {
+  get path() : StateNode[] {
     var p = this.previousState,
       r : StateNode[] = [];
     r.unshift(this);
@@ -473,6 +477,29 @@ export class ProvenanceGraph extends graph.GraphBase {
     return r;
   }
 
+  findOrAddObject<T>(i: T) : ObjectNode<T>;
+  findOrAddObject<T>(i: IObjectRef<T>) : ObjectNode<T>;
+  findOrAddObject<T>(i: any) : ObjectNode<T> {
+    var r;
+    if (i instanceof ObjectNode) {
+      return <ObjectNode<T>>i;
+    }
+    if (i.hasOwnProperty('v') && i.hasOwnProperty('name')) { //sounds like an proxy
+      i.category = i.category || cat.data;
+      r = C.search(this.objects, (obj) => obj.v === i.v && i.name === obj.name && i.category === obj.category);
+      if (r) {
+        return r;
+      }
+      return this.addObject(i.v, i.name, i.category);
+    } else { //raw value
+      r = C.search(this.objects, (obj) => obj.v === i);
+      if (r) {
+        return r;
+      }
+      return this.addObject(i, arguments[1], arguments[2]);
+    }
+  }
+
   findObject<T>(value: T) {
     var r = C.search(this.objects, (obj) => obj.v === value);
     if (r) {
@@ -485,16 +512,17 @@ export class ProvenanceGraph extends graph.GraphBase {
     var r = new ObjectNode<T>(value, name, category);
     this.objects.push(r);
     this.fire('add_object', r);
+    this.addNode(r);
     return r;
   }
 
   private resolve(arr: IObjectRef<any>[]) {
-    return arr.map((r) => this.findOrAddObject(r));
+    return arr.map((r) => this.findOrAddJustObject(r));
   }
 
-  private findOrAddObject<T>(i: T) : ObjectNode<T>;
-  private findOrAddObject<T>(i: IObjectRef<T>) : ObjectNode<T>;
-  private findOrAddObject<T>(i: any) : ObjectNode<T> {
+  private findOrAddJustObject<T>(i: T) : ObjectNode<T>;
+  private findOrAddJustObject<T>(i: IObjectRef<T>) : ObjectNode<T>;
+  private findOrAddJustObject<T>(i: any) : ObjectNode<T> {
     var r;
     if (i instanceof ObjectNode) {
       return <ObjectNode<T>>i;
@@ -511,7 +539,7 @@ export class ProvenanceGraph extends graph.GraphBase {
       if (r) {
         return r;
       }
-      return this.addJustObject(i);
+      return this.addJustObject(i, arguments[1], arguments[2]);
     }
   }
 
@@ -630,7 +658,7 @@ export class ProvenanceGraph extends graph.GraphBase {
     var s= new StateNode(name);
     this.states.push(s);
     this.fire('add_state', s);
-    this.addObject(s);
+    this.addNode(s);
     return s;
   }
 
