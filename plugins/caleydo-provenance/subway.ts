@@ -15,12 +15,12 @@ function translate(x = 0, y = 0) {
 export class SubwayVis extends vis.AVisInstance implements vis.IVisInstance {
   private $node:D3.Selection;
   private trigger = C.bind(this.update, this);
+  private layouts : any = {};
   private add = (event, node) => {
     this.layouts[node.id] = {
       _ : node
     };
   }
-  private layouts : any = {};
 
   constructor(public data:provenance.ProvenanceGraph, public parent:Element, private options:any) {
     super();
@@ -147,7 +147,7 @@ export class SubwayVis extends vis.AVisInstance implements vis.IVisInstance {
     });
     objects = objects.sort((a,b) => {
       var r = l[a.id].from - l[b.id].from;
-      return r != 0 ? r : l[b.id].to - l[a.id].to;
+      return r !== 0 ? r : l[b.id].to - l[a.id].to;
     });
     objects.forEach((obj,i) => {
       var li = l[obj.id];
@@ -161,7 +161,7 @@ export class SubwayVis extends vis.AVisInstance implements vis.IVisInstance {
         requires.map(obj => { return { m : 'require', track : toTrack(obj)}; }),
         removes.map(obj => { return { m : 'remove', track : toTrack(obj)}; }),
       ]);
-      li.tracks.sort((a,b) => { return a.track - b.track});
+      li.tracks.sort((a,b) => { return a.track - b.track; });
       if (creates.length === 0 && removes.length === 0 && requires.length > 0) {
         li.tracks[0].m = 'update';
       }
@@ -181,7 +181,7 @@ export class SubwayVis extends vis.AVisInstance implements vis.IVisInstance {
       var r :any[] = ['M',track,','];
       r.push(li.from >= 0 ? yscale(li.from * 2 + 1)+2 : 0);
       r.push(' L',track,',');
-      r.push(li.to != Number.POSITIVE_INFINITY ? yscale(li.to * 2 + 1)-2 : yscale(states.length * 2 - 2));
+      r.push(li.to !== Number.POSITIVE_INFINITY ? yscale(li.to * 2 + 1)-2 : yscale(states.length * 2 - 2));
       return r.join('');
     });
 
@@ -201,7 +201,7 @@ export class SubwayVis extends vis.AVisInstance implements vis.IVisInstance {
     $states.classed('act', (d) => d === act);
     $states.transition()
       .attr('transform',(d,i) => translate(0,yscale(i*2)))
-      .select('rect').attr('width',(d) => 8 + xscale(l[d.id].elems))
+      .select('rect').attr('width',(d) => 8 + xscale(l[d.id].elems));
 
     $states.exit().remove();
 

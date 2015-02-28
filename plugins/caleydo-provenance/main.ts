@@ -283,21 +283,35 @@ export class StateNode extends graph.GraphNode {
     return null;
   }
 
+  get previousStates() : StateNode[] {
+    return this.resultsFrom.map((n) => n.previous);
+  }
+
+  get nextStates(): StateNode[] {
+    return this.next.map((n) => n.resultsIn);
+  }
+
+  get nextState() : StateNode {
+    var r = this.next[0];
+    return r ? r.resultsIn : null;
+  }
+
   get path() : StateNode[] {
     var p = this.previousState,
       r : StateNode[] = [];
     r.unshift(this);
     if (p) {
-      p.previousStates(r);
+      p.pathImpl(r);
     }
     return r;
   }
-  previousStates(r : StateNode[]) {
+
+  private pathImpl(r : StateNode[]) {
     var p = this.previousState;
     r.unshift(this);
     if (p && r.indexOf(p) < 0) { //no loop
       //console.log(p.toString() + ' path '+ r.join(','));
-      p.previousStates(r);
+      p.pathImpl(r);
     }
   }
 

@@ -77,7 +77,7 @@ export class MultiForm extends vis.AVisInstance implements vis.IVisInstance, IMu
       initialVis : 0,
       all : { //options to all visses
 
-      },
+      }
     }, options);
     this.parent = d3.select(parent).append('div').attr('class', 'multiform');
     this.node = this.parent.node();
