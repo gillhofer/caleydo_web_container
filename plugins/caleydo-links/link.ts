@@ -261,7 +261,7 @@ class Link {
     var $links = $g.selectAll('path').data(links, (d) => d.id);
     $links.enter().append('path').on('click', (link) => {
       if (link.range) {
-        this.idtype.select(link.range);
+        this.idtype.select(link.range, idtypes.toSelectOperation(d3.event));
       }
       d3.event.preventDefault();
       d3.event.stopPropagation();

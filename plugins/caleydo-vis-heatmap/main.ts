@@ -177,11 +177,11 @@ export class HeatMap extends vis.AVisInstance implements vis.IVisInstance {
         $g.selectAll('rect').classed('select-' + type, true);
       } else if (dim0.isAll || dim0.isNone) {
         dim1.forEach((j) => {
-          $g.selectAll('g rect:nth-child(' + (j + 1) + ')').classed('select-' + type, true);
+          $g.selectAll('g > rect:nth-child(' + (j + 1) + ')').classed('select-' + type, true);
         });
       } else if (dim1.isAll || dim1.isNone) {
         dim0.forEach((i) => {
-          $g.selectAll('g:nth-child(' + (i + 1) + ') rect').classed('select-' + type, true);
+          $g.selectAll('g:nth-child(' + (i + 1) + ') > rect').classed('select-' + type, true);
         });
       } else {
         dim0.forEach((i) => {
