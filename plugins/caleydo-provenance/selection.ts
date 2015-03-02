@@ -14,7 +14,9 @@ function select(inputs:provenance.IObjectRef<any>[], parameter:any):provenance.I
     type = parameter.type;
   var bak = parameter.old ? ranges.parse(parameter.old) : idtype.selections(type);
   parameter.rec.disable(); //disable listening to events
-  console.log('select', range.toString());
+  if (C.hash.is('debug')) {
+    console.log('select', range.toString());
+  }
   idtype.select(type, range);
   parameter.rec.enable();
   return {

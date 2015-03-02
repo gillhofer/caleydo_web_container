@@ -443,14 +443,21 @@ export interface IPersistable {
  */
 class HashProperties {
   private map: any = {};
+  private updated = () => {
+    this.parse(location.hash);
+  };
 
   constructor() {
     this.map = history.state;
     if (!this.map) {
       this.parse(location.hash);
     }
+    window.addEventListener('hashchange', this.updated, false);
   }
 
+  is(name:string) {
+    return this.getProp(name, null) != null;
+  }
 
   getProp(name: string, default_ : string) {
     if (this.map.hasOwnProperty(name)) {
@@ -467,7 +474,9 @@ class HashProperties {
   }
 
   private update() {
+    window.removeEventListener('hashchange', this.updated, false);
     history.pushState(this.map, 'State '+Date.now(), '#'+this.toString());
+    window.addEventListener('hashchange', this.updated, false);
   }
 
   private parse(v : string) {
