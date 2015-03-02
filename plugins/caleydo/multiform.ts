@@ -413,6 +413,28 @@ export class MultiFormGrid extends vis.AVisInstance implements vis.IVisInstance,
     return this.dims.map((d) => d.length);
   }
 
+  private toElem(pos: number[]) {
+    var s = this.dimSizes;
+    if (s.length === 1) {
+      return this.grid[pos[0]];
+    }
+    return this.grid[pos[0] * s[1] + (pos[1]||0)];
+  }
+
+  getRange(...indices: number[]) {
+    var elem = this.toElem(indices);
+    return elem.range;
+  }
+
+  getBounds(...indices : number[]) {
+    var elem = this.toElem(indices);
+    var absloc = elem.location;
+    var size = elem.size;
+    var parentLoc = $(this.$content.node()).offset();
+
+    return geom.rect(absloc.x - parentLoc.left, absloc.y - parentLoc.top, size[0], size[1]);
+  }
+
   /**
    * converts this multiform to a vis metadata
    * @return {vis.IVisMetaData}

@@ -433,6 +433,10 @@ export class Range1D {
     return Range1D.from(r.sort());
   }
 
+  toSet(size?:number) {
+    return this.removeDuplicates(size);
+  }
+
   /**
    * logical difference between two ranges
    * @param other
@@ -529,7 +533,7 @@ export class Range1D {
    */
   indexRangeOf(r:Range1D, size?:number) {
     if (r.isNone || this.isNone) {
-      return Range1D.none();
+      return r.fromLike([]);
     }
     var result = [];
     //
@@ -550,7 +554,7 @@ export class Range1D {
       });
     }
 
-    return Range1D.from(result);
+    return r.fromLike(result);
   }
 
   /**
@@ -623,7 +627,7 @@ export class Range1D {
     return Range1D.from(r);
   }
 
-  removeDuplicates(size?:number): Range1D {
+  private removeDuplicates(size?:number): Range1D {
     var arr = this.iter().asList();
     arr = arr.sort();
     arr = arr.filter((di, i) => di !== arr[i-1]); //same value as before, remove
@@ -647,6 +651,18 @@ export class Range1D {
       return this.arr[0].toString();
     }
     return '(' + this.arr.join(',') + ')';
+  }
+
+  eq(other:Range1D) {
+    if (this === other || (this.isAll && other.isAll) || (this.isNone && other.isNone)) {
+      return true;
+    }
+    //TODO more performant comparison
+    return this.toString() === other.toString();
+  }
+
+  fromLike(indices: number[]) {
+    return Range1D.from(indices);
   }
 }
 
@@ -686,6 +702,14 @@ export class Range1DGroup extends Range1D {
 
   toString() {
     return '"' + this.name + '""' + this.color + '"' + super.toString();
+  }
+
+  toSet(size?:number): Range1DGroup {
+    return new Range1DGroup(this.name, this.color, super.toSet(size));
+  }
+
+  fromLike(indices: number[]) {
+    return new Range1DGroup(this.name, this.color, super.fromLike(indices));
   }
 }
 
@@ -745,6 +769,11 @@ export class CompositeRange1D extends Range1D {
   sort(cmp:(a:number, b:number) => number):Range1D {
     var r = this.groups.length > 1 ? super.sort(cmp) : undefined;
     return new CompositeRange1D(this.name, this.groups.map((g) => <Range1DGroup>g.sort(cmp)), r);
+  }
+
+  toSet(size?:number): CompositeRange1D {
+    var r = this.groups.length > 1 ? super.toSet(size) : undefined;
+    return new CompositeRange1D(this.name, this.groups.map((g) => <Range1DGroup>g.toSet(size)), r);
   }
 
   toString() {

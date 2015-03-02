@@ -20,7 +20,7 @@ export class SubwayVis extends vis.AVisInstance implements vis.IVisInstance {
     this.layouts[node.id] = {
       _ : node
     };
-  }
+  };
 
   constructor(public data:provenance.ProvenanceGraph, public parent:Element, private options:any) {
     super();
@@ -119,12 +119,17 @@ export class SubwayVis extends vis.AVisInstance implements vis.IVisInstance {
   private update() {
     var graph = this.data,
       act = graph.act,
-      states = act.path,
+      states = act.path, //just the active path to the root
       objects_m = {},
       objects = [],
       actions = [],
       l = this.layouts;
 
+    //collect all contained objects and actions
+    var t = act;
+    while ((t = t.nextState) != null && states.indexOf(t) < 0) {
+      states.push(t);
+    }
     states.forEach((s) => {
       var li = l[s.id];
       var a= s.resultsFrom[0];
