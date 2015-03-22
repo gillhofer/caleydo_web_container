@@ -92,6 +92,9 @@ export function off(events, handler) {
  * @param event
  * @param extraArguments
  */
-export function fire(event, extraArguments) {
-  return global.fire(event, extraArguments);
+export function fire() {
+
+  return EventHandler.prototype.fire.apply(global, arguments);
+  //return global.fire(event, extraArguments);
+
 }
