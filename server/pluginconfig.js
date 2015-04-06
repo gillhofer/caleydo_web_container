@@ -13,8 +13,7 @@ var metadata_file = '/package.json';
 function PluginConfig(config) {
   this.config_file = 'plugins/config-gen.js';
   this.bower_dependencies = {
-    requirejs: '~2.1.8',
-    'require-css': '~0.1.5'
+
   };
   this.ignoredBoweredDependencies = ['requirejs', 'require-css'];
 

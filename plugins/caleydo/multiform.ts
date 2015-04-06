@@ -426,6 +426,11 @@ export class MultiFormGrid extends vis.AVisInstance implements vis.IVisInstance,
     return elem.range;
   }
 
+  getData(...indices: number[]) {
+    var elem = this.toElem(indices);
+    return elem.data;
+  }
+
   getBounds(...indices : number[]) {
     var elem = this.toElem(indices);
     var absloc = elem.location;

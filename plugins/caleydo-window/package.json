@@ -2,9 +2,8 @@
   "name" : "caleydo-window",
   "version": "0.0.1",
   "dependencies": {
-    "jquery": "~1.10.2",
-    "jquery-ui": "~1.10.2",
-    "font-awesome": ">=4.2.0"
+    "jquery-ui": "~1.11.4",
+    "font-awesome": ">=4.3.0"
   },
   "caleydo" : {
     "requirejs-config": {

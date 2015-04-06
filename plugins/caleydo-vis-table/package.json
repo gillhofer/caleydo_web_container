@@ -2,7 +2,7 @@
   "name" : "caleydo-vis-table",
   "version": "0.0.1",
   "dependencies": {
-    "d3": "~3.4.11"
+    "d3": "~3.5.5"
   },
   "caleydo" : {
     "plugins": [

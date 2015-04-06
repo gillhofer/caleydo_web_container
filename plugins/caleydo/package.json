@@ -2,8 +2,10 @@
   "name" : "caleydo",
   "version": "0.0.1",
   "dependencies": {
-    "d3": "~3.4.11",
-    "jquery": "~1.10.2"
+    "d3": "~3.5.5",
+    "jquery": "~1.10.2",
+    "requirejs": "~2.1.17",
+    "require-css": "~0.1.8"
   },
   "caleydo" : {
     "plugins": [
@@ -27,6 +29,16 @@
         "id": "stratification",
         "module": "caleydo/stratification"
       }
-    ]
+    ],
+    "requirejs-config": {
+      "map": {
+        "*": {
+          "css": "${baseUrl}/require-css/css.js"
+        }
+      }
+    },
+    "requirejs-bower": {
+      "ignore" : ["requirejs", "require-css"]
+    }
   }
 }
