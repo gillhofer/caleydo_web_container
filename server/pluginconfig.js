@@ -12,20 +12,14 @@ var metadata_file = '/package.json';
 
 function PluginConfig(config) {
   this.config_file = 'plugins/config-gen.js';
-  this.bower_dependencies = {
-
-  };
-  this.ignoredBoweredDependencies = ['requirejs', 'require-css'];
+  this.bower_dependencies = {};
+  this.ignoredBoweredDependencies = [];
 
   this.caleydo_plugins = [];
   this.requirejs_config = {
     baseUrl: config.baseUrl,
     paths: {},
-    map: {
-      '*': {
-        'css': '${baseUrl}/require-css/css.js' // or whatever the path to require-css is
-      }
-    },
+    map: {},
     deps: [config.mainFile],
     config: { }
   };
@@ -107,6 +101,24 @@ function createConfigFile(config_obj) {
   return config_full;
 }
 
+
+function resolveConflicts(dependencies) {
+  var r = {};
+  Object.keys(dependencies).map(function(key) {
+    var v = dependencies[key];
+    if (Array.isArray(v)) {
+      console.log('resolving versions of ',key,v,'->', v.join(' '));
+      //multiple version select the highest one
+      //v.sort(semver.rcompare);
+      //console.log('resolving versions of ',key,v,'->',v[0]);
+      r[key] = v.join(' ');
+    } else {
+      r[key] = v; //single hit
+    }
+  });
+  return r;
+}
+
 PluginConfig.prototype.dumpConfig = function (that) {
   var deferred = Q.defer();
   var config_full = createConfigFile(that.requirejs_config);
@@ -130,10 +142,28 @@ PluginConfig.prototype.addCaleydoPlugins = function (plugins) {
 };
 
 PluginConfig.prototype.addDependencies = function (dependencies, dir) {
-  extend(this.bower_dependencies, dependencies);
+  //TODO check for similar entries and merge them
+  var b = this.bower_dependencies;
+  Object.keys(dependencies).forEach(function(key) {
+    var value = dependencies[key];
+    if (key in b) {
+      //handle duplicate
+      var old = b[key];
+      if ((!Array.isArray(old) && old === value) || (Array.isArray(old) && old.indexOf(value) >= 0)) { //fine
+        //fine
+      } else if (Array.isArray(old)) {
+        old.push(value);
+      } else {
+        b[key] = [old, value];
+      }
+    } else {
+      b[key] = value;
+    }
+  });
 };
 
 PluginConfig.prototype.addRequireJSConfig = function (rconfig, dir) {
+  //TODO check for key=primitive and report differences
   extend(this.requirejs_config, rconfig);
 };
 
@@ -179,7 +209,7 @@ PluginConfig.prototype.dumpBower = function (that) {
   console.log('dump bower');
   var deferred = Q.defer();
   function write(bower) {
-    bower.dependencies = that.bower_dependencies;
+    bower.dependencies = resolveConflicts(that.bower_dependencies);
     fs.writeFile(bower_file, JSON.stringify(bower, null, 2), function (err) {
       if (err) {
         throw err;
@@ -199,8 +229,8 @@ PluginConfig.prototype.dumpBower = function (that) {
       });
     } else {
      write({
-       "name": "caleydo-web",
-       "version": "0.0.0"
+       name: 'caleydo-web',
+       version: '0.0.0'
      });
     }
   });
