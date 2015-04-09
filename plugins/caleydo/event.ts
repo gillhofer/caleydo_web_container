@@ -68,33 +68,21 @@ export class EventHandler implements IEventHandler {
 }
 
 var global = new EventHandler();
-
 /**
  * register a global event handler
  * @param events
  * @param handler
  */
-export function on(events, handler) {
-  return global.on(events, handler);
-}
-
+export var on = global.on.bind(global);
 /**
  * unregister a global event handler
  * @param events
  * @param handler
  */
-export function off(events, handler) {
-  return global.off(events, handler);
-}
-
+export var off = global.off.bind(global);
 /**
  * fires an event
  * @param event
  * @param extraArguments
  */
-export function fire() {
-
-  return EventHandler.prototype.fire.apply(global, arguments);
-  //return global.fire(event, extraArguments);
-
-}
+export var fire = global.fire.bind(global);

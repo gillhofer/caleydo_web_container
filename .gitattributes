@@ -33,7 +33,7 @@
 *.py text
 *.scm text
 *.sql text
-*.sh text
+*.sh text eof=LF
 *.bat text
 
 # templates
