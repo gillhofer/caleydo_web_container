@@ -79,7 +79,8 @@ exports.load = function (desc, callback) {
       trim: true,
       comment: '#'
     })
-    .on('record', function (data) {
+    .on('data', function (data) {
+      console.log('entry',data);
       dataset.push(data.map(function (elem) {
         if (isNumeric(elem)) {
           return parseFloat(elem);
