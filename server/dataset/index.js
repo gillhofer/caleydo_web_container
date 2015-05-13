@@ -1,7 +1,7 @@
 /*global require, module, console*/
 'use strict';
 
-console.log('index.js 4');
+//console.log('index.js 4');
 var fs = require('fs');
 // global variables
 var datasetIndex = [];
@@ -12,9 +12,9 @@ router.param('dataset_id', function (req, res, next, id) {
   var desc = datasetIndex[id];
   if (desc) {
     req.dataset = [];
-    console.log('index.js 15');
+    //console.log('index.js 15');
     desc.load(function (data) {
-      console.log('index.js 17');
+      //console.log('index.js 17');
       data.rowIds = idtypes.map(data.rows, desc.rowtype || desc.idtype);
       if (desc.coltype) {
         data.colIds = idtypes.map(data.cols, desc.coltype);
@@ -23,7 +23,7 @@ router.param('dataset_id', function (req, res, next, id) {
         data.data = data.data.map(function (row) { return row[0]; });
       }
       req.dataset = data;
-      console.log('index.js 26');
+      //console.log('index.js 26');
       next();
     });
   } else {
@@ -50,7 +50,7 @@ router.route('/:dataset_id')
     if (req.query.start > req.query.end) {
       next(new Error('"start" must not be larger than "end".'));
     }
-    console.log('index.js 53');
+    //console.log('index.js 53');
 
     // apply query
     if (req.query.start && req.query.end) {

@@ -70,7 +70,7 @@ function isNumeric(obj) {
 
 //load a specific dataset
 exports.load = function (desc, callback) {
-  console.log('data.js 73',datasetBasePath + desc.path);
+  //console.log('data.js 73',datasetBasePath + desc.path);
   var dataset = [];
   csv
     .fromPath(datasetBasePath + desc.path, {
@@ -80,7 +80,7 @@ exports.load = function (desc, callback) {
       comment: '#'
     })
     .on('data', function (data) {
-      console.log('entry',data);
+      //console.log('entry',data);
       dataset.push(data.map(function (elem) {
         if (isNumeric(elem)) {
           return parseFloat(elem);
