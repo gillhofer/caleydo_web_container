@@ -70,6 +70,7 @@ function isNumeric(obj) {
 
 //load a specific dataset
 exports.load = function (desc, callback) {
+  console.log('data.js 73',datasetBasePath + desc.path);
   var dataset = [];
   csv
     .fromPath(datasetBasePath + desc.path, {
