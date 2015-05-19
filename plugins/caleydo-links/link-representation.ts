@@ -131,7 +131,7 @@ export function createItemRep(context: link.IBandContext, a: link.IVisWrapper, a
       locb = toArray(locations[2]);
     var r = [];
     context.line.interpolate('linear');
-    var selections = this.idtype.selections().dim(0);
+    var selections = context.idtype.selections().dim(0);
     union.forEach((id, i) => {
       var la = geom.wrap(loca[i]);
       var lb = geom.wrap(locb[i]);
