@@ -135,11 +135,16 @@ class HeatMapCanvasRenderer implements IHeatMapRenderer {
   private imageData : ImageData;
 
   rescale($node: D3.Selection, dim: number[], scale: number[]) {
-    $node.select('canvas').attr({
+    $node.selectAll('canvas').attr({
       width: dim[1] * scale[0],
       height: dim[0] * scale[1]
     });
     this.redraw(this.imageData, $node, scale);
+
+    $node.datum().selections().then((selected) => {
+      this.redrawSelection(<HTMLCanvasElement>$node.select('canvas.heatmap-selection').node(), dim,
+'selected', selected);
+    });
   }
 
   recolor($node: D3.Selection, data: matrix.IMatrix, color: D3.Scale.Scale, scale: number[]) {
@@ -183,6 +188,37 @@ class HeatMapCanvasRenderer implements IHeatMapRenderer {
     }
   }
 
+  private redrawSelection(canvas: HTMLCanvasElement, dim: number[], type: string, selected: ranges.Range) {
+    var ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'orange';
+    if (selected.isNone) {
+      return;
+    }
+    if (selected.isAll) {
+      ctx.fillRect(0,0, canvas.width, canvas.height);
+      return;
+    }
+    var dim0 = selected.dim(0), dim1 = selected.dim(1);
+    ctx.scale(canvas.width / dim[1], canvas.height / dim[0]);
+
+    if (dim0.isAll || dim0.isNone) {
+      dim1.forEach((j) => { //column
+        ctx.fillRect(j, 0, 1, dim[0]);
+      });
+    } else if (dim1.isAll || dim1.isNone) {
+      dim0.forEach((i) => { //rows
+        ctx.fillRect(0, i, dim[1], 1);
+      });
+    } else {
+      dim0.forEach((i) => {
+        dim1.forEach((j) => {
+          ctx.fillRect(i, j, 1, 1);
+        });
+      });
+    }
+  }
+
   build(data: matrix.IMatrix, $parent: D3.Selection, initialScale: number, c: D3.Scale.Scale, onReady: () => void) {
 
     var dims = data.dim;
@@ -192,13 +228,13 @@ class HeatMapCanvasRenderer implements IHeatMapRenderer {
     var $canvas = $root.append('canvas').attr({
       width: width * initialScale,
       height: height * initialScale,
-      'class': 'heatmap-data',
+      'class': 'heatmap-data'
     });
-    /*var $selections = $root.append('canvas').attr({
+    var $selection = $root.append('canvas').attr({
       width: width * initialScale,
       height: height * initialScale,
-      'class': 'heatmap-selection',
-    });*/
+      'class': 'heatmap-selection'
+    });
 
     this.imageData = new (<any>ImageData)(data.ncol, data.nrow);
     var rgba = this.imageData.data;
@@ -208,19 +244,31 @@ class HeatMapCanvasRenderer implements IHeatMapRenderer {
       onReady();
     });
 
-    /*$selections.on('mouseover', () => {
+    var toCoord = (evt) => {
+      var c = <HTMLCanvasElement>$selection.node(),
+        rect = c.getBoundingClientRect();
+      var x = evt.clientX - rect.left,
+          y = evt.clientY - rect.top;
+      var i = d3.round(width * x / c.width, 0),
+        j = d3.round(height * y / c.height, 0);
+      return [i,j];
+    };
 
-    });*/
-    var l = function(event, type, selected) {
-      //clear selection = redraw? a second canvas with just the selections?
+    $selection.on('click', () => {
+      var ij = toCoord(d3.event);
+      data.select([[ij[0]], [ij[1]]], idtypes.toSelectOperation(d3.event));
+    });
+
+    var l = (event, type, selected) => {
+      this.redrawSelection(<HTMLCanvasElement>$selection.node(), dims, type, selected);
     };
 
     data.on('select', l);
     C.onDOMNodeRemoved($canvas.node(), () => {
-      data.off('select', l)
+      data.off('select', l);
     });
-    data.selections().then(function (selected) {
-      l(null, 'selected', selected);
+    data.selections().then((selected) => {
+      this.redrawSelection(<HTMLCanvasElement>$selection.node(), dims, 'selected', selected);
     });
 
 
