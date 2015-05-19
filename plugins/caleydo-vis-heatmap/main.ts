@@ -190,13 +190,16 @@ class HeatMapCanvasRenderer implements IHeatMapRenderer {
 
   private redrawSelection(canvas: HTMLCanvasElement, dim: number[], type: string, selected: ranges.Range) {
     var ctx = canvas.getContext('2d');
+    ctx.save();
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = 'orange';
     if (selected.isNone) {
+      ctx.restore();
       return;
     }
     if (selected.isAll) {
       ctx.fillRect(0,0, canvas.width, canvas.height);
+      ctx.restore();
       return;
     }
     var dim0 = selected.dim(0), dim1 = selected.dim(1);
@@ -213,10 +216,12 @@ class HeatMapCanvasRenderer implements IHeatMapRenderer {
     } else {
       dim0.forEach((i) => {
         dim1.forEach((j) => {
-          ctx.fillRect(i, j, 1, 1);
+          ctx.fillRect(j,i, 1, 1);
         });
       });
     }
+    ctx.restore();
+
   }
 
   build(data: matrix.IMatrix, $parent: D3.Selection, initialScale: number, c: D3.Scale.Scale, onReady: () => void) {
@@ -236,7 +241,7 @@ class HeatMapCanvasRenderer implements IHeatMapRenderer {
       'class': 'heatmap-selection'
     });
 
-    this.imageData = new (<any>ImageData)(data.ncol, data.nrow);
+    this.imageData = (<HTMLCanvasElement>$canvas.node()).getContext('2d').createImageData(width, height);//new (<any>ImageData)(data.ncol, data.nrow);
     var rgba = this.imageData.data;
     data.data().then((arr) => {
       this.genImage(rgba, arr, data.ncol, c);
@@ -249,9 +254,9 @@ class HeatMapCanvasRenderer implements IHeatMapRenderer {
         rect = c.getBoundingClientRect();
       var x = evt.clientX - rect.left,
           y = evt.clientY - rect.top;
-      var i = d3.round(width * x / c.width, 0),
-        j = d3.round(height * y / c.height, 0);
-      return [i,j];
+      var i = Math.floor(width * x / c.width),
+        j = Math.floor(height * y / c.height);
+      return [j,i];
     };
 
     $selection.on('click', () => {

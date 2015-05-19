@@ -2,11 +2,11 @@ div.heatmap {
   position: relative;
 
   canvas {
-    position: absolute;
-    top: 0;
-    left: 0;
 
     &.heatmap-selection {
+      position: absolute;
+      top: 0;
+      left: 0;
       z-index: 2;
     }
   }
