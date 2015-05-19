@@ -2,6 +2,8 @@
  * Created by Samuel Gratzl on 05.08.2014.
  */
 /// <reference path='../../tsd.d.ts' />
+/// <amd-dependency path='css!./style' />
+
 /* global define */
 'use strict';
 
@@ -38,14 +40,18 @@ function toScale(value): D3.Scale.Scale {
 }
 
 interface IHeatMapRenderer {
-  rescale($node: D3.Selection, scale: number[]);
+  rescale($node: D3.Selection, dim: number[], scale: number[]);
   recolor($node: D3.Selection, data: matrix.IMatrix, color: D3.Scale.Scale, scale: number[]);
   build(data: matrix.IMatrix, $parent: D3.Selection, initialScale: number, c: D3.Scale.Scale, onReady: () => void);
 }
 
 class HeatMapDOMRenderer implements IHeatMapRenderer {
 
-  rescale($node: D3.Selection, scale: number[]) {
+  rescale($node: D3.Selection, dim: number[], scale: number[]) {
+    $node.attr({
+      width: dim[1] * scale[0],
+      height: dim[0] * scale[1]
+    });
     $node.select('g').attr('transform','scale('+scale[0]+','+scale[1]+')');
   }
 
@@ -128,7 +134,11 @@ class HeatMapDOMRenderer implements IHeatMapRenderer {
 class HeatMapCanvasRenderer implements IHeatMapRenderer {
   private imageData : ImageData;
 
-  rescale($node: D3.Selection, scale: number[]) {
+  rescale($node: D3.Selection, dim: number[], scale: number[]) {
+    $node.select('canvas').attr({
+      width: dim[1] * scale[0],
+      height: dim[0] * scale[1]
+    });
     this.redraw(this.imageData, $node, scale);
   }
 
@@ -153,8 +163,8 @@ class HeatMapCanvasRenderer implements IHeatMapRenderer {
     });
   }
 
-  private redraw(imageData: ImageData, $canvas: D3.Selection, scale: number[]) {
-    var context = (<any>$canvas.node()).getContext('2d');
+  private redraw(imageData: ImageData, $root: D3.Selection, scale: number[]) {
+    var context = (<any>$root.select('canvas').node()).getContext('2d');
     context.imageSmoothingEnabled = false;
 
     if (scale[0] === 1 && scale[1] === 1) {
@@ -178,21 +188,43 @@ class HeatMapCanvasRenderer implements IHeatMapRenderer {
     var dims = data.dim;
     var width = dims[1], height = dims[0];
 
-    var $canvas = $parent.append('canvas').attr({
+    var $root = $parent.append('div').attr('class','heatmap');
+    var $canvas = $root.append('canvas').attr({
       width: width * initialScale,
       height: height * initialScale,
-      'class': 'heatmap',
+      'class': 'heatmap-data',
     });
+    /*var $selections = $root.append('canvas').attr({
+      width: width * initialScale,
+      height: height * initialScale,
+      'class': 'heatmap-selection',
+    });*/
 
     this.imageData = new (<any>ImageData)(data.ncol, data.nrow);
     var rgba = this.imageData.data;
     data.data().then((arr) => {
       this.genImage(rgba, arr, data.ncol, c);
-      this.redraw(this.imageData, $canvas, [initialScale, initialScale]);
+      this.redraw(this.imageData, $root, [initialScale, initialScale]);
       onReady();
     });
 
-    return $canvas;
+    /*$selections.on('mouseover', () => {
+
+    });*/
+    var l = function(event, type, selected) {
+      //clear selection = redraw? a second canvas with just the selections?
+    };
+
+    data.on('select', l);
+    C.onDOMNodeRemoved($canvas.node(), () => {
+      data.off('select', l)
+    });
+    data.selections().then(function (selected) {
+      l(null, 'selected', selected);
+    });
+
+
+    return $root;
 
   }
 }
@@ -281,12 +313,8 @@ export class HeatMap extends vis.AVisInstance implements vis.IVisInstance {
       return bak;
     }
     var dims = this.data.dim;
-    var width = dims[1], height = dims[0];
-    this.$node.attr({
-      width: width * scale[0],
-      height: height * scale[1]
-    }).style('transform','rotate('+rotate+'deg)');
-    this.renderer.rescale(this.$node, scale);
+    this.$node.style('transform','rotate('+rotate+'deg)');
+    this.renderer.rescale(this.$node, dims, scale);
     var new_ = {
       scale: scale,
       rotate: rotate
