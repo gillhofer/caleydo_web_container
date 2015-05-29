@@ -90,7 +90,7 @@ if (require.main === module) {
     .option('--port <port>', 'specify port [9000]', 9000)
     .parse(process.argv);
   if (program.dependencyOnly) {
-    require('./pluginconfig').dumpDependencies()
+    require('./config').dumpDependencies()
   } else {
     console.log('running as main');
     main();
