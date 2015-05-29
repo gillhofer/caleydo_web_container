@@ -13,14 +13,14 @@ var contextPath = '/';
 app.get(contextPath + 'api/about', function (req, res) {
   res.send(require('../package.json'));
 });
-app.use(contextPath + 'api/dataset', require('./dataset').Router);
-app.use(contextPath + 'api/idtype', require('./idtypes').Router);
+app.use(contextPath + 'api/dataset', require('./dataset').DataSetRouter);
+app.use(contextPath + 'api/idtype', require('./dataset').IDTypeRouter);
 app.use(contextPath + 'api/mapper', require('./mapper').Router);
 
 
 //if it is the root then try to generate a list of apps and redirect to the only one found if just one is there
 app.get(contextPath, function (req, res, next) {
-  require('./pluginconfig').findApps().then(function (apps) {
+  require('./config').findApps().then(function (apps) {
     if (apps.length === 1) {
       //redirect to the only one
       res.redirect('/' + apps[0] + '/');
@@ -39,7 +39,7 @@ app.get(contextPath, function (req, res, next) {
 app.get(contextPath + 'config-gen.js', function (req, res) {
   console.log(JSON.stringify(req.query));
   var app = req.query.app || './main';
-  require('./pluginconfig').gen({
+  require('./config').gen({
     mainFile: app,
     baseUrl : contextPath.substr(1),
     configPrefix: '../'

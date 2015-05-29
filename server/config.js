@@ -338,8 +338,8 @@ PluginConfig.prototype.parseDir = function (plugindir) {
     files.map(function (f) {
       return function () {
         var d = Q.defer();
-        fs.stat(plugindir + '/' + f, function (err, stats) {
-          if (stats.isDirectory()) {
+        fs.stat(plugindir + '/' + f + '/' + metadata_file, function (err, stats) {
+          if (stats && stats.isFile()) {
             d.resolve(that.addPlugin(plugindir, f));
           } else {
             d.resolve(f);
@@ -418,6 +418,44 @@ module.exports.findApps = function (config) {
   return c.pluginDirs.map(function (pluginDir) {
     return function (result) {
       return findAppsInDir(pluginDir, result);
+    };
+  }).reduce(Q.when, Q.resolve([]));
+};
+
+function findDatasetsInDir(plugindir, result) {
+  var deferred = Q.defer();
+  fs.readdir(plugindir, function (err, files) {
+    console.log(plugindir, err);
+    if (files === undefined) {
+      deferred.resolve(result);
+      return;
+    }
+    //map pluginDir to promise function and execute them
+    files.map(function (f) {
+      return function () {
+        var d = Q.defer();
+        fs.stat(plugindir + '/' + f + '/data/index.json', function (err, stats) {
+          if (stats && stats.isFile()) {
+            result.push(plugindir + '/' + f);
+          }
+          d.resolve(null);
+        });
+        return d.promise;
+      };
+    }).reduce(Q.when, Q.resolve(null)).then(function () {
+      //ok directory done
+      deferred.resolve(result);
+    });
+  });
+  return deferred.promise;
+}
+
+module.exports.findDataDirs = function(config) {
+  var c = {};
+  extend(c, defaultConfig, config || {});
+  return c.pluginDirs.map(function (pluginDir) {
+    return function (result) {
+      return findDatasetsInDir(pluginDir, result);
     };
   }).reduce(Q.when, Q.resolve([]));
 };

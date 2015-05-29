@@ -7,17 +7,7 @@
 var csv = require('fast-csv');
 var fs = require('fs');
 
-var matrix = require('../matrix');
-
-var datasetBasePath = './data/';
-
-//list function returns the description objects of all known datasets
-exports.list = function () {
-  // expects an array of {name: <dataset name>, path: <relative path to datafile>} pairs
-  //since the server is in a sub directory
-  var datasetIndex = JSON.parse(fs.readFileSync(datasetBasePath + 'index.json'));
-  return datasetIndex;
-};
+var matrix = require('./matrix');
 
 function convertToStratification(data) {
   var d = data.slice(1).map(function (row, i) {
@@ -73,11 +63,14 @@ exports.load = function (desc, callback) {
   //console.log('data.js 73',datasetBasePath + desc.path);
   var dataset = [];
   csv
-    .fromPath(datasetBasePath + desc.path, {
+    .fromPath(desc.path, {
       ignoreEmpty: true,
       delimiter: desc.separator || ',',
       trim: true,
       comment: '#'
+    })
+    .on('error', function(error) {
+      console.error(error);
     })
     .on('data', function (data) {
       //console.log('entry',data);
@@ -89,8 +82,6 @@ exports.load = function (desc, callback) {
       }));
     })
     .on('end', function () {
-      //console.log(dataset);
-      console.log('Successfully parsed dataset ' + desc.name + ' from ' + (datasetBasePath + desc.path) + '!');
       callback(convertData(desc, dataset));
     });
 };
