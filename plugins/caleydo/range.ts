@@ -1232,6 +1232,7 @@ function parseRange1D(code:string, act:number) {
  * @returns {Range}
  */
 export function parse(range:Range);
+export function parse(indices: number[]);
 export function parse(...encoded:string[]);
 export function parse(...args:any[]) {
 
@@ -1240,6 +1241,9 @@ export function parse(...args:any[]) {
   }
   if (args.length === 1 && args[0] instanceof Range) {
     return <Range>args[0];
+  }
+  if (args.length === 1 && Array.isArray(args[0]) && typeof args[0][0] === 'number') {
+    return list(args[0])
   }
   return parseRange(args.map(String).join(','));
 }

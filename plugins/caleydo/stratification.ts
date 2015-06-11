@@ -8,7 +8,7 @@ import ranges = require('./range');
 import idtypes = require('./idtype');
 import datatypes = require('./datatype');
 import vector = require('./vector');
-
+import math = require('./math');
 
 export interface IStratificationLoader {
   (desc: datatypes.IDataDescription) : C.IPromise<{
@@ -20,8 +20,7 @@ export interface IStratificationLoader {
 
 function createRangeFromGroups(name: string, groups: any[]) {
   return ranges.composite(name, groups.map((g) => {
-    var r = new ranges.Range1DGroup(g.name, g.color || 'gray');
-    r.setList(g.range);
+    var r = new ranges.Range1DGroup(g.name, g.color || 'gray', ranges.parse(g.range).dim(0));
     return r;
   }));
 }
@@ -34,7 +33,7 @@ function viaAPILoader() {
     }
     _data = C.getAPIJSON('/dataset/'+desc.id).then(function (data) {
       var d = {
-        rowIds : ranges.list(data.rowIds),
+        rowIds : ranges.parse(data.rowIds),
         rows : data.rows,
         range: createRangeFromGroups(desc.name, data.groups)
       };
@@ -89,11 +88,26 @@ export class Stratification extends datatypes.DataTypeBase {
     return this.loader(this.desc);
   }
 
+  view(range: ranges.Range) {
+    if (range.isAll) {
+      return this;
+    }
+    //TODO
+    return this;
+  }
+
+  hist() : C.IPromise<math.IHistogram> {
+    return null;
+    //return this.load().then((d) => {
+    //  return math.categoricalHist(d, this.indices.dim(0), d.length, v.categories.map((d) => typeof d === 'string' ? d : d.name));
+    //});
+  }
   vector(): C.IPromise<vector.IVector> {
     if (this._v) {
       return this._v;
     }
     this._v = this.load().then((data) => new StratificationVector(this, data.range, this.desc));
+    return this._v;
   }
 
   range() {

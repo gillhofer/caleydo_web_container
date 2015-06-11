@@ -253,7 +253,7 @@ function viaAPILoader() {
       return _loader;
     }
     return _loader = C.getAPIJSON('/dataset/'+desc.id).then(function (data) {
-      data.rowIds = ranges.list(data.rowIds);
+      data.rowIds = ranges.parse(data.rowIds);
       return data;
     });
   };
@@ -266,7 +266,7 @@ function viaDataLoader(rows: string[], rowIds: number[], data: any[]) {
       return C.resolved(_data);
     }
     _data = {
-      rowIds : ranges.list(rowIds),
+      rowIds : ranges.parse(rowIds),
       rows: rows,
       data: data
     };
