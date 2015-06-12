@@ -1,4 +1,4 @@
-/**
+  /**
  * Created by Samuel Gratzl on 04.08.2014.
  */
 /// <reference path="../../tsd.d.ts" />
@@ -76,6 +76,11 @@ export function getAPIJSON(url, ...args:any[]):IPromise<any> {
   url = server_url + url + server_json_suffix;
   args.unshift(url);
   return getJSON.apply($, args);
+}
+export function ajaxAPI(args: any):IPromise<any> {
+  //convert to full url
+  args.url = server_url + args.url + server_json_suffix;
+  return ajax.apply($, args);
 }
 /**
  * integrate b into a and override all duplicates

@@ -51,7 +51,7 @@
     "path": "test_h10x4.csv",
     "size": [10, 4],
     "type": "table",
-    "rowtype": "patient",
+    "idtype": "patient",
     "columns": [
       {
         "name": "Gender",

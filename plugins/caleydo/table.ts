@@ -136,7 +136,7 @@ function viaAPILoader() {
       return _loader;
     }
     return _loader = C.getAPIJSON('/dataset/'+desc.id).then(function (data) {
-      data.rowIds = ranges.list(data.rowIds);
+      data.rowIds = ranges.parse(data.rowIds);
       //transpose to have column order for better vector access
       data.objs = toObjects(data.data, desc.columns);
       data.data = datatypes.transpose(data.data);

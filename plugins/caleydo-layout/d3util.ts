@@ -3,7 +3,7 @@
  */
 
 import d3 = require('d3');
-import layout = require('./main')
+import layout = require('./main');
 import C = require('../caleydo/main');
 import geom = require('../caleydo/geom');
 'use strict';

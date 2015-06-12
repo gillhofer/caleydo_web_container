@@ -42,6 +42,8 @@ export interface IMatrix extends datatypes.IDataType {
    */
   view(range?:ranges.Range) : IMatrix;
 
+  view(filter: string): C.IPromise<IMatrix>;
+
   /**
    * reduces the current matrix to a vector using the given reduce function
    * @param f the reduce function
@@ -139,11 +141,22 @@ export class MatrixBase extends idtypes.SelectAble {
     throw new Error('not implemented');
   }
 
-  view(range:ranges.Range = ranges.all()) : IMatrix {
+  view(): IMatrix;
+  view(range:ranges.Range) : IMatrix;
+  view(filter: string): C.IPromise<IMatrix>;
+  view(): any {
+    if (typeof arguments[0] === 'string') {
+      return this.dynview(<string>arguments[0]);
+    }
+    var range : ranges.Range = arguments.length === 0 ? ranges.all() : arguments[0];
     if (range.isAll) {
       return this._root;
     }
     return new MatrixView(this._root, range);
+  }
+
+  dynview(filter: string): C.IPromise<IMatrix> {
+    return null;
   }
 
   stats() : C.IPromise<math.IStatistics> {
@@ -211,8 +224,8 @@ function viaAPILoader() {
       return _loader;
     }
     return _loader = C.getAPIJSON('/dataset/'+desc.id).then(function (data) {
-      data.rowIds = ranges.list(data.rowIds);
-      data.colIds = ranges.list(data.colIds);
+      data.rowIds = ranges.parse(data.rowIds);
+      data.colIds = ranges.parse(data.colIds);
       data.ids = ranges.list(data.rowIds.dim(0), data.colIds.dim(0));
       return data;
     });
