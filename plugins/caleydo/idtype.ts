@@ -369,7 +369,7 @@ export class SelectAble extends events.EventHandler {
   selections(type = defaultSelectionType) {
     return this.ids().then((ids: ranges.Range) => {
       var r = ranges.join(this.idtypes.map((idtype) => idtype.selections(type)));
-      return ids.indexOf(r);
+      return ids.indexRangeOf(r);
     });
   }
 

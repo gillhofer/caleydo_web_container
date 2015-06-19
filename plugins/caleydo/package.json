@@ -12,22 +12,22 @@
       {
         "type": "datatype",
         "id": "matrix",
-        "module": "caleydo/matrix"
+        "module": "caleydo/matrix_impl"
       },
       {
         "type": "datatype",
         "id": "table",
-        "module": "caleydo/table"
+        "module": "caleydo/table_impl"
       },
       {
         "type": "datatype",
         "id": "vector",
-        "module": "caleydo/vector"
+        "module": "caleydo/vector_impl"
       },
       {
         "type": "datatype",
         "id": "stratification",
-        "module": "caleydo/stratification"
+        "module": "caleydo/stratification_impl"
       }
     ],
     "requirejs-config": {

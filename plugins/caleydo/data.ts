@@ -5,6 +5,7 @@ import C = require('./main');
 import plugins = require('./plugin');
 import datatypes = require('./datatype');
 import tables = require('./table');
+import tables_impl = require('./table_impl');
 
 'use strict';
 
@@ -88,7 +89,7 @@ export function create(desc: any) : C.IPromise<datatypes.IDataType> {
 }
 
 export function convertToTable(list : datatypes.IDataType[]) {
-  return tables.wrapObjects({
+  return tables_impl.wrapObjects({
     id : '_data',
     name: 'data',
     type: 'table',
