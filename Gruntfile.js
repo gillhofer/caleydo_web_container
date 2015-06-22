@@ -271,6 +271,7 @@ module.exports = function (grunt) {
 
   grunt.registerTask('pythonserver', [
     'clean:server',
+	'tsd:refresh',
     'ts:build',
     'sass:dist',
     'bgShell:vagrant',
