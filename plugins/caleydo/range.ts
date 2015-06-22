@@ -1243,7 +1243,7 @@ export function parse(...args:any[]) {
     return <Range>args[0];
   }
   if (args.length === 1 && Array.isArray(args[0]) && typeof args[0][0] === 'number') {
-    return list(args[0])
+    return list(args[0]);
   }
   return parseRange(args.map(String).join(','));
 }
