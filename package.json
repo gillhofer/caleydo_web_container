@@ -1,13 +1,9 @@
 {
-  "name": "caledo-web-server",
-  "description": "Server component for Caleydo Web.",
+  "name": "caledo-web",
+  "description": "Caleydo Web Container",
   "version": "0.0.1",
   "private": true,
-  "dependencies": {
-    "commander": "^2.5.0",
-    "express": "4.x",
-    "fast-csv": "0.5.x",
-    "q": "~1.0.1"
+  "dependencies": {  
   },
   "devDependencies": {
     "grunt": "~0.4.5",
