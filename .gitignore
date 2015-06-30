@@ -1,0 +1,35 @@
+#provision Entries
+/.vagrant
+/.idea
+
+#build entries
+/deploy
+/dist
+/build
+
+#temporary stuff and generated ones
+/node_modules
+/bower_components
+/supervisord.conf
+/requirements.txt
+/bower.json
+.tmp
+/.sass-cache
+/.tscache/
+/tsd.gen.d.ts
+/typings/
+
+.project
+.pydevproject
+local_settings.py
+
+*.log
+*.pot
+*.pyc
+*.swp
+*.lock
+*.map
+*.css
+
+#remove all projects
+/*/
