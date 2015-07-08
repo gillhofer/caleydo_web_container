@@ -47,12 +47,15 @@ function install_pip_dependencies {
 function install_npm_dependencies {
   if [ -f npm.txt ] ; then
     echo "--- installing npm dependencies ---"
-    cat npm.txt | while  read $line;do
-      set -vx #to turn echoing on and
-      npm install $line
-      set +vx #to turn them both off
-    done
-    rm npm.txt
+    mv "package.json" "ori.package.json"
+    mv "npm.package.json" "package.json"
+
+    set -vx #to turn echoing on and
+    npm install
+    set +vx #to turn them both off
+
+    rm "package.json"
+    mv "ori.package.json" "package.json"
   fi
 }
 function install_bower_dependencies {
@@ -97,9 +100,29 @@ function npmredirect {
     ###################################
     #create the link to our own registry
     echo "registry=$REGISTRY" > .npmrc
+
+    #fake node_modules directory
+    if [ -d "node_modules" ] ; then
+      mv "node_modules" "_node_modules"
+    fi
+    if [ -d "plugins" ] ; then
+      mv "plugins" "node_modules"
+    else
+      mkdir "node_modules"
+    fi
+
     set -vx #to turn echoing on and
-    (npm $@; rm .npmrc)
+
+    npm $@
+
     set +vx #to turn them both off
+    rm .npmrc
+
+    #recreate original structure
+    mv "node_modules" "plugins"
+    if [ -d "_node_modules" ] ; then
+      mv "_node_modules" "node_modules"
+    fi
 }
 
 #command switch

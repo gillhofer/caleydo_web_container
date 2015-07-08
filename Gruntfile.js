@@ -287,4 +287,82 @@ module.exports = function (grunt) {
     'jshint',
     'buildd'
   ]);
+
+  grunt.registerTask('resolveDependencies', 'Resolves the dependencies from the current plugins and creates the type specific files', function() {
+  var options = this.options({
+      plugins: ['plugins/**/package.json'],
+      target:  {
+        bower : 'bower.json',
+        npm : 'npm.package.json',
+        pip: 'requirements.txt',
+      },
+      converter : {
+        bower: function(deps) {
+          return JSON.stringify({
+             name: 'caleydo-web',
+             version: '0.0.1',
+             dependencies: deps
+           }, null, 2);
+        },
+        npm: function(deps) {
+          return JSON.stringify({
+             name: 'caleydo-web',
+             version: '0.0.1',
+             dependencies: deps
+           }, null, 2);
+        },
+        apt: function(deps) {
+          return Object.keys(deps).map(function(d) {
+            return d+deps[d];
+          }).join(' ')
+        },
+        //suitable for pip
+        _default : function(deps) {
+          return Object.keys(deps).map(function(d) {
+            return d+deps[d];
+          }).join('\n')
+        }
+      }
+    });
+    grunt.log.writeln(options.plugins);
+    var dependencies = { };
+
+    /**
+     * merges a dependency list
+     */
+    function addDependency(type, deps) {
+      if (type in dependencies) {
+        var existing = dependencies[type];
+        Object.keys(deps).forEach(function(d) {
+          if (d in existing) {
+            //TODO merge
+          } else {
+            existing[d] = deps[d];
+          }
+        });
+      } else {
+        dependencies[type] = deps
+      }
+    }
+    //parse all package.json files
+    grunt.file.expand(options.plugins).forEach(function(plugin) {
+	  grunt.log.writeln(plugin);
+      var desc = grunt.file.readJSON(plugin);
+      if ('caleydo' in desc && 'dependencies' in desc.caleydo) {
+        Object.keys(desc.caleydo.dependencies).forEach(function(type) {
+          addDependency(type, desc.caleydo.dependencies[type]);
+        });
+      }
+    });
+
+	  grunt.log.writeln(JSON.stringify(dependencies));
+
+    //generate the dependency files
+    Object.keys(dependencies).forEach(function(d) {
+      var target = options.target[d] || d+'.txt';
+      var converter = options.converter[d] || options.converter._default;
+      var r = converter(dependencies[d]);
+      grunt.file.write(target, r);
+    });
+  });
 };
