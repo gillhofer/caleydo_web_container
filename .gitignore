@@ -30,6 +30,3 @@ local_settings.py
 *.lock
 *.map
 *.css
-
-#remove all projects
-/*/
