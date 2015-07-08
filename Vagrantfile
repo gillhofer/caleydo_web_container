@@ -16,11 +16,13 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.ssh.forward_agent = true
   #cweb
   config.vm.network "forwarded_port", guest: 9000, host: 9000
-  
+
   config.vm.provider "virtualbox" do |v|
-    v.customize ["modifyvm", :id, "--memory", "2048"]
-	v.customize ["setextradata", :id, "VBoxInternal2/SharedFoldersEnableSymlinksCreate/vagrant", "1"]
+    v.memory = 2048
+    v.cpus = 2
+    v.customize ["modifyvm", :id, "--ioapic", "on"]
+	  v.customize ["setextradata", :id, "VBoxInternal2/SharedFoldersEnableSymlinksCreate/vagrant", "1"]
   end
-  
+
   config.vm.provision "shell", path: "Vagrantfile_provision.sh"
 end
