@@ -20,55 +20,52 @@ function pull {
   done
 }
 
-INDEX_FILE=".tmp/web-index.csv"
 
-function update {
-  ###################################
-  # update the index file
-  ###################################
-
-  mkdir -p .tmp
-  curl -o $INDEX_FILE http://caleydo.github.io/downloads/web-index.csv
+function install_apt_dependencies {
+  if [ -f apt.txt ] ; then
+    echo "--- installing apt dependencies ---"
+    wd="`pwd`"
+    cd /tmp #switch to tmp directory
+    set -vx #to turn echoing on and
+    sudo apt-get install -y `cat $wd/apt.txt`
+    set +vx #to turn them both off
+    cd $wd
+    rm apt.txt
+  fi
 }
-
-function ensure_index {
-  ###################################
-  # ensures that the index file exists
-  ###################################
-
-  if [ ! -f $INDEX_FILE ]; then
-    update
+function install_pip_dependencies {
+  if [ -f requirements.txt ] ; then
+    echo "--- installing pip dependencies ---"
+    wd="`pwd`"
+    cd /tmp #switch to tmp directory
+    sudo pip install -r $wd/requirements.txt
+    set -vx #to turn echoing on and
+    cd $wd
+    rm requirements.txt
+  fi
+}
+function install_npm_dependencies {
+  if [ -f npm.txt ] ; then
+    echo "--- installing npm dependencies ---"
+    cat npm.txt | while  read $line;do
+      set -vx #to turn echoing on and
+      npm install $line
+      set +vx #to turn them both off
+    done
+    rm npm.txt
+  fi
+}
+function install_bower_dependencies {
+  if [ -f bower.json ] ; then
+    echo "--- installing bower dependencies ---"
+    set -vx #to turn echoing on and
+    bower install
+    set +vx #to turn them both off
+    rm bower.json
   fi
 }
 
-function list {
-  ###################################
-  # lists all available plugins
-  ###################################
 
-  ensure_index
-  while IFS=';' read name url description
-  do
-    echo "$name ($url)"
-    echo  "$description"
-  done < $INDEX_FILE
-}
-
-function install {
-  ###################################
-  # install a given plugin by name
-  ###################################
-
-  local plugin=$1
-  local usessh=$2
-  while IFS=';' read name url description
-  do
-    if [ "$name" == "$plugin" ]; then
-      echo "installing: $name ($url)"
-      git clone $url
-    fi
-  done < $INDEX_FILE
-}
 
 function resolve {
   ###################################
@@ -78,27 +75,42 @@ function resolve {
   #pip dependencies
   #node dependencies
   #bower dependencies
-  echo "TODO"
+
+  if [ "`whoami`" == "vagrant" ] ; then
+    echo "--- resolving depenendencies"
+    grunt resolveDependencies
+
+    install_apt_dependencies
+    install_pip_dependencies
+    install_npm_dependencies
+    install_bower_dependencies
+  else
+    echo "this command should be executed within the VM: aborting"
+  fi
 }
 
+REGISTRY="http://dev.caleydo.org/nexus/content/repositories/caleydo-web/"
+
+function npmredirect {
+    ###################################
+    # redirects commands to npm
+    ###################################
+    #create the link to our own registry
+    echo "registry=$REGISTRY" > .npmrc
+    set -vx #to turn echoing on and
+    (npm $@; rm .npmrc)
+    set +vx #to turn them both off
+}
 
 #command switch
 case "$1" in
 pull)
 	pull
 	;;
-update)
-  update
-  ;;
-list)
-  list
-  ;;
-install)
-  install $2 $3
-  ;;
 resolve)
   resolve
   ;;
 *)
-	echo "unknown command: $1"
+	npmredirect $@
+  ;;
 esac

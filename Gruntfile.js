@@ -18,19 +18,19 @@ module.exports = function (grunt) {
     yeoman: {
       // configurable paths
       app: 'plugins',
-      dist: 'dist'
+      dist: '_dist'
     },
     watch: {
       ts: {
-        files: ['{plugins,external,server}/**/*.ts'],
+        files: ['**/*.ts','!_**/*.ts'],
         tasks: ['ts:build']
       },
       sass: {
-        files: ['{plugins,external,server}/**/*.scss'],
+        files: ['**/*.scss','!_**/*.scss'],
         tasks: ['sass:dev']
       },
       coffee: {
-        files: ['{plugins,external,server}/**/*.coffee'],
+        files: ['**/*.coffee','!_**/*.coffee'],
         tasks: ['coffee:dist']
       }
     },
@@ -38,7 +38,7 @@ module.exports = function (grunt) {
       dist: {                            // target
         files: [{
           expand: true,
-          src: ['{plugins,external,server}/**/*.scss'],
+          src: ['**/*.scss','!_**/*.scss'],
           dest: '',
           ext: '.css'
         }]
@@ -49,7 +49,7 @@ module.exports = function (grunt) {
         },
         files: [{
           expand: true,
-          src: ['{plugins,external,server}/**/*.scss'],
+          src: ['**/*.scss','!_**/*.scss'],
           dest: '',
           ext: '.css'
         }]
@@ -69,14 +69,14 @@ module.exports = function (grunt) {
         ]
       },
       server: '.tmp',
-      deploy: 'deploy',
+      deploy: '_deploy',
       deploycleanup: {
         files: [
           {
             dot: true,
             src: [
-              'deploy/*',
-              '!deploy/.git*'
+              '_deploy/*',
+              '!_deploy/.git*'
             ]
           }
         ]
@@ -91,7 +91,8 @@ module.exports = function (grunt) {
       },
       all: [
         'Gruntfile.js',
-        '{plugins,external,server}/**/*.js'
+        '**/*.js',
+		'!_**/*.js'],
       ]
     },
     tslint: {
@@ -99,7 +100,7 @@ module.exports = function (grunt) {
         configuration: grunt.file.readJSON("tslint.json")
       },
       all: {
-        src: ['{plugins,external,server}/**/*.ts']
+        src: ['**/*.ts','!_**/*.ts'],
       }
     },
     mocha: {
@@ -116,7 +117,7 @@ module.exports = function (grunt) {
       // A specific target
       build: {
         // The source TypeScript files, http://gruntjs.com/configuring-tasks#files
-        src: ['{plugins,external,server}/**/*.ts'],
+        src: ['**/*.ts','!_**/*.ts'],
         // If specified, generate this file that to can use for reference management
         reference: 'tsd.gen.d.ts',
         // If specified, the generate JavaScript files are placed here. Only works if out is not specified
@@ -161,13 +162,13 @@ module.exports = function (grunt) {
             expand: true,
             dot: true,
             dest: '<%= yeoman.dist %>',
-            src: '{plugins,external,server}/**/*.{htaccess,webp,gif,js,css,png,jpg,svg,txt,htm,html,xhtml,ico,json,csv,tsv}'
+            src: [ '**/*.{htaccess,webp,gif,js,css,png,jpg,svg,txt,htm,html,xhtml,ico,json,csv,tsv}','!_**/*']
           },
           {
             expand: true,
             dot: true,
             dest: '<%= yeoman.dist %>',
-            src: ['bower_components/**']
+            src: ['_bower_components/**']
           }
         ]
       },
@@ -176,17 +177,16 @@ module.exports = function (grunt) {
           {
             expand: true,
             dot: true,
-            dest: 'deploy',
+            dest: '_deploy',
             src: [
               'Procfile',
-              'package.json',
-              'data/**'
+              'package.json'
             ]
           },
           {
             expand: true,
             dot: true,
-            dest: 'deploy',
+            dest: '_deploy',
             cwd : '<%= yeoman.dist %>',
             src: '**'
           }
@@ -195,9 +195,9 @@ module.exports = function (grunt) {
     },
     jsdoc: {
       dist: {
-        src: ['{plugins,external,server}/**/*.js'],
+        src: ['**/*.js','!_**/*.js'],
         options: {
-          destination: 'doc'
+          destination: '_doc'
         }
       }
     },
@@ -220,7 +220,7 @@ module.exports = function (grunt) {
       }
     },
     bgShell: {
-      _defaults: {
+      vagrant: {
         cmd: 'python server',
         bg: true,
         stdout: function (data) {
@@ -231,12 +231,6 @@ module.exports = function (grunt) {
       local: {
         execOpts: {
           cwd: '../caleydo-web-server/',
-          maxBuffer: false
-        }
-      },
-      vagrant: {
-        execOpts: {
-          cwd: '../vagrant/',
           maxBuffer: false
         }
       }
@@ -256,25 +250,9 @@ module.exports = function (grunt) {
     }
   });
 
-
-  grunt.registerTask('server', [
-    'clean:server',
-    'express:custom',
-    'watch'
-  ]);
-
   grunt.registerTask('serverd', [
     'clean:server',
     'express:debug',
-    'watch'
-  ]);
-
-  grunt.registerTask('pythonserver', [
-    'clean:server',
-	'tsd:refresh',
-    'ts:build',
-    'sass:dist',
-    'bgShell:vagrant',
     'watch'
   ]);
 
@@ -284,15 +262,6 @@ module.exports = function (grunt) {
     'sass:dist',
     'express:custom',
     'mocha'
-  ]);
-
-  grunt.registerTask('build', [
-    'clean:dist',
-    //'tsd:refresh',
-    'ts:build',
-    'sass:dist',
-    'copy:plugins',
-    'jsdoc'
   ]);
 
   grunt.registerTask('buildd', [
