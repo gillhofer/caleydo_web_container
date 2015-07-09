@@ -68,25 +68,34 @@ function install_bower_dependencies {
   fi
 }
 
+function install_tsd_dependencies {
+  if [ -f tsd.txt ] ; then
+    echo "--- installing tsd dependencies ---"
 
+    while IFS=';' read name sha1
+    do
+      set -vx #to turn echoing on and
+      tsd install $name --commit $sha1
+      set +vx #to turn them both off
+    done < tsd.txt
+    rm tsd.txt
+  fi
+}
 
 function resolve {
   ###################################
   # collects and resolve all dependencies
   ###################################
-  #provision dependencies
-  #pip dependencies
-  #node dependencies
-  #bower dependencies
 
   if [ "`whoami`" == "vagrant" ] ; then
-    echo "--- resolving depenencies ---"
+    echo "--- resolving dependencies ---"
     grunt resolveDependencies
 
     install_apt_dependencies
     install_pip_dependencies
     install_npm_dependencies
     install_bower_dependencies
+    install_tsd_dependencies
   else
     echo "this command should be executed within the VM: aborting"
   fi

@@ -18,7 +18,9 @@ module.exports = function (grunt) {
     yeoman: {
       // configurable paths
       app: 'plugins',
-      dist: '_dist'
+      dist: '_dist',
+      deploy: '_deploy',
+      doc: '_doc'
     },
     watch: {
       ts: {
@@ -69,14 +71,14 @@ module.exports = function (grunt) {
         ]
       },
       server: '.tmp',
-      deploy: 'deploy',
+      deploy: '<%= yeoman.deploy %>',
       deploycleanup: {
         files: [
           {
             dot: true,
             src: [
-              'deploy/*',
-              '!deploy/.git*'
+              '<%= yeoman.deploy %>/*',
+              '!<%= yeoman.deploy %>/.git*'
             ]
           }
         ]
@@ -176,7 +178,7 @@ module.exports = function (grunt) {
           {
             expand: true,
             dot: true,
-            dest: 'deploy',
+            dest: '<%= yeoman.deploy %>',
             src: [
               'Procfile',
               'package.json'
@@ -185,7 +187,7 @@ module.exports = function (grunt) {
           {
             expand: true,
             dot: true,
-            dest: 'deploy',
+            dest: '<%= yeoman.deploy %>',
             cwd : '<%= yeoman.dist %>',
             src: '**'
           }
@@ -196,7 +198,7 @@ module.exports = function (grunt) {
       dist: {
         src: ['plugins/**/*.js'],
         options: {
-          destination: 'doc'
+          destination: '<%= yeoman.doc %>'
         }
       }
     },
@@ -226,13 +228,21 @@ module.exports = function (grunt) {
           grunt.log.write('server(' + data.length + '): ' + data);
         },
         fail: true
+      },
+      debug: {
+
       }
     }
   });
 
-  grunt.registerTask('serverd', [
+  grunt.registerTask('js-server', [
     'clean:server',
     'express:debug',
+    'watch'
+  ]);
+  grunt.registerTask('server', [
+    'clean:server',
+    'bgShell:debug',
     'watch'
   ]);
 
@@ -244,9 +254,9 @@ module.exports = function (grunt) {
     'mocha'
   ]);
 
-  grunt.registerTask('buildd', [
+  grunt.registerTask('build', [
     'clean:dist',
-    'tsd:refresh',
+    //'tsd:refresh',
     'ts:build',
     'sass:dist',
     'copy:plugins',
@@ -254,9 +264,9 @@ module.exports = function (grunt) {
   ]);
 
   grunt.registerTask('default', [
+    'buildd',
     'tslint',
     'jshint',
-    'buildd'
   ]);
 
   grunt.registerTask('resolveDependencies', 'Resolves the dependencies from the current plugins and creates the type specific files', function() {
@@ -265,7 +275,7 @@ module.exports = function (grunt) {
       target:  {
         bower : 'bower.json',
         npm : 'npm.package.json',
-        pip: 'requirements.txt',
+        pip: 'requirements.txt'
       },
       converter : {
         bower: function(deps) {
@@ -286,6 +296,11 @@ module.exports = function (grunt) {
           return Object.keys(deps).map(function(d) {
             return d+deps[d];
           }).join(' ')
+        },
+        tsd: function(deps) {
+          return Object.keys(deps).map(function(d) {
+            return d+';'+deps[d];
+          }).join('\n')
         },
         //suitable for pip
         _default : function(deps) {
@@ -308,14 +323,13 @@ module.exports = function (grunt) {
         Object.keys(deps).forEach(function(d) {
           if (d in existing) {
             var new_ = deps[d],
-              old = existing[b];
-            if (semver.eq(old, new_)) { //keep the old one
+              old = existing[d];
+            if (old === new_) { //keep the old one
               //nothing to do
-            } else if (semver.lt(old, new_)){
-              existing[d] = new_;
             } else { //merge
               existing[d] = old+','+new_;
             }
+            grunt.log.writeln('resvoling: '+old+' '+new_+' to '+existing[d]);
           } else {
             existing[d] = deps[d];
           }

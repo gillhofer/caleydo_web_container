@@ -3,9 +3,7 @@
 /.idea
 
 #build entries
-/deploy
-/dist
-/build
+/_*
 
 #temporary stuff and generated ones
 /node_modules

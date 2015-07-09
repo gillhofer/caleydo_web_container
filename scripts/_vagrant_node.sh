@@ -9,7 +9,7 @@ curl -sL https://deb.nodesource.com/setup | sudo bash -
 sudo apt-get install -y nodejs
 
 #install some global packages
-sudo npm install -g grunt-cli bower
+sudo npm install -g grunt-cli bower tsd
 
 #install the node packages
 bak="`pwd`"
