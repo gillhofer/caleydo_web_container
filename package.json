@@ -3,7 +3,7 @@
   "description": "Caleydo Web Container",
   "version": "0.0.1",
   "private": true,
-  "dependencies": {  
+  "dependencies": {
   },
   "devDependencies": {
     "grunt": "~0.4.5",
@@ -25,7 +25,8 @@
     "jshint-stylish": "~0.2.0",
     "load-grunt-tasks": "~0.6.0",
     "time-grunt": "~1.0.0",
-    "typescript": "~1.4.1"
+    "typescript": "~1.4.1",
+    "semver": "^4.3.6"
   },
   "engines": {
     "node": "~0.10.x"

@@ -22,15 +22,15 @@ module.exports = function (grunt) {
     },
     watch: {
       ts: {
-        files: ['**/*.ts','!_**/*.ts'],
+        files: ['plugins/**/*.ts'],
         tasks: ['ts:build']
       },
       sass: {
-        files: ['**/*.scss','!_**/*.scss'],
+        files: ['plugins/**/**.scss'],
         tasks: ['sass:dev']
       },
       coffee: {
-        files: ['**/*.coffee','!_**/*.coffee'],
+        files: ['plugins/**/*.coffee'],
         tasks: ['coffee:dist']
       }
     },
@@ -38,7 +38,7 @@ module.exports = function (grunt) {
       dist: {                            // target
         files: [{
           expand: true,
-          src: ['**/*.scss','!_**/*.scss'],
+          src: ['plugins/**/*.scss'],
           dest: '',
           ext: '.css'
         }]
@@ -49,7 +49,7 @@ module.exports = function (grunt) {
         },
         files: [{
           expand: true,
-          src: ['**/*.scss','!_**/*.scss'],
+          src: ['plugins/**/*.scss'],
           dest: '',
           ext: '.css'
         }]
@@ -69,14 +69,14 @@ module.exports = function (grunt) {
         ]
       },
       server: '.tmp',
-      deploy: '_deploy',
+      deploy: 'deploy',
       deploycleanup: {
         files: [
           {
             dot: true,
             src: [
-              '_deploy/*',
-              '!_deploy/.git*'
+              'deploy/*',
+              '!deploy/.git*'
             ]
           }
         ]
@@ -91,7 +91,7 @@ module.exports = function (grunt) {
       },
       all: [
         'Gruntfile.js',
-        '**/*.js'
+        'plugins/**/*.js'
       ]
     },
     tslint: {
@@ -99,7 +99,7 @@ module.exports = function (grunt) {
         configuration: grunt.file.readJSON("tslint.json")
       },
       all: {
-        src: ['**/*.ts','!_**/*.ts'],
+        src: ['plugins/**/*.ts'],
       }
     },
     mocha: {
@@ -116,7 +116,7 @@ module.exports = function (grunt) {
       // A specific target
       build: {
         // The source TypeScript files, http://gruntjs.com/configuring-tasks#files
-        src: ['**/*.ts','!_**/*.ts'],
+        src: ['plugins/**/*.ts'],
         // If specified, generate this file that to can use for reference management
         reference: 'tsd.gen.d.ts',
         // If specified, the generate JavaScript files are placed here. Only works if out is not specified
@@ -161,13 +161,13 @@ module.exports = function (grunt) {
             expand: true,
             dot: true,
             dest: '<%= yeoman.dist %>',
-            src: [ '**/*.{htaccess,webp,gif,js,css,png,jpg,svg,txt,htm,html,xhtml,ico,json,csv,tsv}','!_**/*']
+            src: [ 'plugins/**/*.{htaccess,webp,gif,js,css,png,jpg,svg,txt,htm,html,xhtml,ico,json,csv,tsv}','!_**/*']
           },
           {
             expand: true,
             dot: true,
             dest: '<%= yeoman.dist %>',
-            src: ['_bower_components/**']
+            src: ['bower_components/**']
           }
         ]
       },
@@ -176,7 +176,7 @@ module.exports = function (grunt) {
           {
             expand: true,
             dot: true,
-            dest: '_deploy',
+            dest: 'deploy',
             src: [
               'Procfile',
               'package.json'
@@ -185,7 +185,7 @@ module.exports = function (grunt) {
           {
             expand: true,
             dot: true,
-            dest: '_deploy',
+            dest: 'deploy',
             cwd : '<%= yeoman.dist %>',
             src: '**'
           }
@@ -194,9 +194,9 @@ module.exports = function (grunt) {
     },
     jsdoc: {
       dist: {
-        src: ['**/*.js','!_**/*.js'],
+        src: ['plugins/**/*.js'],
         options: {
-          destination: '_doc'
+          destination: 'doc'
         }
       }
     },
@@ -204,8 +204,8 @@ module.exports = function (grunt) {
       options: {
         hostname: 'localhost',
         port: 9000,
-        server: require('path').resolve('./server/index'),
-        bases: [require('path').resolve('./server')]
+        server: require('path').resolve('./plugins/caleydo-js-server/index'),
+        bases: [require('path').resolve('./plugins/caleydo-js-server')]
       },
       custom: {
         options: {
@@ -219,32 +219,13 @@ module.exports = function (grunt) {
       }
     },
     bgShell: {
-      vagrant: {
-        cmd: 'python server',
+      _default: {
+        cmd: 'python plugins/caleydo-server',
         bg: true,
         stdout: function (data) {
           grunt.log.write('server(' + data.length + '): ' + data);
         },
         fail: true
-      },
-      local: {
-        execOpts: {
-          cwd: '../caleydo-web-server/',
-          maxBuffer: false
-        }
-      }
-    },
-    exec: {
-      clone: {
-        cmd: 'git clone git@heroku.com:caleydo-web.git deploy'
-      },
-      commit: {
-        cmd: function () {
-          return 'cd deploy; git add *; git commit --all -m "deploy ' + new Date() + '"';
-        }
-      },
-      push: {
-        cmd: 'cd deploy; git push'
       }
     }
   });
@@ -270,15 +251,6 @@ module.exports = function (grunt) {
     'sass:dist',
     'copy:plugins',
     'jsdoc'
-  ]);
-
-  grunt.registerTask('deploy', [
-    'clean:deploy',
-    'exec:clone',
-    'clean:deploycleanup',
-    'copy:deploy',
-    'exec:commit',
-    'exec:push'
   ]);
 
   grunt.registerTask('default', [
@@ -325,6 +297,7 @@ module.exports = function (grunt) {
     });
     grunt.log.writeln(options.plugins);
     var dependencies = { };
+    var semver = require('semver');
 
     /**
      * merges a dependency list
@@ -334,7 +307,15 @@ module.exports = function (grunt) {
         var existing = dependencies[type];
         Object.keys(deps).forEach(function(d) {
           if (d in existing) {
-            //TODO merge
+            var new_ = deps[d],
+              old = existing[b];
+            if (semver.eq(old, new_)) { //keep the old one
+              //nothing to do
+            } else if (semver.lt(old, new_)){
+              existing[d] = new_;
+            } else { //merge
+              existing[d] = old+','+new_;
+            }
           } else {
             existing[d] = deps[d];
           }

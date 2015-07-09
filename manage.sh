@@ -45,13 +45,13 @@ function install_pip_dependencies {
   fi
 }
 function install_npm_dependencies {
-  if [ -f npm.txt ] ; then
+  if [ -f npm.package.json ] ; then
     echo "--- installing npm dependencies ---"
     mv "package.json" "ori.package.json"
     mv "npm.package.json" "package.json"
 
     set -vx #to turn echoing on and
-    npm install
+    sudo npm install
     set +vx #to turn them both off
 
     rm "package.json"
