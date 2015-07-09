@@ -206,8 +206,8 @@ module.exports = function (grunt) {
       options: {
         hostname: 'localhost',
         port: 9000,
-        server: require('path').resolve('./plugins/caleydo-js-server/index'),
-        bases: [require('path').resolve('./plugins/caleydo-js-server')]
+        server: require('path').resolve('./plugins/caleydo_server_js/index'),
+        bases: [require('path').resolve('./plugins/caleydo_server_js')]
       },
       custom: {
         options: {
@@ -222,7 +222,7 @@ module.exports = function (grunt) {
     },
     bgShell: {
       _default: {
-        cmd: 'python plugins/caleydo-server',
+        cmd: 'python plugins/caleydo_server',
         bg: true,
         stdout: function (data) {
           grunt.log.write('server(' + data.length + '): ' + data);
@@ -235,7 +235,7 @@ module.exports = function (grunt) {
     }
   });
 
-  grunt.registerTask('js-server', [
+  grunt.registerTask('server_js', [
     'clean:server',
     'express:debug',
     'watch'
@@ -266,26 +266,26 @@ module.exports = function (grunt) {
   grunt.registerTask('default', [
     'buildd',
     'tslint',
-    'jshint',
+    'jshint'
   ]);
 
   grunt.registerTask('resolveDependencies', 'Resolves the dependencies from the current plugins and creates the type specific files', function() {
   var options = this.options({
       plugins: ['plugins/**/package.json'],
       target:  {
-        bower : 'bower.json',
-        npm : 'npm.package.json',
-        pip: 'requirements.txt'
+        web : 'bower.json',
+        node : 'npm.package.json',
+        python: 'requirements.txt'
       },
       converter : {
-        bower: function(deps) {
+        web: function(deps) {
           return JSON.stringify({
              name: 'caleydo-web',
              version: '0.0.1',
              dependencies: deps
            }, null, 2);
         },
-        npm: function(deps) {
+        node: function(deps) {
           return JSON.stringify({
              name: 'caleydo-web',
              version: '0.0.1',
@@ -302,7 +302,7 @@ module.exports = function (grunt) {
             return d+';'+deps[d];
           }).join('\n')
         },
-        //suitable for pip
+        //suitable for python
         _default : function(deps) {
           return Object.keys(deps).map(function(d) {
             return d+deps[d];
