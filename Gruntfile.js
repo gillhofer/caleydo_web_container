@@ -292,7 +292,7 @@ module.exports = function (grunt) {
              dependencies: deps
            }, null, 2);
         },
-        apt: function(deps) {
+        debian: function(deps) {
           return Object.keys(deps).map(function(d) {
             return d+deps[d];
           }).join(' ')

@@ -11,7 +11,7 @@
 /supervisord.conf
 
 /requirements.txt
-/apt.txt
+/debian.txt
 /npm.package.json
 /bower.json
 

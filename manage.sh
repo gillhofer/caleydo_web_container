@@ -22,15 +22,15 @@ function pull {
 
 
 function install_apt_dependencies {
-  if [ -f apt.txt ] ; then
+  if [ -f debian.txt ] ; then
     echo "--- installing apt dependencies ---"
     wd="`pwd`"
     cd /tmp #switch to tmp directory
     set -vx #to turn echoing on and
-    sudo apt-get install -y `cat $wd/apt.txt`
+    sudo apt-get install -y `cat $wd/debian.txt`
     set +vx #to turn them both off
     cd $wd
-    rm apt.txt
+    rm debian.txt
   fi
 }
 function install_pip_dependencies {
