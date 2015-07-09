@@ -15,6 +15,9 @@
 /npm.package.json
 /bower.json
 
+/data
+/config.ini
+
 .tmp
 /.sass-cache
 /.tscache/

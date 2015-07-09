@@ -324,7 +324,7 @@ module.exports = function (grunt) {
           if (d in existing) {
             var new_ = deps[d],
               old = existing[d];
-            if (old === new_) { //keep the old one
+            if (old.indexOf(new_)>=0) { //keep the old one
               //nothing to do
             } else { //merge
               existing[d] = old+','+new_;
