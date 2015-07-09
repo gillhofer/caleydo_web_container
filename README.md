@@ -3,8 +3,8 @@ Caleydo Web Container
 
 This is a container repository for Caleydo Web. It is used for creating, combining, and managing individual plugins Caleydo Web constists of.
 
-Get Caleydo Web Dev Running on Your Machine
--------------------------------------------
+Create Dev Environment
+----------------------
 
 0. *Windows Only*: Install [Git](http://git-scm.com/download/win)
 1. Install [Vagrant](http://www.vagrantup.com/) and [VirtualBox](https://www.virtualbox.org/)
@@ -18,61 +18,70 @@ Get Caleydo Web Dev Running on Your Machine
 3. Launch a (bash) shell
    *Windows Only*: Ensure that you start the `Git Bash` with Adminstrative rights
 
-4. Install the plugins and applications you wanna use.
-
-
-5. let Vagrant create the environment for you
+4. let Vagrant create the environment for you
  ~~~bash
  # start vagrant
  vagrant up
  ~~~
 
-6. Connect to VM:
+5. Connect to VM:
  ~~~bash
  # connect to vm
  vagrant ssh
  ~~~
 
-7. Run Caleydo Web
+6. Navigate to caleydo directory
  ~~~bash
-/vagrant/run.sh
+ cd /vagrant
  ~~~
-
-*Hint*: during the first run bower will asked whether it can upload usage statistics
-
-8. Caleydo Web should now be accessible at: http://localhost:9000
-
-
-
-Long version for the server setup:
-
-##Install Pip Depedendencies
- 1. Within the vm:
-  ~~~bash
- #switch to right directory
- cd /vagrant/
- ~~~
-
- 2. create a pip dependencies file
-  ~~~bash
- python server --dependencyOnly
- ~~~
-
- 3. install the dependencies
-
+ this folder is shared with your cloned repository. So, all changes are reflected in your local filesystem
+ 
+7. Exit and stop the virtual machine
  ~~~bash
- sudo pip install -r requirements.txt
- ~~~
-
-##Run the server
- 1. ~~~bash
- python server
- ~~~
- 2. access the server as usual: http://localhost:9000
-
-##Stop
- 1. kill python
- 2. shutdown vagrant
- ~~~bash
+ exit
  vagrant halt
  ~~~
+
+Management Utility
+------------------
+`manage.py` is a management utility for installling plugins, pulling repositories, and resolving external dependencies. commands
+
+usage: 
+~~~bash
+./manage.sh <command> <args>
+~~~
+
+### pull command
+
+the `pull` command is a utility for pulling all git repositories within the project, i.e. the container and all the plugins
+
+### resolve command
+
+the `resolve` command is used to resolve external dependencies of the plugins. 
+
+**Attention**: this command can only be invoked within the virtual machine, to avoid that your system is cluttered. 
+
+Currently, following external dependency types are supported: 
+
+ * *debian*: installs the listed debian packages using `[Apt](https://wiki.debian.org/Apt)
+ * *python*: installs python plugins using the [PyPi](https://pypi.python.org/pypi)
+ * *node*: installs node dependencies via [npm](http://npmjs.org/)
+ * *web*: installs web dependencies via [Bower](http://bower.io)
+
+### install, list, explore, search, ... commands
+
+all other commands are redirected to a configured [npm](http://npmjs.org/) instance. The configuration includes using the caleydo repository. 
+If you wanna install plugins outside of the virtual machine, ensure that you installed npm. 
+
+Building Caleydo Web
+--------------------
+
+[Grunt](http://gruntjs.com) is used as build tool. Common targets include: `build`
+
+TODO
+
+Running Caleydo Web
+-------------------
+
+Depending whether you installed the python server `caleydo_server` or the Javascript server `caleydo_server_js` call the corresponing grunt task: `server` and `server_js`. 
+This will compile and watches all files and launch the server at port 9000 by default. 
