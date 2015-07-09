@@ -91,8 +91,7 @@ module.exports = function (grunt) {
       },
       all: [
         'Gruntfile.js',
-        '**/*.js',
-		'!_**/*.js'],
+        '**/*.js'
       ]
     },
     tslint: {

@@ -80,7 +80,7 @@ function resolve {
   #bower dependencies
 
   if [ "`whoami`" == "vagrant" ] ; then
-    echo "--- resolving depenendencies"
+    echo "--- resolving depenencies ---"
     grunt resolveDependencies
 
     install_apt_dependencies
@@ -102,7 +102,7 @@ function npmredirect {
     echo "registry=$REGISTRY" > .npmrc
 
     #fake node_modules directory
-    if [ -d "node_modules" ] ; then
+    if [ -e "node_modules" ] ; then
       mv "node_modules" "_node_modules"
     fi
     if [ -d "plugins" ] ; then
@@ -120,7 +120,7 @@ function npmredirect {
 
     #recreate original structure
     mv "node_modules" "plugins"
-    if [ -d "_node_modules" ] ; then
+    if [ -e "_node_modules" ] ; then
       mv "_node_modules" "node_modules"
     fi
 }

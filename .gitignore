@@ -11,8 +11,12 @@
 /node_modules
 /bower_components
 /supervisord.conf
+
 /requirements.txt
+/apt.txt
+/npm.package.json
 /bower.json
+
 .tmp
 /.sass-cache
 /.tscache/

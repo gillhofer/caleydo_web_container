@@ -16,12 +16,15 @@ bak="`pwd`"
 cd /vagrant
 
 #create a symlink version of the node modueles for better performance
-if ![ -d "node_modules" ] ; then
+if [[ ! -d "node_modules" ]]; then
+  mkdir ~/vagrant_node_modules
   ln -s ~/vagrant_node_modules ./node_modules
 fi
 
+
+echo "--- installing node dependencies ---"
 set -vx #to turn echoing on and
-npm install
+sudo npm install
 set +vx
 
 cd $bak
