@@ -82,56 +82,72 @@ function install_tsd_dependencies {
   fi
 }
 
+function ensure_in_vm {
+  if [ "`whoami`" != "vagrant" ] ; then
+    echo "this command should be executed within the VM: aborting"
+    exit 1
+  fi
+
+}
 function resolve {
   ###################################
   # collects and resolve all dependencies
   ###################################
 
-  if [ "`whoami`" == "vagrant" ] ; then
-    echo "--- resolving dependencies ---"
-    grunt resolveDependencies
+  ensure_in_vm
+  echo "--- resolving dependencies ---"
+  grunt resolveDependencies
 
-    install_apt_dependencies
-    install_pip_dependencies
-    install_npm_dependencies
-    install_bower_dependencies
-    install_tsd_dependencies
-  else
-    echo "this command should be executed within the VM: aborting"
-  fi
+  install_apt_dependencies
+  install_pip_dependencies
+  install_npm_dependencies
+  install_bower_dependencies
+  install_tsd_dependencies
 }
 
 REGISTRY="http://dev.caleydo.org/nexus/content/repositories/caleydo-web/"
 
+function gruntredirect {
+  ###################################
+  # redirects commands to npm
+  ###################################
+
+  ensure_in_vm
+
+  set -vx
+
+  grunt $@
+}
+
 function npmredirect {
-    ###################################
-    # redirects commands to npm
-    ###################################
-    #create the link to our own registry
-    echo "registry=$REGISTRY" > .npmrc
+  ###################################
+  # redirects commands to npm
+  ###################################
+  #create the link to our own registry
+  echo "registry=$REGISTRY" > .npmrc
 
-    #fake node_modules directory
-    if [ -e "node_modules" ] ; then
-      mv "node_modules" "_node_modules"
-    fi
-    if [ -d "plugins" ] ; then
-      mv "plugins" "node_modules"
-    else
-      mkdir "node_modules"
-    fi
+  #fake node_modules directory
+  if [ -e "node_modules" ] ; then
+    mv "node_modules" "_node_modules"
+  fi
+  if [ -d "plugins" ] ; then
+    mv "plugins" "node_modules"
+  else
+    mkdir "node_modules"
+  fi
 
-    set -vx #to turn echoing on and
+  set -vx #to turn echoing on and
 
-    npm $@
+  npm $@
 
-    set +vx #to turn them both off
-    rm .npmrc
+  set +vx #to turn them both off
+  rm .npmrc
 
-    #recreate original structure
-    mv "node_modules" "plugins"
-    if [ -e "_node_modules" ] ; then
-      mv "_node_modules" "node_modules"
-    fi
+  #recreate original structure
+  mv "node_modules" "plugins"
+  if [ -e "_node_modules" ] ; then
+    mv "_node_modules" "node_modules"
+  fi
 }
 
 #command switch
@@ -141,6 +157,9 @@ pull)
 	;;
 resolve)
   resolve
+  ;;
+build | server | server_js)
+  gruntredirect $@
   ;;
 *)
 	npmredirect $@

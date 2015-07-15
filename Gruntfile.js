@@ -10,6 +10,7 @@ module.exports = function (grunt) {
   var JENKINS = grunt.option('jenkins');
   // show elapsed time at the end
   require('time-grunt')(grunt);
+
   // load all grunt tasks
   require('load-grunt-tasks')(grunt);
 
@@ -89,7 +90,7 @@ module.exports = function (grunt) {
         jshintrc: '.jshintrc',
         reporter: (JENKINS && 'checkstyle') || require('jshint-stylish'),
         reporterOutput: JENKINS && 'jshint.xml',
-        force : true
+        force: true
       },
       all: [
         'Gruntfile.js',
@@ -163,7 +164,7 @@ module.exports = function (grunt) {
             expand: true,
             dot: true,
             dest: '<%= yeoman.dist %>',
-            src: [ 'plugins/**/*.{htaccess,webp,gif,js,css,png,jpg,svg,txt,htm,html,xhtml,ico,json,csv,tsv}','!_**/*']
+            src: ['plugins/**/*.{htaccess,webp,gif,js,css,png,jpg,svg,txt,htm,html,xhtml,ico,json,csv,tsv}', '!_**/*']
           },
           {
             expand: true,
@@ -188,7 +189,7 @@ module.exports = function (grunt) {
             expand: true,
             dot: true,
             dest: '<%= yeoman.deploy %>',
-            cwd : '<%= yeoman.dist %>',
+            cwd: '<%= yeoman.dist %>',
             src: '**'
           }
         ]
@@ -210,8 +211,7 @@ module.exports = function (grunt) {
         bases: [require('path').resolve('./plugins/caleydo_server_js')]
       },
       custom: {
-        options: {
-        }
+        options: {}
       },
       debug: {
         options: {
@@ -229,9 +229,7 @@ module.exports = function (grunt) {
         },
         fail: true
       },
-      debug: {
-
-      }
+      debug: {}
     }
   });
 
@@ -254,65 +252,69 @@ module.exports = function (grunt) {
     'mocha'
   ]);
 
+  grunt.registerTask('compile', [
+    'ts:build',
+    'sass:dist'
+  ]);
+
   grunt.registerTask('build', [
     'clean:dist',
     //'tsd:refresh',
-    'ts:build',
-    'sass:dist',
+    'compile',
     'copy:plugins',
     'jsdoc'
   ]);
 
   grunt.registerTask('default', [
-    'buildd',
+    'build',
     'tslint',
     'jshint'
   ]);
 
-  grunt.registerTask('resolveDependencies', 'Resolves the dependencies from the current plugins and creates the type specific files', function() {
-  var options = this.options({
+  grunt.registerTask('resolveDependencies', 'Resolves the dependencies from the current plugins and creates the type specific files', function () {
+    var options = this.options({
       plugins: ['plugins/**/package.json'],
-      target:  {
-        web : 'bower.json',
-        node : 'npm.package.json',
+      target: {
+        web: 'bower.json',
+        node: 'npm.package.json',
         python: 'requirements.txt'
       },
-      converter : {
-        web: function(deps) {
+      converter: {
+        web: function (deps) {
           return JSON.stringify({
-             name: 'caleydo-web',
-             version: '0.0.1',
-             dependencies: deps
-           }, null, 2);
+            name: 'caleydo-web',
+            version: '0.0.1',
+            dependencies: deps
+          }, null, 2);
         },
-        node: function(deps) {
+        node: function (deps) {
           return JSON.stringify({
-             name: 'caleydo-web',
-             version: '0.0.1',
-             dependencies: deps
-           }, null, 2);
+            name: 'caleydo-web',
+            version: '0.0.1',
+            dependencies: deps
+          }, null, 2);
         },
-        debian: function(deps) {
-          return Object.keys(deps).map(function(d) {
-            return d+deps[d];
+        debian: function (deps) {
+          return Object.keys(deps).map(function (d) {
+            return d + deps[d];
           }).join(' ')
         },
-        tsd: function(deps) {
-          return Object.keys(deps).map(function(d) {
-            return d+';'+deps[d];
+        tsd: function (deps) {
+          return Object.keys(deps).map(function (d) {
+            return d + ';' + deps[d];
           }).join('\n')
         },
         //suitable for python
-        _default : function(deps) {
-          return Object.keys(deps).map(function(d) {
-            return d+deps[d];
+        _default: function (deps) {
+          return Object.keys(deps).map(function (d) {
+            return d + deps[d];
           }).join('\n')
         }
       }
     });
     grunt.log.writeln(options.plugins);
-    var dependencies = { };
-    var semver = require('semver');
+    var dependencies = {};
+    //var semver = require('semver');
 
     /**
      * merges a dependency list
@@ -320,16 +322,16 @@ module.exports = function (grunt) {
     function addDependency(type, deps) {
       if (type in dependencies) {
         var existing = dependencies[type];
-        Object.keys(deps).forEach(function(d) {
+        Object.keys(deps).forEach(function (d) {
           if (d in existing) {
             var new_ = deps[d],
-              old = existing[d];
-            if (old.indexOf(new_)>=0) { //keep the old one
+                old = existing[d];
+            if (old.indexOf(new_) >= 0) { //keep the old one
               //nothing to do
             } else { //merge
-              existing[d] = old+','+new_;
+              existing[d] = old + ',' + new_;
             }
-            grunt.log.writeln('resvoling: '+old+' '+new_+' to '+existing[d]);
+            grunt.log.writeln('resvoling: ' + old + ' ' + new_ + ' to ' + existing[d]);
           } else {
             existing[d] = deps[d];
           }
@@ -338,22 +340,23 @@ module.exports = function (grunt) {
         dependencies[type] = deps
       }
     }
+
     //parse all package.json files
-    grunt.file.expand(options.plugins).forEach(function(plugin) {
-	  grunt.log.writeln(plugin);
+    grunt.file.expand(options.plugins).forEach(function (plugin) {
+      grunt.log.writeln(plugin);
       var desc = grunt.file.readJSON(plugin);
       if ('caleydo' in desc && 'dependencies' in desc.caleydo) {
-        Object.keys(desc.caleydo.dependencies).forEach(function(type) {
+        Object.keys(desc.caleydo.dependencies).forEach(function (type) {
           addDependency(type, desc.caleydo.dependencies[type]);
         });
       }
     });
 
-	  grunt.log.writeln(JSON.stringify(dependencies));
+    grunt.log.writeln(JSON.stringify(dependencies));
 
     //generate the dependency files
-    Object.keys(dependencies).forEach(function(d) {
-      var target = options.target[d] || d+'.txt';
+    Object.keys(dependencies).forEach(function (d) {
+      var target = options.target[d] || d + '.txt';
       var converter = options.converter[d] || options.converter._default;
       var r = converter(dependencies[d]);
       grunt.file.write(target, r);

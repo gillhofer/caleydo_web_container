@@ -17,8 +17,8 @@ cd /vagrant
 
 #create a symlink version of the node modueles for better performance
 if [[ ! -d "node_modules" ]]; then
-  mkdir ~/vagrant_node_modules
-  ln -s ~/vagrant_node_modules ./node_modules
+  mkdir -p /home/vagrant/caleydo_web/node_modules
+  ln -s /home/vagrant/caleydo_web/node_modules ./node_modules
 fi
 
 

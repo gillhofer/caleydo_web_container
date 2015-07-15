@@ -67,6 +67,11 @@ Currently, following external dependency types are supported:
  * *python*: installs python plugins using the [PyPi](https://pypi.python.org/pypi)
  * *node*: installs node dependencies via [npm](http://npmjs.org/)
  * *web*: installs web dependencies via [Bower](http://bower.io)
+ 
+### build, server, server_js commands
+
+builds or build and runs Caleydo Web. [Grunt](http://gruntjs.com) is used as build tool and this command redirects to it. 
+
 
 ### install, list, explore, search, ... commands
 
@@ -75,8 +80,6 @@ If you wanna install plugins outside of the virtual machine, ensure that you ins
 
 Building Caleydo Web
 --------------------
-
-[Grunt](http://gruntjs.com) is used as build tool. Common targets include: `build`
 
 TODO
 
