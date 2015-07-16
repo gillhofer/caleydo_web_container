@@ -302,7 +302,7 @@ module.exports = function (grunt) {
         tsd: function (deps) {
           return Object.keys(deps).map(function (d) {
             return d + ';' + deps[d];
-          }).join('\n')
+          }).join('\n')+'\n'; //and a final last one
         },
         //suitable for python
         _default: function (deps) {
