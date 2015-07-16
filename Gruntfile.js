@@ -233,13 +233,20 @@ module.exports = function (grunt) {
     }
   });
 
+  grunt.registerTask('compile', [
+    'ts:build',
+    'sass:dist'
+  ]);
+
   grunt.registerTask('server_js', [
     'clean:server',
+    'compile',
     'express:debug',
     'watch'
   ]);
   grunt.registerTask('server', [
     'clean:server',
+    'compile',
     'bgShell:debug',
     'watch'
   ]);
@@ -252,14 +259,8 @@ module.exports = function (grunt) {
     'mocha'
   ]);
 
-  grunt.registerTask('compile', [
-    'ts:build',
-    'sass:dist'
-  ]);
-
   grunt.registerTask('build', [
     'clean:dist',
-    //'tsd:refresh',
     'compile',
     'copy:plugins',
     'jsdoc'

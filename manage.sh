@@ -79,6 +79,11 @@ function install_tsd_dependencies {
       set +vx #to turn them both off
     done < tsd.txt
     rm tsd.txt
+
+    set -vx #to turn echoing on and
+    #create the tsd description file
+    tsd rebundle
+    set +vx #to turn them both off
   fi
 }
 
