@@ -140,7 +140,9 @@ function npmredirect {
 
   #fake node_modules directory
   if [ -e "node_modules" ] ; then
-    mv "node_modules" "_node_modules"
+    #no idea why mv not works
+    cp -d "node_modules" "_node_modules"
+    rm "node_modules"
   fi
   if [ -d "plugins" ] ; then
     mv "plugins" "node_modules"
@@ -158,7 +160,8 @@ function npmredirect {
   #recreate original structure
   mv "node_modules" "plugins"
   if [ -e "_node_modules" ] ; then
-    mv "_node_modules" "node_modules"
+    cp -d "_node_modules" "node_modules"
+    rm "_node_modules"
   fi
 }
 
