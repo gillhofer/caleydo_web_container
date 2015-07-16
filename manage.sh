@@ -78,7 +78,7 @@ function install_tsd_dependencies {
       tsd install $name --commit $sha1
       set +vx #to turn them both off
     done < tsd.txt
-    rm tsd.txt
+    rm -f tsd.txt tsd.json
 
     set -vx #to turn echoing on and
     #create the tsd description file
