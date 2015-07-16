@@ -221,15 +221,14 @@ module.exports = function (grunt) {
       }
     },
     bgShell: {
-      _default: {
+      options: {
+
+      },
+      debug: {
         cmd: 'python plugins/caleydo_server',
         bg: true,
-        stdout: function (data) {
-          grunt.log.write('server(' + data.length + '): ' + data);
-        },
         fail: true
-      },
-      debug: {}
+      }
     }
   });
 

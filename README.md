@@ -3,6 +3,23 @@ Caleydo Web Container
 
 This is a container repository for Caleydo Web. It is used for creating, combining, and managing individual plugins Caleydo Web constists of.
 
+Minimal Steps for Launching the Demo Application
+------------------------------------------------
+~~~bash
+git clone https://github.com/Caleydo/caleydo-web.git
+cd caleydo-web
+vagrant up
+#wait
+vagrant ssh
+~~~
+
+~~~bash
+cd /vagrant
+./manage install demo_app caleydo_server
+./manager resolve
+grunt server
+~~~
+
 Create Dev Environment
 ----------------------
 
@@ -16,7 +33,7 @@ Create Dev Environment
  ~~~
 
 3. Launch a (bash) shell
-   *Windows Only*: Ensure that you start the `Git Bash` with Adminstrative rights
+   *Windows Only*: Ensure that you start the `Git Bash` with adminstrative rights
 
 4. let Vagrant create the environment for you
  ~~~bash
@@ -61,6 +78,7 @@ the `resolve` command is used to resolve external dependencies of the plugins.
 
 **Attention**: this command can only be invoked within the virtual machine, to avoid that your system is cluttered. 
 
+
 Currently, following external dependency types are supported: 
 
  * *debian*: installs the listed debian packages using `[Apt](https://wiki.debian.org/Apt)
@@ -68,7 +86,25 @@ Currently, following external dependency types are supported:
  * *node*: installs node dependencies via [npm](http://npmjs.org/)
  * *web*: installs web dependencies via [Bower](http://bower.io)
  
-### build, server, server_js commands
+**Attention**: during first run of bower, it asks you whether you wanna allow anonymous usage statistics
+ 
+### publish command
+
+the `publish` command publishes a plugin to the caleydo registry
+
+usage
+
+~~~bash
+./manage.sh publish <plugin name>
+~~~
+
+Before the first usage you have to enter the credentials for the caleydo registry, i.e. the nexus registry
+~~~bash
+npm adduser
+# follow instructions
+~~~
+ 
+### compile, build, server, server_js commands
 
 builds or build and runs Caleydo Web. [Grunt](http://gruntjs.com) is used as build tool and this command redirects to it. 
 
