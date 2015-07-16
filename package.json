@@ -36,5 +36,8 @@
     "type": "git",
     "url": "git://github.com/Caleydo/caleydo-web"
   },
-  "license": "BSD"
+  "license": "BSD",
+  "publishConfig": {
+    "registry": "http://dev.caleydo.org/nexus/content/repositories/caleydo-web/"
+  }
 }

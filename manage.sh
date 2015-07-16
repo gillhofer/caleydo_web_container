@@ -13,10 +13,10 @@ function pull {
   echo "--- pull plugins ---"
 
   find . -name .git -type d -prune | while read d; do
-     cd $d/..
-     echo "--- pull plugin $PWD"
-     git pull
-     cd $OLDPWD
+    cd $d/..
+    echo "--- pull plugin $PWD"
+    git pull
+    cd $OLDPWD
   done
 }
 
@@ -119,6 +119,18 @@ function gruntredirect {
   grunt $@
 }
 
+function publish {
+  ###################################
+  # publishes a plugin
+  ###################################
+  cd plugins
+  shift
+  set -vx
+
+  npm --registry=$REGISTRY publish $@
+}
+
+
 function npmredirect {
   ###################################
   # redirects commands to npm
@@ -157,6 +169,9 @@ pull)
 	;;
 resolve)
   resolve
+  ;;
+publish)
+  publish $@
   ;;
 build | server | server_js)
   gruntredirect $@
