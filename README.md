@@ -147,3 +147,19 @@ Install [PyCharm](https://www.jetbrains.com/pycharm/).
  ~~~
 
 TODO
+
+Static Deployment
+-----------------
+folder structure: 
+```
+/config-gen.js ... generated
+/caleydo_web.js ... generated
+/bower_components/<libs>
+/<plugins> ... compile css and ts and exclude them from making them public
+/index.html ... generated
+```
+
+Server Deployment
+-----------------
+http://requirejs.org/docs/optimization.html could be used for creating modules for each plugin
+

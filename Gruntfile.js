@@ -48,7 +48,7 @@ module.exports = function (grunt) {
       },
       dev: {                              // another target
         options: {                      // dictionary of render options
-          sourceMap: false
+          sourceMap: true
         },
         files: [{
           expand: true,
@@ -71,19 +71,7 @@ module.exports = function (grunt) {
           }
         ]
       },
-      server: '.tmp',
-      deploy: '<%= yeoman.deploy %>',
-      deploycleanup: {
-        files: [
-          {
-            dot: true,
-            src: [
-              '<%= yeoman.deploy %>/*',
-              '!<%= yeoman.deploy %>/.git*'
-            ]
-          }
-        ]
-      }
+      server: '.tmp'
     },
     jshint: {
       options: {
@@ -102,22 +90,12 @@ module.exports = function (grunt) {
         configuration: grunt.file.readJSON("tslint.json")
       },
       all: {
-        src: ['plugins/**/*.ts'],
-      }
-    },
-    mocha: {
-      all: {
-        options: {
-          run: false,
-          urls: ['http://<%= connect.test.options.hostname %>:<%= connect.test.options.port %>/test.html'],
-          reporter: 'XUnit'
-        },
-        dest: './test/xunit.xml'
+        src: ['plugins/**/*.ts']
       }
     },
     ts: {
       // A specific target
-      build: {
+      dev: {
         // The source TypeScript files, http://gruntjs.com/configuring-tasks#files
         src: ['plugins/**/*.ts'],
         // If specified, generate this file that to can use for reference management
@@ -133,6 +111,18 @@ module.exports = function (grunt) {
           sourceMap: true,
           declaration: false,
           removeComments: false
+        }
+      },
+      // A specific target
+      dist: {
+        src: ['plugins/**/*.ts'],
+        reference: 'tsd.gen.d.ts',
+        options: {
+          target: 'es5',
+          module: 'amd', // 'amd' (default) | 'commonjs'
+          sourceMap: false,
+          declaration: false,
+          removeComments: true
         }
       }
     },
@@ -158,39 +148,28 @@ module.exports = function (grunt) {
     },
     // Put files not handled in other tasks here
     copy: {
-      plugins: {
+      dist: {
         files: [
-          {
+          { //copy the plugins
             expand: true,
             dot: true,
+            cwd: 'plugins/',
             dest: '<%= yeoman.dist %>',
-            src: ['plugins/**/*.{htaccess,webp,gif,js,css,png,jpg,svg,txt,htm,html,xhtml,ico,json,csv,tsv,py}', '!_**/*']
+            src: ['**/*.{htaccess,webp,gif,js,css,png,jpg,svg,txt,htm,html,xhtml,ico,json,csv,tsv,py}']
           },
-          {
+          { //copy static stuff
             expand: true,
             dot: true,
+            cwd: 'static/',
             dest: '<%= yeoman.dist %>',
-            src: ['bower_components/**']
-          }
-        ]
-      },
-      deploy: {
-        files: [
-          {
-            expand: true,
-            dot: true,
-            dest: '<%= yeoman.deploy %>',
-            src: [
-              'Procfile',
-              'package.json'
-            ]
+            src: ['**/*']
           },
-          {
+          { //copy bower dependencies
             expand: true,
             dot: true,
-            dest: '<%= yeoman.deploy %>',
-            cwd: '<%= yeoman.dist %>',
-            src: '**'
+            cwd: '_bower_components/',
+            dest: '<%= yeoman.dist %>/bower_components/',
+            src: ['**']
           }
         ]
       }
@@ -228,13 +207,17 @@ module.exports = function (grunt) {
         cmd: 'python plugins/caleydo_server',
         bg: true,
         fail: true
+      },
+      dist: {
+        cmd: 'python plugins/caleydo_server/deployhelper.py -t <%= yeoman.dist %>',
+        bg: false
       }
     }
   });
 
   grunt.registerTask('compile', [
-    'ts:build',
-    'sass:dist'
+    'ts:dev',
+    'sass:dev'
   ]);
 
   grunt.registerTask('server_js', [
@@ -250,19 +233,13 @@ module.exports = function (grunt) {
     'watch'
   ]);
 
-  grunt.registerTask('test', [
-    'clean:server',
-    'ts:build',
-    'sass:dist',
-    'express:custom',
-    'mocha'
-  ]);
-
   grunt.registerTask('build', [
     'clean:dist',
     'compile',
-    'copy:plugins',
+    'copy:dist',
+    'bgShell:dist',
     'jsdoc'
+    //TODO optimize the plugins by bundling them
   ]);
 
   grunt.registerTask('default', [

@@ -16,7 +16,6 @@
     "grunt-exec": "^0.4.6",
     "grunt-express": "^1.4.1",
     "grunt-jsdoc": "^0.6.7",
-    "grunt-mocha": "^0.4.13",
     "grunt-sass": "^1.0.0",
     "grunt-ts": "^4.2.0-beta.1",
     "grunt-tsd": "^0.1.0",
@@ -28,9 +27,6 @@
   },
   "engines": {
     "node": "~0.10.x"
-  },
-  "scripts": {
-    "test": "grunt test"
   },
   "repository": {
     "type": "git",
