@@ -14,7 +14,7 @@ module.exports = function (grunt) {
   // load all grunt tasks
   require('load-grunt-tasks')(grunt);
 
-  grunt.initConfig({
+  grunt.config.init({
     // configurable paths
     yeoman: {
       // configurable paths
@@ -209,7 +209,19 @@ module.exports = function (grunt) {
         fail: true
       },
       dist: {
-        cmd: 'python plugins/caleydo_server/deployhelper.py -t <%= yeoman.dist %>',
+        cmd: function() {
+          //generates the config files for a specific context and application
+          var r = grunt.config.process('python plugins/caleydo_server/deployhelper.py -t <%= yeoman.dist %>');
+          var app = grunt.option('application') || null;
+          var context = grunt.option('context') || null;
+          if (app) {
+            r += ' --application='+app;
+          }
+          if (context) {
+            r += ' --context='+context;
+          }
+          return r;
+        },
         bg: false
       }
     }
@@ -237,8 +249,7 @@ module.exports = function (grunt) {
     'clean:dist',
     'compile',
     'copy:dist',
-    'bgShell:dist',
-    'jsdoc'
+    'bgShell:dist'
     //TODO optimize the plugins by bundling them
   ]);
 

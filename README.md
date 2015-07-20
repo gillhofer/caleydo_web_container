@@ -88,8 +88,6 @@ Currently, following external dependency types are supported:
  * *node*: installs node dependencies via [npm](http://npmjs.org/)
  * *web*: installs web dependencies via [Bower](http://bower.io)
 
-**Attention**: during first run of bower, it asks you whether you wanna allow anonymous usage statistics
-
 ### publish command
 
 the `publish` command publishes a plugin to the caleydo registry
@@ -150,16 +148,22 @@ TODO
 
 Static Deployment
 -----------------
+
+grunt task: `grunt build [--application=<application>] [--context=<context>]`
+
+* application: the main script file of the application which is normally provided as parameter to the `caleydo_web.js` file
+* context: since absolute links are used, this may specify a context path, e.g. `/test` where the website is located
+
 folder structure: 
 ```
 /config-gen.js ... generated
 /caleydo_web.js ... generated
+/index.html ... generated
 /bower_components/<libs>
 /<plugins> ... compile css and ts and exclude them from making them public
-/index.html ... generated
 ```
 
 Server Deployment
 -----------------
-http://requirejs.org/docs/optimization.html could be used for creating modules for each plugin
+http://requirejs.org/docs/optimization.html could be used for creating bundles for each plugin
 
