@@ -140,34 +140,29 @@ function npmredirect {
   ###################################
   # redirects commands to npm
   ###################################
+
+  mkdir -p _npmenv
+  if [ -d "plugins" ] ; then
+    mv "plugins" "_npmenv/node_modules"
+  else
+    mkdir "_npmenv/node_modules"
+  fi
+
+  cd _npmenv
+
   #create the link to our own registry
   echo "registry=$REGISTRY" > .npmrc
-
-  #fake node_modules directory
-  if [ -e "node_modules" ] ; then
-    #no idea why mv not works
-    cp -d "node_modules" "_node_modules"
-    rm "node_modules"
-  fi
-  if [ -d "plugins" ] ; then
-    mv "plugins" "node_modules"
-  else
-    mkdir "node_modules"
-  fi
 
   set -vx #to turn echoing on and
 
   npm $@
 
   set +vx #to turn them both off
-  rm .npmrc
 
   #recreate original structure
-  mv "node_modules" "plugins"
-  if [ -e "_node_modules" ] ; then
-    cp -d "_node_modules" "node_modules"
-    rm "_node_modules"
-  fi
+  mv "node_modules" "../plugins"
+  cd ..
+  rm -r _npmenv
 }
 
 #command switch
