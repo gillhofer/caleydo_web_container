@@ -6,8 +6,8 @@ This is a container repository for Caleydo Web. It is used for creating, combini
 Minimal Steps for Launching the Demo Application
 ------------------------------------------------
 ~~~bash
-git clone https://github.com/Caleydo/caleydo-web.git
-cd caleydo-web
+git clone https://github.com/Caleydo/caleydo_web_container.git
+cd caleydo_web_container
 vagrant up
 #wait
 vagrant ssh
@@ -19,6 +19,8 @@ cd /vagrant
 ./manager resolve
 grunt server
 ~~~
+
+access: http://192.168.50.52:9000 and have fun :)
 
 Create Dev Environment
 ----------------------
@@ -52,7 +54,7 @@ Create Dev Environment
  cd /vagrant
  ~~~
  this folder is shared with your cloned repository. So, all changes are reflected in your local filesystem
- 
+
 7. Exit and stop the virtual machine
  ~~~bash
  exit
@@ -63,7 +65,7 @@ Management Utility
 ------------------
 `manage.py` is a management utility for installling plugins, pulling repositories, and resolving external dependencies. commands
 
-usage: 
+usage:
 ~~~bash
 ./manage.sh <command> <args>
 ~~~
@@ -74,20 +76,20 @@ the `pull` command is a utility for pulling all git repositories within the proj
 
 ### resolve command
 
-the `resolve` command is used to resolve external dependencies of the plugins. 
+the `resolve` command is used to resolve external dependencies of the plugins.
 
-**Attention**: this command can only be invoked within the virtual machine, to avoid that your system is cluttered. 
+**Attention**: this command can only be invoked within the virtual machine, to avoid that your system is cluttered.
 
 
-Currently, following external dependency types are supported: 
+Currently, following external dependency types are supported:
 
  * *debian*: installs the listed debian packages using `[Apt](https://wiki.debian.org/Apt)
  * *python*: installs python plugins using the [PyPi](https://pypi.python.org/pypi)
  * *node*: installs node dependencies via [npm](http://npmjs.org/)
  * *web*: installs web dependencies via [Bower](http://bower.io)
- 
+
 **Attention**: during first run of bower, it asks you whether you wanna allow anonymous usage statistics
- 
+
 ### publish command
 
 the `publish` command publishes a plugin to the caleydo registry
@@ -103,16 +105,16 @@ Before the first usage you have to enter the credentials for the caleydo registr
 npm adduser
 # follow instructions
 ~~~
- 
+
 ### compile, build, server, server_js commands
 
-builds or build and runs Caleydo Web. [Grunt](http://gruntjs.com) is used as build tool and this command redirects to it. 
+builds or build and runs Caleydo Web. [Grunt](http://gruntjs.com) is used as build tool and this command redirects to it.
 
 
 ### install, list, explore, search, ... commands
 
-all other commands are redirected to a configured [npm](http://npmjs.org/) instance. The configuration includes using the caleydo repository. 
-If you wanna install plugins outside of the virtual machine, ensure that you installed npm. 
+all other commands are redirected to a configured [npm](http://npmjs.org/) instance. The configuration includes using the caleydo repository.
+If you wanna install plugins outside of the virtual machine, ensure that you installed npm.
 
 Building Caleydo Web
 --------------------
@@ -122,5 +124,26 @@ TODO
 Running Caleydo Web
 -------------------
 
-Depending whether you installed the python server `caleydo_server` or the Javascript server `caleydo_server_js` call the corresponing grunt task: `server` and `server_js`. 
-This will compile and watches all files and launch the server at port 9000 by default. 
+Depending whether you installed the python server `caleydo_server` or the Javascript server `caleydo_server_js` call the corresponing grunt task: `server` and `server_js`.
+This will compile and watches all files and launch the server at port 9000 by default.
+
+
+Setup PyCharm environment
+-------------------------
+
+Install [PyCharm](https://www.jetbrains.com/pycharm/).
+
+1. Launch PyCharm
+2. Create a project with existing sources via PyCharm
+3. Go to File->Settings->Project:...->Project Interpreter and configure a new remote intrepter by choosing the Vagrant option.
+4. PyCharm will try to launch the virtual machine
+3. copy the template project settings (`_idea_template`) to `.idea` and launch PyCharm
+4. prepare the typscript compiler.
+  Since PyCharm currently just supports 1.4 we need to use our own compiler from the node_modules folder:
+ ~~~bash
+  #within virtual machine!
+  mkdir -p ./_compiler
+  cp ./node_modules/grunt-ts/node_modules/typescript ./_compiler/
+ ~~~
+
+TODO
