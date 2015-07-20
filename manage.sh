@@ -62,7 +62,7 @@ function install_bower_dependencies {
   if [ -f bower.json ] ; then
     echo "--- installing bower dependencies ---"
     set -vx #to turn echoing on and
-    bower install
+    bower --config.interactive=false install
     set +vx #to turn them both off
     rm bower.json
   fi
