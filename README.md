@@ -30,32 +30,37 @@ Create Dev Environment
   Vagrant is used for creating a controlled environment using a virtual machine provided by VirtualBox
 
 2. Clone this repository
-  ~~~bash
- git clone https://github.com/Caleydo/caleydo-web.git
+ ~~~bash
+ git clone https://github.com/Caleydo/caleydo_web_container.git
  ~~~
 
 3. Launch a (bash) shell
    *Windows Only*: Ensure that you start the `Git Bash` with adminstrative rights
 
-4. let Vagrant create the environment for you
+4. switch to the new directory
+ ~~~bash
+ cd caleydo_web_container
+ ~~~
+
+5. let Vagrant create the environment for you
  ~~~bash
  # start vagrant
  vagrant up
  ~~~
 
-5. Connect to VM:
+6. Connect to VM:
  ~~~bash
  # connect to vm
  vagrant ssh
  ~~~
 
-6. Navigate to caleydo directory
+7. Navigate to caleydo directory
  ~~~bash
  cd /vagrant
  ~~~
  this folder is shared with your cloned repository. So, all changes are reflected in your local filesystem
 
-7. Exit and stop the virtual machine
+8. Exit and stop the virtual machine
  ~~~bash
  exit
  vagrant halt
