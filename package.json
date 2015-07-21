@@ -13,7 +13,8 @@
     "grunt-contrib-copy": "^0.8.0",
     "grunt-contrib-jshint": "^0.11.2",
     "grunt-contrib-watch": "^0.6.1",
-    "grunt-exec": "^0.4.6",
+    "grunt-contrib-compress": "^0.13.0",
+    "grunt-debian-package": "^0.1.11",
     "grunt-express": "^1.4.1",
     "grunt-jsdoc": "^0.6.7",
     "grunt-sass": "^1.0.0",
@@ -30,7 +31,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/Caleydo/caleydo-web"
+    "url": "git://github.com/Caleydo/caleydo_web_container"
   },
   "license": "BSD",
   "publishConfig": {

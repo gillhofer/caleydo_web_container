@@ -101,7 +101,7 @@ function resolve {
 
   ensure_in_vm
   echo "--- resolving dependencies ---"
-  grunt resolveDependencies
+  grunt resolve_dependencies:dev
 
   install_apt_dependencies
   install_pip_dependencies

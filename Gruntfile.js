@@ -155,7 +155,7 @@ module.exports = function (grunt) {
             dot: true,
             cwd: 'plugins/',
             dest: '<%= yeoman.dist %>',
-            src: ['**/*.{htaccess,webp,gif,js,css,png,jpg,svg,txt,htm,html,xhtml,ico,json,csv,tsv,py}']
+            src: ['**/*.{htaccess,webp,gif,js,css,png,jpg,svg,txt,htm,html,xhtml,ico,json,csv,tsv,py}', '!*/_**/*', '!*/**/_*']
           },
           { //copy static stuff
             expand: true,
@@ -170,8 +170,32 @@ module.exports = function (grunt) {
             cwd: '_bower_components/',
             dest: '<%= yeoman.dist %>/bower_components/',
             src: ['**']
+          },
+          { //copy bower dependencies
+            expand: true,
+            dot: true,
+            dest: '<%= yeoman.dist %>',
+            src: ['package.json', 'config.ini']
           }
         ]
+      },
+      server_dist: {
+        files: [{ //copy the plugins
+          expand: true,
+          dot: true,
+          cwd: 'plugins/caleydo_server/_deploy/',
+          dest: '<%= yeoman.dist %>',
+          src: '**/*'
+        }]
+      },
+      server_js_dist: {
+        files: [{ //copy the plugins
+          expand: true,
+          dot: true,
+          cwd: 'plugins/caleydo_server_js/_deploy/',
+          dest: '<%= yeoman.dist %>',
+          src: '**/*'
+        }]
       }
     },
     jsdoc: {
@@ -200,29 +224,131 @@ module.exports = function (grunt) {
       }
     },
     bgShell: {
-      options: {
-
-      },
+      options: {},
       debug: {
         cmd: 'python plugins/caleydo_server',
         bg: true,
         fail: true
       },
-      dist: {
-        cmd: function() {
+      static: {
+        cmd: function () {
           //generates the config files for a specific context and application
           var r = grunt.config.process('python plugins/caleydo_server/deployhelper.py -t <%= yeoman.dist %>');
           var app = grunt.option('application') || null;
           var context = grunt.option('context') || null;
           if (app) {
-            r += ' --application='+app;
+            r += ' --application=' + app;
           }
           if (context) {
-            r += ' --context='+context;
+            r += ' --context=' + context;
           }
           return r;
         },
         bg: false
+      }
+    },
+    resolve_dependencies: {
+      dist: {
+        options: {
+          target_dir: '<%= yeoman.dist %>'
+        }
+      },
+      dev: {
+
+      }
+    },
+    compress: {
+      package_static: {
+        options: {
+          archive: '<%=yeoman.dist%>/caleydo_static.zip'
+        },
+        files: [
+          { //copy the plugins
+            expand: true,
+            dot: true,
+            cwd: 'plugins',
+            src: ['**/*.{htaccess,webp,gif,js,css,png,jpg,svg,txt,htm,html,xhtml,ico,json,csv,tsv,py}', '!*/_**/*', '!*/**/_*', '!caleydo_server*/**']
+          },
+          { //copy static stuff
+            expand: true,
+            dot: true,
+            cwd: '_bower_components',
+            dest: 'bower_components',
+            src: ['**/*']
+          },
+          { //copy static stuff
+            expand: true,
+            dot: true,
+            cwd: 'static',
+            dest: '.',
+            src: ['**/*']
+          },
+          { //copy dumped generated files
+            expand: true,
+            dot: true,
+            cwd: '<%=yeoman.dist%>/',
+            src: ['config-gen.js', 'index.html', 'caleydo_web.js']
+          }
+        ]
+      },
+      package_python: {
+        options: {
+          archive: '<%=yeoman.dist%>/caleydo_python.zip'
+        },
+        files: [
+          { //copy the plugins
+            expand: true,
+            dot: true,
+            src: ['plugins/**/*.{htaccess,webp,gif,js,css,png,jpg,svg,txt,htm,html,xhtml,ico,json,csv,tsv,py}', '!*/_**/*', '!*/**/_*', '!plugins/caleydo_server_js/**']
+          },
+          { //copy static stuff
+            expand: true,
+            dot: true,
+            src: ['static/**/*', '_bower_components/**/*']
+          },
+          { //copy deployment specific stuff
+            expand: true,
+            dot: true,
+            cwd: 'plugins/caleydo_server/_deploy',
+            src: ['**/*']
+          },
+          { //copy deployment specific stuff
+            expand: true,
+            dot: true,
+            cwd: '<%=yeoman.dist%>/',
+            src: ['requirements.txt', 'debian.txt']
+          }
+        ]
+      },
+      package_js: {
+        options: {
+          archive: '<%=yeoman.dist%>/caleydo_js.zip'
+        },
+        files: [
+          { //copy the plugins
+            expand: true,
+            dot: true,
+            src: ['plugins/**/*.{htaccess,webp,gif,js,css,png,jpg,svg,txt,htm,html,xhtml,ico,json,csv,tsv,py}', '!*/_**/*', '!*/**/_*', '!plugins/caleydo_server/**']
+          },
+          { //copy static stuff
+            expand: true,
+            dot: true,
+            src: ['static/**/*', '_bower_components/**/*']
+          },
+          { //copy deployment specific stuff
+            expand: true,
+            dot: true,
+            cwd: 'plugins/caleydo_server_js/_deploy',
+            src: ['**/*']
+          },
+          { //copy deployment specific stuff
+            expand: true,
+            src: '<%=yeoman.dist%>/npm.package.json',
+            rename: function (dest, src) {
+              return 'package.json';
+            }
+          }
+        ]
       }
     }
   });
@@ -231,37 +357,64 @@ module.exports = function (grunt) {
     'ts:dev',
     'sass:dev'
   ]);
+  grunt.registerTask('server_common', [
+    'clean:server',
+    'compile']);
 
   grunt.registerTask('server_js', [
-    'clean:server',
-    'compile',
+    'server_common',
     'express:debug',
     'watch'
   ]);
   grunt.registerTask('server', [
-    'clean:server',
-    'compile',
+    'server_common',
     'bgShell:debug',
     'watch'
   ]);
 
-  grunt.registerTask('build', [
+  grunt.registerTask('package_common', [
     'clean:dist',
-    'compile',
-    'copy:dist',
-    'bgShell:dist'
+    'ts:dist',
+    'sass:dist',
+    'resolve_dependencies:dist'
     //TODO optimize the plugins by bundling them
+  ]);
+  grunt.registerTask('package_static', [
+    'package_common',
+    'bgShell:static',
+    'compress:package_static'
+  ]);
+  grunt.registerTask('package_python', [
+    'package_common',
+    'compress:package_python'
+  ]);
+  grunt.registerTask('package_js', [
+    'package_common',
+    'compress:package_js'
+  ]);
+  grunt.registerTask('package', [
+    'package_common',
+    'bgShell:static',
+    'compress:package_static',
+    'compress:package_python',
+    'compress:package_js'
   ]);
 
   grunt.registerTask('default', [
-    'build',
+    'package_common',
     'tslint',
-    'jshint'
+    'jshint',
+    'bgShell:static',
+    'compress:package_static',
+    'compress:package_python',
+    'compress:package_js'
   ]);
 
-  grunt.registerTask('resolveDependencies', 'Resolves the dependencies from the current plugins and creates the type specific files', function () {
+  grunt.registerMultiTask('resolve_dependencies', 'Resolves the dependencies from the current plugins and creates the type specific files', function () {
+
     var options = this.options({
       plugins: ['plugins/**/package.json'],
+      target_dir : '.',
       target: {
         web: 'bower.json',
         node: 'npm.package.json',
@@ -276,11 +429,9 @@ module.exports = function (grunt) {
           }, null, 2);
         },
         node: function (deps) {
-          return JSON.stringify({
-            name: 'caleydo-web',
-            version: '0.0.1',
-            dependencies: deps
-          }, null, 2);
+          var ori = grunt.file.readJSON('./package.json');
+          ori.dependencies = deps;
+          return JSON.stringify(ori, null, 2);
         },
         debian: function (deps) {
           return Object.keys(deps).map(function (d) {
@@ -319,7 +470,7 @@ module.exports = function (grunt) {
             } else { //merge
               existing[d] = old + ',' + new_;
             }
-            grunt.log.writeln('resvoling: ' + old + ' ' + new_ + ' to ' + existing[d]);
+            grunt.log.writeln('resolving: ' + old + ' ' + new_ + ' to ' + existing[d]);
           } else {
             existing[d] = deps[d];
           }
@@ -344,7 +495,8 @@ module.exports = function (grunt) {
 
     //generate the dependency files
     Object.keys(dependencies).forEach(function (d) {
-      var target = options.target[d] || d + '.txt';
+      var target = options.target_dir + '/'+(options.target[d] || d + '.txt');
+      grunt.log.writeln(options.target_dir, target);
       var converter = options.converter[d] || options.converter._default;
       var r = converter(dependencies[d]);
       grunt.file.write(target, r);
