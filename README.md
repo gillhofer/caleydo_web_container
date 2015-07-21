@@ -15,9 +15,9 @@ vagrant ssh
 
 ~~~bash
 cd /vagrant
-./manage install demo_app caleydo_server
-./manager resolve
-grunt server
+./manage.sh install demo_app caleydo_server
+./manage.sh resolve
+./manage.sh server
 ~~~
 
 access: http://192.168.50.52:9000 and have fun :)
@@ -26,7 +26,7 @@ Create Dev Environment
 ----------------------
 
 0. *Windows Only*: Install [Git](http://git-scm.com/download/win)
-1. Install [Vagrant](http://www.vagrantup.com/) and [VirtualBox](https://www.virtualbox.org/)
+1. Install [Vagrant](http://www.vagrantup.com/) and [VirtualBox](https://www.virtualbox.org/) (*NOT* Version 5 there is some bug with symbolic links)
   Vagrant is used for creating a controlled environment using a virtual machine provided by VirtualBox
 
 2. Clone this repository
