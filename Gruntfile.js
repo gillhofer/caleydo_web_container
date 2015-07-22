@@ -26,7 +26,7 @@ module.exports = function (grunt) {
     watch: {
       ts: {
         files: ['plugins/**/*.ts'],
-        tasks: ['ts:build']
+        tasks: ['ts:dev']
       },
       sass: {
         files: ['plugins/**/**.scss'],
@@ -34,7 +34,7 @@ module.exports = function (grunt) {
       },
       coffee: {
         files: ['plugins/**/*.coffee'],
-        tasks: ['coffee:dist']
+        tasks: ['coffee:dev']
       }
     },
     sass: {
