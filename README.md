@@ -15,8 +15,11 @@ vagrant ssh
 
 ~~~bash
 cd /vagrant
+# install the plugins specified 
 ./manage.sh install demo_app caleydo_server
+# resolve dependencies of plugins
 ./manage.sh resolve
+# start caleydo web
 ./manage.sh server
 ~~~
 
