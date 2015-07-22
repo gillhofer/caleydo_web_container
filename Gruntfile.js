@@ -293,7 +293,7 @@ module.exports = function (grunt) {
       },
       package_python: {
         options: {
-          archive: '<%=yeoman.dist%>/caleydo_python.zip'
+          archive: '<%=yeoman.dist%>/caleydo_python.tar.gz'
         },
         files: [
           { //copy the plugins
@@ -322,7 +322,7 @@ module.exports = function (grunt) {
       },
       package_js: {
         options: {
-          archive: '<%=yeoman.dist%>/caleydo_js.zip'
+          archive: '<%=yeoman.dist%>/caleydo_js.tar.gz'
         },
         files: [
           { //copy the plugins
