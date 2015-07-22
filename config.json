@@ -1,0 +1,11 @@
+{
+  "caleydo_mapping": {
+
+  },
+  "pathfinder_graph": {
+
+  },
+  "sample_python_plugin": {
+    "hello": "Servus"
+  }
+}
