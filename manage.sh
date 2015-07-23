@@ -141,14 +141,14 @@ function npmredirect {
   # redirects commands to npm
   ###################################
 
-  mkdir -p _npmenv
+  mkdir -p ~/caleydo_web/plugins
   if [ -d "plugins" ] ; then
-    mv "plugins" "_npmenv/node_modules"
+    ln -s ./plugins ~/caleydo_web/plugins/node_modules
   else
-    mkdir "_npmenv/node_modules"
+    mkdir ~/caleydo_web/plugins/node_modules
   fi
 
-  cd _npmenv
+  cd ~/caleydo_web/plugins
 
   #create the link to our own registry
   echo "registry=$REGISTRY" > .npmrc
@@ -160,9 +160,8 @@ function npmredirect {
   set +vx #to turn them both off
 
   #recreate original structure
-  mv "node_modules" "../plugins"
-  cd ..
-  rm -r _npmenv
+  cd /vagrant
+  rm -r ~/caleydo_web/plugins
 }
 
 #command switch
