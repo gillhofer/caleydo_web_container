@@ -124,6 +124,17 @@ function gruntredirect {
   grunt $@
 }
 
+function clone {
+  ###################################
+  # clones a plugin given by url
+  ###################################
+  cd plugins
+  shift
+  set -vx
+
+  git clone $@
+}
+
 function publish {
   ###################################
   # publishes a plugin
@@ -194,10 +205,13 @@ function npmredirect {
 #command switch
 case "$1" in
 pull)
-	pull
-	;;
+  pull $@
+  ;;
 resolve)
-  resolve
+  resolve $@
+  ;;
+clone)
+  clone $@
   ;;
 publish)
   publish $@
@@ -206,6 +220,6 @@ build | server | server_js)
   gruntredirect $@
   ;;
 *)
-	npmredirect $@
+  npmredirect $@
   ;;
 esac
