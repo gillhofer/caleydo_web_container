@@ -141,14 +141,32 @@ function npmredirect {
   # redirects commands to npm
   ###################################
 
-  mkdir -p ~/caleydo_web/plugins
-  if [ -d "plugins" ] ; then
-    ln -s ./plugins ~/caleydo_web/plugins/node_modules
+  if [ "`whoami`" == "vagrant" ] ; then
+    #inside vm
+    mkdir -p ~/caleydo_web/plugins
+    if [ -d "plugins" ] ; then
+      if [ ! -e "/home/vagrant/caleydo_web/plugins/node_modules" ] ; then
+        ln -sf `pwd`/plugins ~/caleydo_web/plugins/node_modules
+      fi
+    else
+      mkdir ~/caleydo_web/plugins/node_modules
+    fi
+    cd ~/caleydo_web/plugins
   else
-    mkdir ~/caleydo_web/plugins/node_modules
+    # outside on windows
+    #outside of vm use move if we are on a linux system else just link
+    mkdir -p _npmenv
+    if [ -d "plugins" ] ; then
+      if [ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" -o "$(expr substr $(uname -s) 1 6)" == "CYGWIN" ]; then
+        mv plugins _npmenv/node_modules
+      else
+        ln -s `pwd`/plugins _npmenv/node_modules
+      fi
+    else
+      mkdir _npmenv/node_modules
+    fi
+    cd _npmenv
   fi
-
-  cd ~/caleydo_web/plugins
 
   #create the link to our own registry
   echo "registry=$REGISTRY" > .npmrc
@@ -160,8 +178,17 @@ function npmredirect {
   set +vx #to turn them both off
 
   #recreate original structure
-  cd /vagrant
-  rm -r ~/caleydo_web/plugins
+  if [ "`whoami`" == "vagrant" ] ; then
+    #inside vm
+    rm ~/caleydo_web/plugins
+  else
+    #outside of vm use move if we are on a linux system else just link
+    if [ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" -o "$(expr substr $(uname -s) 1 6)" == "CYGWIN" ]; then
+      mv node_modules ../plugins
+    fi
+    cd ..
+    rm -r _npmenv
+  fi
 }
 
 #command switch
