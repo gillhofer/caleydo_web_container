@@ -92,8 +92,8 @@ function ensure_in_vm {
     echo "this command should be executed within the VM: aborting"
     exit 1
   fi
-
 }
+
 function resolve {
   ###################################
   # collects and resolve all dependencies

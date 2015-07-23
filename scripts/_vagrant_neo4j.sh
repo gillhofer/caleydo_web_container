@@ -17,6 +17,6 @@ sudo apt-get install -y neo4j
 sudo sed -i '/^#.*0.0.0.0/s/^#//' /etc/neo4j/neo4j-server.properties
 #disable authorization by default
 sudo sed -i '/dbms.security.auth_enabled=true/s/dbms.security.auth_enabled=false/' /etc/neo4j/neo4j-server.properties
-#restart server:
-sudo service neo4j-service restart
+#stop server:
+sudo service neo4j-service stop
 #access the browser interface via: http://localhost:7474/
