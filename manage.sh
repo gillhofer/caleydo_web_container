@@ -130,9 +130,14 @@ function clone {
   ###################################
   cd plugins
   shift
-  set -vx
 
-  git clone $@
+  if [ $# == 1 ] && ([ $1 != git* ] || [ $1 != http* ] ) ; then
+    set -vx
+    git clone git@github.com:Caleydo/$1.git
+  else
+    set -vx
+    git clone $@
+  fi
 }
 
 function publish {
@@ -141,9 +146,10 @@ function publish {
   ###################################
   cd plugins
   shift
+
   set -vx
 
-  npm --registry=$REGISTRY publish $@
+  npm --registry="${REGISTRY}" publish $@
 }
 
 
