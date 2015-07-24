@@ -155,7 +155,7 @@ module.exports = function (grunt) {
             dot: true,
             cwd: 'plugins/',
             dest: '<%= yeoman.dist %>',
-            src: ['**/*.{htaccess,webp,gif,js,css,png,jpg,svg,txt,htm,html,xhtml,ico,json,csv,tsv,py}', '!*/_**/*', '!*/**/_*']
+            src: ['**/*.{htaccess,webp,gif,js,css,png,jpg,svg,txt,htm,html,xhtml,ico,json,csv,tsv,py}', '!*/_**/*']
           },
           { //copy static stuff
             expand: true,
@@ -267,7 +267,7 @@ module.exports = function (grunt) {
             expand: true,
             dot: true,
             cwd: 'plugins',
-            src: ['**/*.{htaccess,webp,gif,js,css,png,jpg,svg,txt,htm,html,xhtml,ico,json,csv,tsv,py}', '!*/_**/*', '!*/**/_*', '!caleydo_server*/**']
+            src: ['**/*.{htaccess,webp,gif,js,css,png,jpg,svg,txt,htm,html,xhtml,ico,json,csv,tsv,py}', '!*/_**/*', '!caleydo_server*/**']
           },
           { //copy static stuff
             expand: true,
@@ -299,7 +299,7 @@ module.exports = function (grunt) {
           { //copy the plugins
             expand: true,
             dot: true,
-            src: ['plugins/**/*.{htaccess,webp,gif,js,css,png,jpg,svg,txt,htm,html,xhtml,ico,json,csv,tsv,py}', '!*/_**/*', '!*/**/_*', '!plugins/caleydo_server_js/**']
+            src: ['plugins/**/*.{htaccess,webp,gif,js,css,png,jpg,svg,txt,htm,html,xhtml,ico,json,csv,tsv,py}', '!*/_**/*', '!plugins/caleydo_server_js/**']
           },
           { //copy static stuff
             expand: true,
@@ -328,7 +328,7 @@ module.exports = function (grunt) {
           { //copy the plugins
             expand: true,
             dot: true,
-            src: ['plugins/**/*.{htaccess,webp,gif,js,css,png,jpg,svg,txt,htm,html,xhtml,ico,json,csv,tsv,py}', '!*/_**/*', '!*/**/_*', '!plugins/caleydo_server/**']
+            src: ['plugins/**/*.{htaccess,webp,gif,js,css,png,jpg,svg,txt,htm,html,xhtml,ico,json,csv,tsv,py}', '!*/_**/*', '!plugins/caleydo_server/**']
           },
           { //copy static stuff
             expand: true,
