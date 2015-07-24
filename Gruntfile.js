@@ -306,6 +306,11 @@ module.exports = function (grunt) {
             dot: true,
             src: ['static/**/*', '_bower_components/**/*']
           },
+          { //copy scripts
+            expand: true,
+            dot: true,
+            src: ['scripts/**/*', '!**/_*']
+          },
           { //copy deployment specific stuff
             expand: true,
             dot: true,
@@ -334,6 +339,11 @@ module.exports = function (grunt) {
             expand: true,
             dot: true,
             src: ['static/**/*', '_bower_components/**/*']
+          },
+          { //copy scripts
+            expand: true,
+            dot: true,
+            src: ['scripts/**/*', '!**/_*']
           },
           { //copy deployment specific stuff
             expand: true,
