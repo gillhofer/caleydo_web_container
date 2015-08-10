@@ -128,15 +128,51 @@ function clone {
   ###################################
   # clones a plugin given by url
   ###################################
-  cd plugins
+
+  #use ssh or https (default)
+  local prefix=""
+  local usessh=$1
+  if [[ $1 == "ssh" ]] ; then
+    prefix="git@github.com:"
+  else
+    prefix="https://github.com/"
+  fi
   shift
 
+  #guess the repo name
+  local reponame=${1##*/}
+  if [ -d plugins/${reponame} ] ; then
+    echo ${reponame} already exists
+    return
+  fi
+
+  cd plugins
+
   if [ $# == 1 ] && ([ $1 != git* ] || [ $1 != http* ] ) ; then
+    local url=Caleydo/$1
+    if [[ "$1" == */* ]] ; then
+      url=$1
+    fi
     set -vx
-    git clone git@github.com:Caleydo/$1.git
+    git clone ${prefix}${url}.git
+    set +vx
   else
     set -vx
     git clone $@
+    set +vx
+  fi
+
+  cd ..
+
+  #extract the peer dependencies
+  if which node >/dev/null; then
+    node ./manage_helper catDependencies ${reponame} | while IFS=';' read name repo
+    do
+      echo "installing dependency ${name} ${repo}"
+      clone ${usessh} ${repo}
+    done
+  else
+    echo "can't find node for extracting dependencies"
   fi
 }
 
@@ -145,8 +181,6 @@ function publish {
   # publishes a plugin
   ###################################
   cd plugins
-  shift
-
   set -vx
 
   npm --registry="${REGISTRY}" publish $@
@@ -217,9 +251,15 @@ resolve)
   resolve $@
   ;;
 clone)
-  clone $@
+  shift
+  clone https $@
+  ;;
+ssh_clone)
+  shift
+  clone ssh $@
   ;;
 publish)
+  shift
   publish $@
   ;;
 build | server | server_js)
