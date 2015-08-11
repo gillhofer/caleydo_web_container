@@ -9,13 +9,11 @@ Minimal Steps for Launching the Demo Application
 git clone https://github.com/Caleydo/caleydo_web_container.git
 cd caleydo_web_container
 vagrant up
-#wait
+#wait and get some coffee this will take a while
 vagrant ssh
 ~~~
 
 ~~~bash
-cd /vagrant
-
 # clone the repositories and their dependencies
 ./manage.sh clone demo_app
 ./manage.sh clone caleydo_server
@@ -68,7 +66,7 @@ Create Dev Environment
  ~~~bash
  cd /vagrant
  ~~~
- this folder is shared with your cloned repository. So, all changes are reflected in your local filesystem
+ the `/vagrant` folder is shared with your cloned repository. So, all changes are reflected in your local filesystem
 
 8. Exit and stop the virtual machine
  ~~~bash
