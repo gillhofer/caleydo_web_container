@@ -28,7 +28,7 @@ vagrant ssh
 ./manage.sh server
 ~~~
 
-access: http://192.168.50.52:9000 and have fun :)
+access: http://localhost:9000 or http://192.168.50.52:9000 and have fun :)
 
 Create Dev Environment
 ----------------------
