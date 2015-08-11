@@ -381,6 +381,10 @@ module.exports = function (grunt) {
     'bgShell:debug',
     'watch'
   ]);
+  grunt.registerTask('dev', [
+    'compile',
+    'watch'
+  ]);
 
   grunt.registerTask('package_common', [
     'clean:dist',
