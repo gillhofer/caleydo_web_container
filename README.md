@@ -15,8 +15,15 @@ vagrant ssh
 
 ~~~bash
 cd /vagrant
-# install the plugins specified 
-./manage.sh install demo_app caleydo_server
+
+# clone the repositories and their dependencies
+./manage.sh clone demo_app
+./manage.sh clone caleydo_server
+
+# OR install the latest published plugin 
+./manage.sh install demo_app
+./manage.sh install caleydo_server
+
 # resolve dependencies of plugins
 ./manage.sh resolve
 # start caleydo web
@@ -123,9 +130,11 @@ npm adduser
 # follow instructions
 ~~~
 
-### compile, build, server, server_js commands
+### compile, build, server, server_js, dev commands
 
 builds or build and runs Caleydo Web. [Grunt](http://gruntjs.com) is used as build tool and this command redirects to it.
+
+The `dev` command first compiles Caleydo Web and then watches for changes. No server will be started
 
 
 ### install, list, explore, search, ... commands

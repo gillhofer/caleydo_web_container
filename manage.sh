@@ -262,7 +262,7 @@ publish)
   shift
   publish $@
   ;;
-build | server | server_js)
+build | server | server_js | dev)
   gruntredirect $@
   ;;
 *)
