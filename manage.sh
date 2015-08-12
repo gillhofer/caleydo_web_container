@@ -166,7 +166,7 @@ function clone {
 
   #extract the peer dependencies
   if which node >/dev/null; then
-    node ./manage_helper catDependencies ${reponame} | while IFS=';' read name repo
+    node ./nanage_helper catDependencies ${reponame} | while IFS=';' read name repo
     do
       echo "installing dependency ${name} ${repo}"
       clone ${usessh} ${repo}
