@@ -167,7 +167,7 @@ module.exports = function (grunt) {
           { //copy bower dependencies
             expand: true,
             dot: true,
-            cwd: '_bower_components/',
+            cwd: 'libs/bower_components/',
             dest: '<%= yeoman.dist %>/bower_components/',
             src: ['**']
           },
@@ -272,7 +272,7 @@ module.exports = function (grunt) {
           { //copy static stuff
             expand: true,
             dot: true,
-            cwd: '_bower_components',
+            cwd: 'libs/bower_components',
             dest: 'bower_components',
             src: ['**/*']
           },
@@ -304,7 +304,7 @@ module.exports = function (grunt) {
           { //copy static stuff
             expand: true,
             dot: true,
-            src: ['static/**/*', '_bower_components/**/*']
+            src: ['static/**/*', 'libs/bower_components/**/*']
           },
           { //copy scripts
             expand: true,
@@ -338,7 +338,7 @@ module.exports = function (grunt) {
           { //copy static stuff
             expand: true,
             dot: true,
-            src: ['static/**/*', '_bower_components/**/*']
+            src: ['static/**/*', 'libs/bower_components/**/*']
           },
           { //copy scripts
             expand: true,
