@@ -12,7 +12,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # Every Vagrant virtual environment requires a box to build off of.
   config.vm.box = "ubuntu/trusty32"
 
-  config.vm.hostname = "caleydo_web"
+  config.vm.hostname = "caleydo-web"
   config.vm.network :private_network, ip: "192.168.50.52"
 
   config.ssh.forward_agent = true
