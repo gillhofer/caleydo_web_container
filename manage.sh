@@ -254,7 +254,7 @@ clone)
   shift
   clone https $@
   ;;
-ssh_clone)
+clone_ssh | ssh_clone)
   shift
   clone ssh $@
   ;;
