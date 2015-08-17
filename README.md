@@ -159,11 +159,12 @@ Install [PyCharm](https://www.jetbrains.com/pycharm/).
 
 1. Launch PyCharm
 2. Create a project with existing sources via PyCharm
-3. Go to File->Settings->Project:...->Project Interpreter and configure a new remote intrepter by choosing the Vagrant option.
+3. Go to File->Settings->Project:...->Project Interpreter and configure a new remote interpreter by choosing the Vagrant option.
 4. PyCharm will try to launch the virtual machine
 3. copy the template project settings (`_idea_template`) to `.idea` and launch PyCharm
 4. prepare the typscript compiler.
   Since PyCharm currently just supports 1.4 we need to use our own compiler from the node_modules folder:
+
  ~~~bash
   #within virtual machine!
   mkdir -p ./_compiler
