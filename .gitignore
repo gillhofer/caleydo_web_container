@@ -1,6 +1,8 @@
 #provision Entries
 /.vagrant
 /.idea
+/.pycharm_helpers
+/tscommand*.txt
 
 #build entries
 /_*
@@ -16,7 +18,7 @@
 /bower.json
 
 /data
-/config.ini
+/config.json
 
 .tmp
 /.sass-cache
