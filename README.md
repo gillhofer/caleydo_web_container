@@ -85,13 +85,22 @@ usage:
 
 ### clone/clone_ssh command
 
-the `clone` command is a utility for cloning a repository and also cloning all of its dependencies. the `clone_ssh` uses the git ssh url version instead of http.
+the `clone` command is a utility for cloning a repository and also cloning all of its dependencies (using `clone_deps`). the `clone_ssh` uses the git ssh url version instead of http.
 
 e.g. 
 ```bash
 ./manage.sh clone caleydo_core
 ./manage.sh clone Caleydo/caleydo_vis
 ./manage.sh clone https://github.com/Caleydo/demo.app.git
+```
+
+### clone_deps/clone_ssh_deps command
+
+the `clone_deps` command resolves and clones the dependencies of the given plugin. 
+
+usage
+```bash
+./manage.sh clone_deps demo_app
 ```
 
 ### pull command
