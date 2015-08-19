@@ -164,6 +164,12 @@ function clone {
 
   cd ..
 
+  clone_dependencies ${usessh} ${reponame}
+}
+
+function clone_dependencies {
+  local usessh=$1
+  local reponame=$2
   #extract the peer dependencies
   if which node >/dev/null; then
     node ./nanage_helper catDependencies ${reponame} | while IFS=';' read name repo
@@ -257,6 +263,14 @@ clone)
 clone_ssh | ssh_clone)
   shift
   clone ssh $@
+  ;;
+clone_deps)
+  shift
+  clone_dependencies https $@
+  ;;
+clone_ssh_deps | ssh_clone_deps)
+  shift
+  clone_dependencies ssh $@
   ;;
 publish)
   shift
