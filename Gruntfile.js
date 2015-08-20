@@ -14,6 +14,40 @@ module.exports = function (grunt) {
   // load all grunt tasks
   require('load-grunt-tasks')(grunt);
 
+  var common_copy_files = [
+          { //copy the plugins
+            expand: true,
+            dot: false,
+            cwd: 'plugins/',
+            dest: 'plugins/',
+            src: ['<%=dynconfig.plugins.include%>/**/*', '!*/_*/**','!**/*.<%=dynconfig.exclude%>']
+          },
+          { //copy bower_components
+            expand: true,
+            dot: false,
+            dest: 'libs/',
+            cwd: '<%=yeoman.tmp%>/',
+            src: ['bower_components/**/*']
+          },
+          { //copy static stuff
+            expand: true,
+            dot: false,
+            src: ['static/**/*','LICENSE']
+          },
+          { //copy scripts
+            expand: true,
+            dot: false,
+            src: ['scripts/**/*', '!**/_*']
+          },
+          { //copy deployment specific stuff
+            expand: true,
+            dot: false,
+            flatten: true,
+            cwd: 'plugins/',
+            src: ['<%=dynconfig.plugins.include%>/_deploy/**/*', '!**/_deploy/product.json']
+          }
+        ];
+
   grunt.config.init({
     // configurable paths
     yeoman: {
@@ -203,7 +237,8 @@ module.exports = function (grunt) {
       extension: 'zip',
       plugins: {
         include: ''
-      }
+      },
+      exclude: '{ts,scss,map,pyc,sass,log,pot,swp,lock}'
     },
     resolve_dependencies: {
       dist: {
@@ -213,8 +248,8 @@ module.exports = function (grunt) {
       },
       product: {
         options: {
-
-          target_dir: '<%= yeoman.tmp %>'
+          target_dir: '<%= yeoman.tmp %>',
+          plugins: 'plugins/<%=dynconfig.plugins.include%>/**/package.json'
         }
       },
       dev: {
@@ -223,99 +258,65 @@ module.exports = function (grunt) {
     },
     compress: {
       options: {
-        archive: '<%=yeoman.dist%>/caleydo_<%=dynconfig.product%>.<%=dynconfig.extension%>',
-        exclude: '{ts,scss,map,pyc,sass,log,pot,swp,lock}',
-        common_server_files: [
-          { //copy the plugins
-            expand: true,
-            dot: true,
-            src: ['plugins/<%=dynconfig.plugins.include%>/**/*', '!*/_**/*', '!**.<%=compress.options.exclude%>']
-          },
-          { //copy bower_components
-            expand: true,
-            dot: true,
-            dest: 'libs/bower_components',
-            src: ['<%=yeoman.tmp%>/bower_components/**/*']
-          },
-          { //copy static stuff
-            expand: true,
-            dot: true,
-            src: ['static/**/*','LICENSE']
-          },
-          { //copy scripts
-            expand: true,
-            dot: true,
-            src: ['scripts/**/*', '!**/_*']
-          },
-          { //copy deployment specific stuff
-            expand: true,
-            dot: true,
-            flatten: true,
-            src: '<%=dynconfig.plugins.include%>/_deploy'
-          }
-        ]
+        archive: '<%=yeoman.dist%>/caleydo_<%=dynconfig.product%>.<%=dynconfig.extension%>'
       },
       package_static: {
         files: [
             { //copy the plugins
               expand: true,
-              dot: true,
+              dot: false,
               cwd: 'plugins',
               //copy plugins exclude common types and all directories starting with _
-              src: ['<%=dynconfig.plugins.include%>/**/*', '!*/_**/*', '!**.<%=compress.options.exclude%>']
+              src: ['<%=dynconfig.plugins.include%>/**/*', '!*/_**/*', '!**.<%=dynconfig.exclude%>']
             },
             { //copy static stuff
               expand: true,
-              dot: true,
+              dot: false,
               cwd: 'static',
               dest: '.',
               src: ['**/*']
             },
             { //copy static stuff
               expand: true,
-              dot: true,
+              dot: false,
               cwd: '<%=yeoman.tmp%>/bower_components',
               dest: 'bower_components',
               src: ['**/*']
             },
             { //copy dumped generated files
               expand: true,
-              dot: true,
+              dot: false,
               cwd: '<%=yeoman.tmp%>/',
               src: ['config-gen.js', 'index.html', 'caleydo_web.js']
             }
           ]
       },
       package_python: {
-        files: function () {
-          return grunt.config('compress.options.common_files').concat(grunt.config('compress.options.common_server_files'), [
-            { //copy deployment specific stuff
-              expand: true,
-              dot: true,
-              cwd: '<%=yeoman.tmp%>/',
-              src: ['requirements.txt', 'debian.txt', 'config.json']
-            }
-          ])
-        }
+        files: common_copy_files.concat([
+          { //copy deployment specific stuff
+            expand: true,
+            dot: false,
+            cwd: '<%=yeoman.tmp%>/',
+            src: ['requirements.txt', 'debian.txt', 'config.json']
+          }
+        ])
       },
       package_js: {
-        files: function () {
-          return grunt.config('compress.options.common_files').concat(grunt.config('compress.options.common_server_files'), [
-            { //copy deployment specific stuff
-              expand: true,
-              dot: true,
-              cwd: '<%=yeoman.tmp%>/',
-              src: ['config.json']
-            },
-            { //copy deployment specific stuff
-              expand: true,
-              src: '<%=yeoman.tmp%>/npm.package.json',
-              rename: function (dest, src) {
-                return 'package.json';
-              }
+        files: common_copy_files.concat([
+          { //copy deployment specific stuff
+            expand: true,
+            dot: false,
+            cwd: '<%=yeoman.tmp%>/',
+            src: ['config.json']
+          },
+          { //copy deployment specific stuff
+            expand: true,
+            src: '<%=yeoman.tmp%>/npm.package.json',
+            rename: function (dest, src) {
+              return 'package.json';
             }
-          ])
-        }
+          }
+        ])
       }
     },
     package_product: {
@@ -403,7 +404,9 @@ module.exports = function (grunt) {
         //install the npm.package dependencies
         //run the js server to dump the needed files
       }
-      //4. generate the package
+      //4. generate bower dependencies
+      r.push('install_tmp_bower');
+      //5. generate the package
       r.push('compress:package_'+product.type);
       return r;
     }));
@@ -424,23 +427,44 @@ module.exports = function (grunt) {
         'caleydo_core': {
           'default_app' : product.app
         }
-      }));
+      }, null, 1));
     }
 
     function resolvePeerDependencies(plugins) {
+
       var queue = plugins.slice(),
-          next = null;
+          next = null,
+          result = [];
       while (next = queue.shift()) {
-        if (plugins.indexOf(next) >= 0) {
+        if (result.indexOf(next) >= 0) {
           continue; //already resolved
         }
-        plugins.push(next); //resolved
+        result.push(next); //resolved
         var package_json = grunt.file.readJSON('plugins/'+next+'/package.json');
         //push all dependencies
         queue.push.apply(queue, Object.keys(package_json.peerDependencies || {}));
       }
-      return plugins;
+      return result;
     }
+  });
+
+  grunt.registerTask('install_tmp_bower', 'Installs the tmp bower dependencies', function() {
+    var options = this.options({
+      cwd: grunt.config.process('./<%=yeoman.tmp%>')
+    });
+    grunt.log.writeln('running bower...');
+    // Force task into async mode and grab a handle to the "done" function.
+    var done = this.async();
+    grunt.util.spawn({
+      cmd: 'bower',
+      opts: {
+        cwd: options.cwd
+      },
+      args: [ '--config.directory=./bower_components', 'install']
+    }, function(error, result, code) {
+      grunt.log.writeln(String(result));
+      done();
+    });
   });
 
   grunt.registerMultiTask('resolve_dependencies', 'Resolves the dependencies from the current plugins and creates the type specific files', function () {
