@@ -110,7 +110,7 @@ function resolve {
   install_tsd_dependencies
 }
 
-REGISTRY="http://dev.caleydo.org/nexus/content/repositories/caleydo-web/"
+REGISTRY="http://registry.caleydo.org/"
 
 function gruntredirect {
   ###################################
