@@ -22,33 +22,31 @@ function pull {
 
 
 function install_apt_dependencies {
-  if [ -f debian.txt ] ; then
+  if [ -f _tmp/debian.txt ] ; then
     echo "--- installing apt dependencies ---"
     wd="`pwd`"
     cd /tmp #switch to tmp directory
     set -vx #to turn echoing on and
-    sudo apt-get install -y `cat $wd/debian.txt`
+    sudo apt-get install -y `cat $wd/_tmp/debian.txt`
     set +vx #to turn them both off
     cd $wd
-    rm debian.txt
   fi
 }
 function install_pip_dependencies {
-  if [ -f requirements.txt ] ; then
+  if [ -f _tmp/requirements.txt ] ; then
     echo "--- installing pip dependencies ---"
     wd="`pwd`"
     cd /tmp #switch to tmp directory
-    sudo pip install -r $wd/requirements.txt
+    sudo pip install -r $wd/_tmp/requirements.txt
     set -vx #to turn echoing on and
     cd $wd
-    rm requirements.txt
   fi
 }
 function install_npm_dependencies {
-  if [ -f npm.package.json ] ; then
+  if [ -f _tmp/package.json ] ; then
     echo "--- installing npm dependencies ---"
     mv "package.json" "ori.package.json"
-    mv "npm.package.json" "package.json"
+    mv "_tmp/package.json" "package.json"
 
     set -vx #to turn echoing on and
     sudo npm install
@@ -59,17 +57,18 @@ function install_npm_dependencies {
   fi
 }
 function install_bower_dependencies {
-  if [ -f bower.json ] ; then
+  if [ -f _tmp/bower.json ] ; then
     echo "--- installing bower dependencies ---"
+    mv "_tmp/bower.json" "bower.json"
     set -vx #to turn echoing on and
     bower --config.interactive=false install
     set +vx #to turn them both off
-    rm bower.json
+    mv "bower.json" "_tmp/bower.json"
   fi
 }
 
 function install_tsd_dependencies {
-  if [ -f tsd.txt ] ; then
+  if [ -f _tmp/tsd.txt ] ; then
     echo "--- installing tsd dependencies ---"
 
     while IFS=';' read name sha1
@@ -77,8 +76,8 @@ function install_tsd_dependencies {
       set -vx #to turn echoing on and
       tsd install $name --commit $sha1
       set +vx #to turn them both off
-    done < tsd.txt
-    rm -f tsd.txt tsd.json
+    done < _tmp/tsd.txt
+    rm -f tsd.json
 
     set -vx #to turn echoing on and
     #create the tsd description file

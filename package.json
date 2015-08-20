@@ -2,6 +2,8 @@
   "name": "caledo-web",
   "description": "Caleydo Web Container",
   "version": "0.0.1",
+  "license" : "SEE LICENSE IN LICENSE",
+  "repository": "Caleydo/caleydo_web_container",
   "private": true,
   "dependencies": {
   },
@@ -29,11 +31,6 @@
   "engines": {
     "node": "~0.10.x"
   },
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/Caleydo/caleydo_web_container"
-  },
-  "license": "BSD",
   "publishConfig": {
     "registry": "http://registry.caleydo.org/"
   }
