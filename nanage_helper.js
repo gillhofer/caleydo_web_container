@@ -32,6 +32,6 @@ var cmds = {
       console.log(meta.repository)
     }
   }
-}
+};
 
-cmds[cmd]()
+cmds[cmd]();
