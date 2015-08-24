@@ -109,6 +109,17 @@ function resolve {
   install_tsd_dependencies
 }
 
+function resolve_dev {
+  ###################################
+  # collects and resolve all dependencies
+  ###################################
+
+  echo "--- resolving dev dependencies ---"
+  grunt resolve_dependencies:dev
+
+  install_tsd_dependencies
+}
+
 REGISTRY="http://registry.caleydo.org/"
 
 function gruntredirect {
@@ -265,6 +276,9 @@ pull)
   ;;
 resolve)
   resolve $@
+  ;;
+resolve_dev)
+  resolve_dev $@
   ;;
 clone)
   shift
