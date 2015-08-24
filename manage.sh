@@ -134,6 +134,8 @@ function gruntredirect {
   grunt $@
 }
 
+resolved_plugins=";"
+
 function clone {
   ###################################
   # clones a plugin given by url
@@ -154,15 +156,23 @@ function clone {
   #guess the repo name
   local reponame=${1##*/}
   if [ -d plugins/${reponame} ] ; then
-    echo ${reponame} already exists
-    if [ ${pull_if_exist} == "true" ] && ([ -d plugins/${reponame}/.git ]) ; then
-      cd plugins/${reponame}
-      set -vx
-      git pull
-      set +vx
-      cd ..
-      cd ..
+    if [[ ${resolved_plugins} == *";${reponame}"* ]] ; then
+      #already resolved
+      echo ${reponame} already exists and checked
+    else
+      echo ${reponame} already exists
+      if [ ${pull_if_exist} == "true" ] && ([ -d plugins/${reponame}/.git ]) ; then
+        cd plugins/${reponame}
+        set -vx
+        git pull
+        set +vx
+        cd ..
+        cd ..
+      fi
+      resolved_plugins="${resolved_plugins}${reponame};"
+      clone_dependencies ${usessh} ${pull_if_exist} ${reponame}
     fi
+
     return
   fi
 
@@ -184,6 +194,7 @@ function clone {
 
   cd ..
 
+  resolved_plugins="${resolved_plugins}${reponame};"
   clone_dependencies ${usessh} ${pull_if_exist} ${reponame}
 }
 
