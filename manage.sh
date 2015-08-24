@@ -137,11 +137,21 @@ function clone {
     prefix="https://github.com/"
   fi
   shift
+  local pull_if_exist=$1
+  shift
 
   #guess the repo name
   local reponame=${1##*/}
   if [ -d plugins/${reponame} ] ; then
     echo ${reponame} already exists
+    if [ ${pull_if_exist} == "true" ] && ([ -d plugins/${reponame}/.git ]) ; then
+      cd plugins/${reponame}
+      set -vx
+      git pull
+      set +vx
+      cd ..
+      cd ..
+    fi
     return
   fi
 
@@ -163,18 +173,19 @@ function clone {
 
   cd ..
 
-  clone_dependencies ${usessh} ${reponame}
+  clone_dependencies ${usessh} ${pull_if_exist} ${reponame}
 }
 
 function clone_dependencies {
   local usessh=$1
-  local reponame=$2
+  local pull_if_exist=$2
+  local reponame=$3
   #extract the peer dependencies
   if which node >/dev/null; then
     node ./nanage_helper catDependencies ${reponame} | while IFS=';' read name repo
     do
       echo "installing dependency ${name} ${repo}"
-      clone ${usessh} ${repo}
+      clone ${usessh} ${pull_if_exist} ${repo}
     done
   else
     echo "can't find node for extracting dependencies"
@@ -257,19 +268,27 @@ resolve)
   ;;
 clone)
   shift
-  clone https $@
+  clone https false $@
   ;;
 clone_ssh | ssh_clone)
   shift
-  clone ssh $@
+  clone ssh false $@
   ;;
 clone_deps)
   shift
-  clone_dependencies https $@
+  clone_dependencies https false $@
   ;;
 clone_ssh_deps | ssh_clone_deps)
   shift
-  clone_dependencies ssh $@
+  clone_dependencies ssh false $@
+  ;;
+update_deps)
+  shift
+  clone_dependencies https true $@
+  ;;
+update_ssh_deps | ssh_update_deps)
+  shift
+  clone_dependencies ssh true $@
   ;;
 publish)
   shift
