@@ -107,6 +107,7 @@ module.exports = function (grunt) {
         ]
       },
       server: '.tmp',
+      server_js: '<%=yeoman.tmp%>/plugins/caleydo_server_js',
       product: '<%=yeoman.tmp%>'
     },
     jshint: {
@@ -264,7 +265,7 @@ module.exports = function (grunt) {
     resolve_dependencies: {
       product: {
         options: {
-          plugins: 'plugins/<%=dynconfig.plugins.include%>/**/package.json',
+          plugins: 'plugins/<%=dynconfig.plugins.resolve%>/**/package.json',
           node_no_devdependencies: true
         }
       },
@@ -280,7 +281,7 @@ module.exports = function (grunt) {
             dot: false,
             cwd: 'plugins/',
             dest: '<%=yeoman.tmp%>/plugins/',
-            src: ['<%=dynconfig.plugins.include%>/**/*', '!*/_*/**','!**/*.<%=dynconfig.exclude%>']
+            src: ['<%=dynconfig.plugins.resolve%>/**/*', '!*/_*/**','!**/*.<%=dynconfig.exclude%>']
           }
         ]
       }
@@ -296,7 +297,7 @@ module.exports = function (grunt) {
             dot: false,
             cwd: 'plugins',
             //copy plugins exclude common types and all directories starting with _
-            src: ['<%=dynconfig.plugins.include%>/**/*', '!caleydo_server_js/**/*', '!*/_**/*', '!**.<%=dynconfig.exclude%>']
+            src: ['<%=dynconfig.plugins.include%>/**/*', '!*/_*/**', '!**/*.<%=dynconfig.exclude%>']
           },
           { //copy static stuff
             expand: true,
@@ -416,25 +417,24 @@ module.exports = function (grunt) {
       var product = products[name];
       var r = [];
       //0. clean up
-      r.push('clean:product');
+      r.push('clean:product:'+name);
       //1. set task for product
       r.push('prepare_product:'+name);
       //2. resolve its dependencies
-      r.push('resolve_dependencies:product');
+      r.push('resolve_dependencies:product:'+name);
       //3. generate bower dependencies
-      r.push('bgShell:bower');
+      r.push('bgShell:bower:'+name);
       //[4. generate the dump files]
       if (product.type === 'static') {
         //TODO use the js server for dumping - less dependencies, i.e. no python ones
         //install the npm.package dependencies
         //run the js server to dump the needed files
-        product.plugins.push('caleydo_server_js'); //add the server as an plugin
-        r.push('copy:static');
-        r.push('bgShell:npm');
-        r.push('bgShell:static');
+        r.push('copy:static:'+name);
+        r.push('bgShell:npm:'+name);
+        r.push('bgShell:static:'+name);
       }
       //5. generate the package
-      r.push('compress:package_'+product.type);
+      r.push('compress:package_'+product.type+':'+name);
       return r;
     }));
     //run the aggregated tasks
@@ -448,6 +448,8 @@ module.exports = function (grunt) {
     grunt.config.set('dynconfig.extension',product.package);
     var plugins = resolvePeerDependencies(product.plugins);
     grunt.config.set('dynconfig.plugins.include','{'+plugins.join(',')+'}');
+    grunt.config.set('dynconfig.plugins.resolve','{'+plugins.join(',')+(product.type === 'static' ? ',caleydo_server_js' : '')+'}');
+
     //tasks
     if (product.app && product.app !== '_select') {
       //generate the index redirect
