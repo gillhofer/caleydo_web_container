@@ -224,7 +224,7 @@ module.exports = function (grunt) {
         bg: true,
         fail: true
       },
-      static: {
+      web: {
         cmd: function () {
           //generates the config files for a specific context and application
           var r = grunt.config.process('node ./plugins/caleydo_server_js/deployhelper.js');
@@ -274,7 +274,7 @@ module.exports = function (grunt) {
       }
     },
     copy: {
-      static: {
+      web: {
         files: [
           { //copy the plugins
             expand: true,
@@ -290,7 +290,7 @@ module.exports = function (grunt) {
       options: {
         archive: '<%=yeoman.dist%>/caleydo_<%=dynconfig.product%>.<%=dynconfig.extension%>'
       },
-      package_static: {
+      package_web: {
         files: [
           { //copy the plugins
             expand: true,
@@ -382,8 +382,22 @@ module.exports = function (grunt) {
     'package_common',
     'tslint',
     'jshint',
+    'all_product:web',
+    'all_product:python',
     'package_product'
   ]);
+
+  function to_product(desc, plugin_name, package_json) {
+    //default options
+    desc.id = desc.id || plugin_name;
+    desc.name = desc.name || package_json.name || plugin_name;
+    desc.description = desc.description || package_json.description || '';
+    desc.package = desc.package || 'tar.gz';
+    desc.type = desc.type || 'web';
+    desc.app = desc.app || plugin_name;
+    desc.plugins = desc.plugins || [ plugin_name ];
+    return desc;
+  }
 
   grunt.registerTask('package_product', 'Packages all products', function(justProduct) {
     var options = this.options({
@@ -396,14 +410,7 @@ module.exports = function (grunt) {
       var package_json = grunt.file.readJSON(path.join(path.dirname(product),'../package.json'));
       var plugin_name = path.basename(path.dirname(path.dirname(product)));
 
-      //default options
-      desc.id = desc.id || plugin_name;
-      desc.name = desc.name || package_json.name || plugin_name;
-      desc.description = desc.description || package_json.description || '';
-      desc.package = desc.package || 'tar.gz';
-      desc.type = desc.type || 'static';
-      desc.app = desc.app || plugin_name;
-      desc.plugins = desc.plugins || [ plugin_name ];
+      desc = to_product(desc, plugin_name, package_json);
 
       if (justProduct && justProduct !== desc.id) {
         return;
@@ -413,6 +420,38 @@ module.exports = function (grunt) {
 
     //products contains a list of all elements to build
     grunt.config.set('dynconfig.products',products);
+    grunt.task.run(['compile_products'])
+  });
+
+  grunt.registerTask('all_product', 'Generates a product of all known one', function(type) {
+    var options = this.options({
+      plugins: ['plugins/*/package.json'],
+      type: type || 'python'
+    });
+    var path = require('path');
+    var matching_plugins = [];
+    grunt.file.expand(options.plugins).forEach(function (plugin) {
+      var package_json = grunt.file.readJSON(plugin);
+      var plugin_name = path.basename(path.dirname(plugin));
+      var plugins = package_json.caleydo && package_json.caleydo.plugins ? package_json.caleydo.plugins : {};
+      if (plugins[options.type] || plugins['web']) {
+        matching_plugins.push(plugin_name);
+      }
+    });
+    //create a pseudo product
+    var product = to_product({
+      type: options.type,
+      plugins: matching_plugins
+    },'all_'+options.type, {});
+    //products contains a list of all elements to build
+    var products = {};
+    products[product.id] = product;
+    grunt.config.set('dynconfig.products',products);
+    grunt.task.run(['compile_products'])
+  })
+
+  grunt.registerTask('compile_products', 'Compiles the product and generates the tasks list', function() {
+    var products = grunt.config('dynconfig.products');
     var tasks = [].concat.apply([], Object.keys(products).map(function(name) {
       var product = products[name];
       var r = [];
@@ -425,13 +464,13 @@ module.exports = function (grunt) {
       //3. generate bower dependencies
       r.push('bgShell:bower:'+name);
       //[4. generate the dump files]
-      if (product.type === 'static') {
+      if (product.type === 'web') {
         //TODO use the js server for dumping - less dependencies, i.e. no python ones
         //install the npm.package dependencies
         //run the js server to dump the needed files
-        r.push('copy:static:'+name);
+        r.push('copy:web:'+name);
         r.push('bgShell:npm:'+name);
-        r.push('bgShell:static:'+name);
+        r.push('bgShell:web:'+name);
       }
       //5. generate the package
       r.push('compress:package_'+product.type+':'+name);
@@ -439,7 +478,7 @@ module.exports = function (grunt) {
     }));
     //run the aggregated tasks
     grunt.task.run(tasks);
-  });
+  })
 
   grunt.registerTask('prepare_product', 'Prepares the product to package', function(name) {
     var product = grunt.config('dynconfig.products.'+name);
@@ -448,7 +487,7 @@ module.exports = function (grunt) {
     grunt.config.set('dynconfig.extension',product.package);
     var plugins = resolvePeerDependencies(product.plugins);
     grunt.config.set('dynconfig.plugins.include','{'+plugins.join(',')+'}');
-    grunt.config.set('dynconfig.plugins.resolve','{'+plugins.join(',')+(product.type === 'static' ? ',caleydo_server_js' : '')+'}');
+    grunt.config.set('dynconfig.plugins.resolve','{'+plugins.join(',')+(product.type === 'web' ? ',caleydo_server_js' : '')+'}');
 
     //tasks
     if (product.app && product.app !== '_select') {
@@ -458,7 +497,7 @@ module.exports = function (grunt) {
           'default_app' : product.app
         }
       };
-      if (product.type === 'static') {
+      if (product.type === 'web') {
         config['caleydo_server_js'] = {
           'bower_components': './bower_components'
         };
