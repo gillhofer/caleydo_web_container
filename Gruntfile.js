@@ -24,7 +24,7 @@ module.exports = function (grunt) {
           },
           { //copy bower_components
             expand: true,
-            dot: false,
+            dot: true,
             dest: 'libs/',
             cwd: '<%=yeoman.tmp%>/',
             src: ['bower_components/**/*']
@@ -308,7 +308,7 @@ module.exports = function (grunt) {
           },
           { //copy static stuff
             expand: true,
-            dot: false,
+            dot: true,
             cwd: '<%=yeoman.tmp%>/bower_components',
             dest: 'bower_components',
             src: ['**/*']
