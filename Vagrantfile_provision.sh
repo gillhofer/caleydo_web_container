@@ -15,7 +15,7 @@ sudo apt-get install -y build-essential git
 echo "--- execution provision scripts: "
 for line in $(find /vagrant/ -maxdepth 2 -name '_vagrant*.sh'); do
   echo "--- execution provision script: $line"
-  ( exec $line )
+  ( exec ${line} )
 done
 
 echo "--- Done, use 'vagrant ssh' for jumping into the VM ---"

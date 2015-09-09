@@ -32,7 +32,7 @@ module.exports = function (grunt) {
           { //copy static stuff
             expand: true,
             dot: false,
-            src: ['static/**/*','LICENSE']
+            src: ['static/**/*','!**/*.{scss|map,less,sass,map}', 'LICENSE']
           },
           { //copy scripts
             expand: true,
@@ -64,7 +64,7 @@ module.exports = function (grunt) {
         tasks: ['ts:dev']
       },
       sass: {
-        files: ['plugins/**/**.scss'],
+        files: ['plugins/**/*.scss', 'static/**/*.scss'],
         tasks: ['sass:dev']
       },
       coffee: {
@@ -76,7 +76,7 @@ module.exports = function (grunt) {
       dist: {                            // target
         files: [{
           expand: true,
-          src: ['plugins/**/*.scss'],
+          src: ['plugins/**/*.scss', 'static/**/*.scss'],
           dest: '',
           ext: '.css'
         }]
@@ -87,7 +87,7 @@ module.exports = function (grunt) {
         },
         files: [{
           expand: true,
-          src: ['plugins/**/*.scss'],
+          src: ['plugins/**/*.scss', 'static/**/*.scss'],
           dest: '',
           ext: '.css'
         }]
@@ -304,14 +304,14 @@ module.exports = function (grunt) {
             dot: false,
             cwd: 'static',
             dest: '.',
-            src: ['**/*']
+            src: ['**/*','!**/*.{scss|map}']
           },
           { //copy static stuff
             expand: true,
             dot: true,
             cwd: '<%=yeoman.tmp%>/bower_components',
             dest: 'bower_components',
-            src: ['**/*']
+            src: ['**/*','!**/*.{scss|map,less,sass,map}']
           },
           { //copy dumped generated files
             expand: true,
