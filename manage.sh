@@ -178,15 +178,18 @@ function clone {
 
   cd plugins
 
-  if [ $# == 1 ] && ([ $1 != git* ] || [ $1 != http* ] ) ; then
+  if ([ $1 != git* ] || [ $1 != http* ] ) ; then
     local url=Caleydo/$1
     if [[ "$1" == */* ]] ; then
       url=$1
     fi
+    shift
+    echo cloning ${prefix}${url}.git $@
     set -vx
-    git clone ${prefix}${url}.git
+    git clone ${prefix}${url}.git $@
     set +vx
   else
+    echo cloning $@
     set -vx
     git clone $@
     set +vx
@@ -321,6 +324,9 @@ publish)
   ;;
 build | server | server_js | dev)
   gruntredirect $@
+  ;;
+autocomplete)
+  echo pull resolve clone clone_ssh clone_deps clone_ssh-deps update_deps update_ssh_deps publish build server server_js dev install search ls
   ;;
 *)
   npmredirect $@
