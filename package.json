@@ -26,7 +26,7 @@
     "jshint-stylish": "^2.0.1",
     "load-grunt-tasks": "^3.2.0",
     "time-grunt": "^1.2.1",
-    "tslint": "^2.3.1-beta"
+    "tslint": "^2.5.0-beta"
   },
   "engines": {
     "node": "~0.10.x"
