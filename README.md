@@ -177,7 +177,7 @@ Install [PyCharm](https://www.jetbrains.com/pycharm/).
  ~~~bash
   #within virtual machine!
   mkdir -p ./_compiler
-  cp ./node_modules/grunt-ts/node_modules/typescript ./_compiler/
+  cp -r ./node_modules/grunt-ts/node_modules/typescript ./_compiler/
  ~~~
 
 TODO

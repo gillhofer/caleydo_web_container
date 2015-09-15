@@ -20,7 +20,7 @@
     "grunt-express": "^1.4.1",
     "grunt-jsdoc": "^0.6.7",
     "grunt-sass": "^1.0.0",
-    "grunt-ts": "^4.2.0-beta.1",
+    "grunt-ts": "^4.2.0",
     "grunt-tsd": "^0.1.0",
     "grunt-tslint": "^2.3.1-beta",
     "jshint-stylish": "^2.0.1",
