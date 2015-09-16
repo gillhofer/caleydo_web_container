@@ -441,14 +441,15 @@ module.exports = function (grunt) {
     //create a pseudo product
     var product = to_product({
       type: options.type,
-      plugins: matching_plugins
+      plugins: matching_plugins,
+      app: '_select'
     },'all_'+options.type, {});
     //products contains a list of all elements to build
     var products = {};
     products[product.id] = product;
     grunt.config.set('dynconfig.products',products);
     grunt.task.run(['compile_products'])
-  })
+  });
 
   grunt.registerTask('compile_products', 'Compiles the product and generates the tasks list', function() {
     var products = grunt.config('dynconfig.products');
@@ -478,7 +479,7 @@ module.exports = function (grunt) {
     }));
     //run the aggregated tasks
     grunt.task.run(tasks);
-  })
+  });
 
   grunt.registerTask('prepare_product', 'Prepares the product to package', function(name) {
     var product = grunt.config('dynconfig.products.'+name);
