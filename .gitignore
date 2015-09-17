@@ -16,6 +16,7 @@
 /debian.txt
 /npm.package.json
 /bower.json
+/wsgi.py
 
 /data
 /config.json
