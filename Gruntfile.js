@@ -387,6 +387,14 @@ module.exports = function (grunt) {
     'package_product'
   ]);
 
+  grunt.registerTask('build', 'Builds Caleydo Web', function(product) {
+    if (product) {
+      grunt.task.run(['package_common', 'package_product:'+product]);
+    } else {
+      grunt.task.run(['default']);
+    }
+  });
+
   function to_product(desc, plugin_name, package_json) {
     //default options
     desc.id = desc.id || plugin_name;
