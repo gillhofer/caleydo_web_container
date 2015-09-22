@@ -706,6 +706,15 @@ if (require.main === module) {
     });
   });
 
+
+
+  program.command('where <plugin>').action(function (plugin) {
+    var repo = guessRepo(plugin);
+    console.log('url:   http://github.com/'+repo);
+    console.log('https: https://github.com/'+repo+'.git');
+    console.log('https: git@github.com:'+repo+'.git');
+  });
+
   program.parse(process.argv);
 
 }
