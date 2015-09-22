@@ -336,7 +336,9 @@ module.exports = function (grunt) {
   ]);
   grunt.registerTask('server_common', [
     'clean:server',
-    'compile']);
+    'compile',
+    'create_dynamic_files'
+  ]);
 
   grunt.registerTask('server_js', [
     'server_common',
@@ -350,6 +352,7 @@ module.exports = function (grunt) {
   ]);
   grunt.registerTask('dev', [
     'compile',
+    'create_dynamic_files',
     'watch'
   ]);
 
@@ -385,14 +388,18 @@ module.exports = function (grunt) {
     });
   });
 
-  grunt.registerTask('create_dynamic_files', 'Creates the dynamic files of Caleydo Web', function() {
-    done = this.async();
-    require('./nanage_caleydo').parse({
-      dir: grunt.config('yeoman.tmp'),
-      bower_components: grunt.option('dynconfig.product.type') === 'web' ? './bower_components' : './libs/bower_components',
+  grunt.registerTask('create_dynamic_files', 'Creates the dynamic files of Caleydo Web', function(product) {
+    var done = this.async();
+    var config = {
+      targetDir: grunt.config('yeoman.tmp'),
       startApp: grunt.option('dynconfig.product.app') || '_select'
-    }).then(function(registry) {
-      return registry.writeDynamicFiles(grunt.config('yeoman.tmp'));
+    };
+    if (product) {
+      config.dir = grunt.config('yeoman.tmp');
+      config.bower_components = grunt.option('dynconfig.product.type') === 'web' ? './bower_components' : './libs/bower_components';
+    }
+    require('./nanage_caleydo').parse(config).then(function(registry) {
+      return registry.writeDynamicFiles(config.targetDir);
     }).then(done);
   });
 

@@ -3,6 +3,7 @@
  */
 
 var fs = require('fs'),
+    path = require('path'),
     Q = require('q'),
     extend = require('dextend');
 
@@ -13,13 +14,17 @@ function guessRepo(name, baseRepo) {
   return baseRepo.split('/')[0] + '/' + name
 }
 
+function debug() {
+  console.info.apply(console, arguments)
+}
+
 function replace_variables_f(config, lookup) {
   return config.replace(/\$\{([^}]+)\}/gi, function (match, variable) {
     var r = lookup(variable);
     if (r) {
       return r;
     }
-    console.log('cant resolve: ${' + variable + '}');
+    debug('cant resolve: ${' + variable + '}');
     return "$unresolved$";
   });
 }
@@ -47,10 +52,10 @@ function Plugin(plugindir, p, desc) {
   this.name = desc.name || p;
   this.version = desc.version || '0.0.1';
   this.description = desc.description || '';
-  this.folder = plugindir + '/' + p;
+  this.folder = path.join(plugindir,p);
   this.folder_name = p;
   this.repository = desc.repository;
-  this.dependencies = desc.peerDependencies;
+  this.dependencies = desc.peerDependencies || {};
   this.deps = [];
   this.extensions = {};
 }
@@ -90,17 +95,60 @@ Object.defineProperty(Plugin.prototype, 'flatDeps', {
 Object.defineProperty(Plugin.prototype, 'isApp', {
   enumerable: true,
   get: function () {
-    return fs.existsSync(this.folder + '/index.html');
+    return fs.existsSync(path.join(this.folder,'index.html'));
   }
 });
 
 function PluginMetaData(config) {
+  var that = this;
   this.config = extend({
     dir: './',
     metadata_file: '/package.json',
     bower_components: 'libs/bower_components',
     startApp: '_select',
-    bower_components_url: '/bower_components'
+    bower_components_url: '/bower_components',
+    dependencies: {
+      target: {
+        web: 'bower.json',
+        node: 'package.json',
+        python: 'requirements.txt'
+      },
+      node_no_devdependencies: false,
+      converter: {
+        web: function (deps) {
+          return JSON.stringify({
+            name: 'caleydo-web',
+            version: '0.0.1',
+            dependencies: deps
+          }, null, 2);
+        },
+        node: function (deps) {
+
+          var ori = require('./'+path.join(that.config.dir, 'package.json'));
+          ori.dependencies = deps;
+          if (that.config.dependencies.node_no_devdependencies) {
+            delete ori.devDependencies;
+          }
+          return JSON.stringify(ori, null, 2);
+        },
+        debian: function (deps) {
+          return Object.keys(deps).map(function (d) {
+            return d + deps[d];
+          }).join(' ')
+        },
+        tsd: function (deps) {
+          return Object.keys(deps).map(function (d) {
+                return d + ';' + deps[d];
+              }).join('\n') + '\n'; //and a final last one
+        },
+        //suitable for python
+        _default: function (deps) {
+          return Object.keys(deps).map(function (d) {
+            return d + deps[d];
+          }).join('\n')
+        }
+      }
+    }
   }, config);
 
   this.plugins = [];
@@ -160,7 +208,7 @@ PluginMetaData.prototype.addDependency = function (type, deps) {
         } else { //merge
           existing[d] = old + ',' + new_;
         }
-        console.log('resolving: ' + old + ' ' + new_ + ' to ' + existing[d]);
+        debug('resolving: ' + old + ' ' + new_ + ' to ' + existing[d]);
       } else {
         existing[d] = deps[d];
       }
@@ -202,22 +250,22 @@ PluginMetaData.prototype._config_requirejs_bower = function (rconfig, dir) {
 
 PluginMetaData.prototype.loadJustPlugin = function (plugindir, dir) {
   var deferred = Q.defer();
-  var metadata_file_abs = plugindir + dir + this.config.metadata_file;
+  var metadata_file_abs = path.join(plugindir, dir, this.config.metadata_file);
   fs.readFile(metadata_file_abs, function (err, data) {
     if (err) {
       console.error('cant parse ' + metadata_file_abs, err);
       deferred.reject(new Error(err));
       return;
     }
-    return new Plugin(plugindir, dir, JSON.parse(data));
+    deferred.resolve(new Plugin(plugindir, dir, JSON.parse(data)));
   });
   return deferred.promise;
 };
 
 PluginMetaData.prototype.addPlugin = function (plugindir, dir) {
   var deferred = Q.defer();
-  var metadata_file_abs = plugindir + dir + this.config.metadata_file;
-  console.log('add plugin ' + metadata_file_abs);
+  var metadata_file_abs = path.join(plugindir, dir, this.config.metadata_file);
+  debug('add plugin ' + metadata_file_abs);
   var that = this;
   fs.readFile(metadata_file_abs, function (err, data) {
     if (err) {
@@ -257,7 +305,7 @@ PluginMetaData.prototype.addPlugin = function (plugindir, dir) {
 };
 
 PluginMetaData.prototype.parseDir = function (plugindir) {
-  console.log('start parsing ' + plugindir);
+  debug('start parsing ' + plugindir);
   var deferred = Q.defer();
   var that = this;
   fs.readdir(plugindir, function (err, files) {
@@ -270,7 +318,7 @@ PluginMetaData.prototype.parseDir = function (plugindir) {
       return function () {
         var d = Q.defer();
         //valid plugin?
-        fs.stat(plugindir + '/' + f + '/' + that.config.metadata_file, function (err, stats) {
+        fs.stat(path.join(plugindir, f,that.config.metadata_file), function (err, stats) {
           if (stats && stats.isFile()) {
             d.resolve(that.addPlugin(plugindir, f));
           } else {
@@ -284,7 +332,7 @@ PluginMetaData.prototype.parseDir = function (plugindir) {
       deferred.resolve(that);
     });
   });
-  return deferred.promise.then(PluginMetaData.prototype.postParse);
+  return deferred.promise;
 };
 
 /**
@@ -297,9 +345,9 @@ PluginMetaData.prototype.parseDirs = function (pluginDirs) {
   //wait for all
   return pluginDirs.map(function (pluginDir) {
     return function () {
-      return that.parseDir(that.config.dir + pluginDir);
+      return that.parseDir(path.join(that.config.dir,pluginDir));
     };
-  }).reduce(Q.when, Q.resolve(that));
+  }).reduce(Q.when, Q.resolve(that)).then(PluginMetaData.prototype.postParse);
 };
 
 PluginMetaData.prototype.postParse = function (that) {
@@ -309,10 +357,10 @@ PluginMetaData.prototype.postParse = function (that) {
     plugins[p.id] = p;
   });
   that.plugins.forEach(function (p) {
-    Object.keys(plugins.dependencies).forEach(function (dep) {
-      var impl = plugins[dep];
+    Object.keys(p.dependencies).forEach(function (dep) {
+      var impl = that.getPlugin(dep);
       if (!impl) {
-        console.warn('cant resolve dependency: ' + dep + ' of plugin ' + p.id);
+        debug('cant resolve dependency: ' + dep + ' of plugin ' + p.id);
       } else {
         p.deps.push(impl);
       }
@@ -326,12 +374,18 @@ PluginMetaData.prototype.postParse = function (that) {
  * generates the dependency files and writes them, e.g. bower.json
  **/
 PluginMetaData.prototype.generateDependencyFiles = function (targetDir) {
-  var options = this.options.dependencies;
+  var options = this.config.dependencies,
+      that = this;
   //generate the dependency files
+    debug('r');
   Object.keys(this.dependencies).forEach(function (d) {
-    var target = targetDir + '/' + (options.target[d] || d + '.txt');
+    debug('r', d);
+    var target = path.join(targetDir, (options.target[d] || d + '.txt'));
+    debug('r');
     var converter = options.converter[d] || options.converter._default;
-    var r = converter(dependencies[d]);
+    debug('r');
+    var r = converter(that.dependencies[d]);
+    debug('r', d);
     fs.writeFileSync(target, r);
   });
 };
@@ -344,7 +398,7 @@ PluginMetaData.prototype.createAppSelector = function () {
   }).forEach(function (app) {
     text.push('<li><a href="/' + app.id + '/">' + app.name + '</a></li>');
   });
-  text.push('</li></body></html>');
+  text.push('</ul></body></html>');
   return text.join('\n');
 };
 
@@ -363,11 +417,8 @@ PluginMetaData.prototype.createRedirect = function (app) {
 
 //index.html
 PluginMetaData.prototype.createStartHTML = function () {
-  if (this.options.startApp && this.options.startApp !== '_select') {
-    var app = this.options.startApp,
-        plugin = this.plugins.filter(function (p) {
-          return p.id === app
-        })[0];
+  if (this.config.startApp && this.config.startApp !== '_select') {
+    var plugin = this.getPlugin(this.config.startApp);
     if (plugin) {
       return this.createRedirect(plugin);
     }
@@ -380,24 +431,22 @@ PluginMetaData.prototype.createStartScript = function () {
   //<script data-app='./main' data-context='/' src='/caleydo_web.js"></script>
 
   //<script data-main="/config-gen.js" src="/bower_components/requirejs/require.js"></script>
-  var base = "(function() {{ \
+  return "(function() { \n\
     var app = document.currentScript.dataset.app; \n\
-    app = app ? '/?app='+app : ''\
+    app = app ? '/?app='+app : '';\n\
     var context = document.currentScript.dataset.context || ''; \n\
     var newScript = document.createElement('script'); \n\
     newScript.type = 'text/javascript'; \n\
     newScript.src = context+'" + this.config.bower_components_url + "/requirejs/require.js'; \n\
     newScript.dataset.main = context+'/caleydo_launcher.js'+app;\n\
     document.getElementsByTagName('head')[0].appendChild(newScript); \n\
-    ; \
-  }}())";
-  return base;
+  }());";
 };
 
 PluginMetaData.prototype.addBowerRequireJSConfig = function (dir, scripts, cssfiles) {
   var deferred = Q.defer();
-  var metadata_file_abs = this.config.dir + this.config.bower_components + '/' + dir + '/.bower.json';
-  console.log('add bower dependency ' + metadata_file_abs);
+  var metadata_file_abs = path.join(this.config.dir,this.config.bower_components,dir,'.bower.json');
+  debug('add bower dependency ' + metadata_file_abs);
   fs.readFile(metadata_file_abs, function (err, data) {
     var metadata, script, value;
     if (err) {
@@ -412,9 +461,9 @@ PluginMetaData.prototype.addBowerRequireJSConfig = function (dir, scripts, cssfi
       //TODO multiple support
     }
     if (script && script.match(/.*\.js$/i)) {
-      scripts[dir] = dir + '/' + script.substring(0, script.length - 3);
+      scripts[dir] = path.join(dir,script.substring(0, script.length - 3));
     } else if (script && script.match(/.*\.css$/i)) {
-      cssfiles[dir] = dir + '/' + script.substring(0, script.length - 4);
+      cssfiles[dir] = path.join(dir,script.substring(0, script.length - 4));
     }
     deferred.resolve(dir);
   });
@@ -423,12 +472,12 @@ PluginMetaData.prototype.addBowerRequireJSConfig = function (dir, scripts, cssfi
 
 PluginMetaData.prototype.deriveBowerRequireJSConfig = function () {
   var that = this;
-  console.log('derive bower config');
+  debug('derive bower config');
   var deferred = Q.defer();
   var scripts = {},
       cssfiles = {};
-  fs.readdir(this.config.dir + this.config.bower_components, function (err, files) {
-    console.log(err);
+  fs.readdir(path.join(this.config.dir,this.config.bower_components), function (err, files) {
+    debug(err);
     var i = 0, l = files.length;
 
     function next() {
@@ -453,9 +502,10 @@ PluginMetaData.prototype.deriveBowerRequireJSConfig = function () {
 
 //caleydo_launcher.js
 PluginMetaData.prototype.createLauncherScript = function () {
+  debug('create launcher script');
   var that = this,
-      baseUrl = '%baseUrl%';
-  this.deriveBowerRequireJSConfig().then(function () {
+      baseUrl = '§baseUrl§';
+  return this.deriveBowerRequireJSConfig().then(function () {
     var c = {
       baseUrl: baseUrl,
       paths: {},
@@ -463,15 +513,14 @@ PluginMetaData.prototype.createLauncherScript = function () {
       config: {}
     };
     //extend with the stored one
-    c = extend(c, this.requirejs_config);
+    c = extend(c, that.requirejs_config);
 
     //inject bower dependencies
-    var that = this;
-    Object.keys(this._bower_configs.scripts).forEach(function (d) {
+    Object.keys(that._bower_configs.scripts).forEach(function (d) {
       var script = that._bower_configs.scripts[d];
       c['paths'][d] = baseUrl + that.config.bower_components_url + '/' + script;
     });
-    Object.keys(this._bower_configs.cssfiles).forEach(function (d) {
+    Object.keys(that._bower_configs.cssfiles).forEach(function (d) {
       var css = that._bower_configs.cssfiles[d];
       c['map']['*'][d] = c['map']['*']['css'] + '!' + baseUrl + that.config.bower_components_url + '/' + css;
     });
@@ -482,56 +531,60 @@ PluginMetaData.prototype.createLauncherScript = function () {
     };
     c = replace_variables(c, variables);
     c = unpack_eval(c);
-    c = c.replace(/%baseUrl%/, '"+context+"');
-
+    c = c.replace(/§baseUrl§/g, '"+context+"');
     var web_plugins = JSON.stringify(that.extensions.web || [], null, ' ');
 
     return "/*global require */\n \(\
-    function() { \
+    function() { \n\
     var app = document.querySelector('script[data-app]'); \n\
     app = app ? app.dataset.app : './main'; \n\
     var context = document.querySelector('script[data-context]'); \n\
     context = context ? context.dataset.context : ''; \n\
-    \
-    require.config(" + c + "); \n\
+    \n\
+    require.config(" + c + "); \n\n\
     require([context+'/caleydo_core/main'], function(C) { \n\
       //init the core at the beginning \n\
       C._init({ \n\
         registry: { \n\
-          baseUrl: context,\
+          baseUrl: context,\n\
           plugins: " + web_plugins + "\n\
         } \n\
       }); \n\
       //request the real main file \n\
       require([app]);\n\
-    });\
-  }())";
+    });\n\
+  }());";
   });
 };
 
 PluginMetaData.prototype.writeDynamicFiles = function (targetDir) {
   var that = this;
   return this.createLauncherScript().then(function (code) {
-    fs.writeFileSync(targetDir + '/caleydo_launcher.js', code);
-    fs.writeFileSync(targetDir + '/caleydo_web.js', that.createStartScript());
-    fs.writeFileSync(targetDir + '/index.html', that.createStartHTML());
+    debug('write launcher script');
+    fs.writeFileSync(path.join(targetDir,'caleydo_launcher.js'), code);
+    debug('write start script');
+    fs.writeFileSync(path.join(targetDir,'caleydo_web.js'), that.createStartScript());
+    debug('write start html');
+    fs.writeFileSync(path.join(targetDir,'index.html'), that.createStartHTML());
+    debug('write dependency files');
     that.generateDependencyFiles(targetDir);
 
-    fs.writeFileSync(targetDir + '/registry.json', JSON.stringify(that.extensions, null, ' '));
+    debug('write registry');
+    fs.writeFileSync(path.join(targetDir, 'registry.json'), JSON.stringify(that.extensions, null, ' '));
   });
 };
 
 exports.parse = function (config) {
   var p = new PluginMetaData(config);
-  return p.parseDirs(config.directories || ['./plugins']);
+  return p.parseDirs(config.directories || ['plugins']);
 };
 
 if (require.main === module) {
   var program = require('commander')
-      .option('--source <source>', 'specify source dir', './')
+      .option('--source <source>', 'specify source dir', '.')
       .option('--bower <bower>', 'specify source relative bower directory', 'libs/bower_components')
       .option('--bower_url <bower_url>', 'bower url at runtime', '/bower_components')
-      .option('--target <target>', 'specify target dir', '.')
+      .option('--target <target>', 'specify target dir', '_tmp')
       .option('--default <default>', 'specify default app', null);
 
   function createReg() {
@@ -550,18 +603,22 @@ if (require.main === module) {
       bower_components_url: program.bower_url,
       startApp: program.default
     });
-    return p.loadJustPlugin('./plugins', plugin);
+    return p.loadJustPlugin(path.join(p.config.dir,'plugins'), plugin);
   }
 
   program.command('gen').action(function () {
     createReg().then(function (registry) {
       registry.writeDynamicFiles(program.target)
+    }).fail(function(error) {
+      console.error(error);
     });
   });
 
   program.command('catRepo <plugin>').action(function (plugin) {
-    parsePlugin(plugin).then(function (p) {
+   parsePlugin(plugin).then(function (p) {
       console.log(p.repository);
+    }).fail(function(error) {
+      console.error(error);
     });
   });
 
@@ -570,6 +627,8 @@ if (require.main === module) {
       Object.keys(p.dependencies).forEach(function (dep) {
         console.log(dep + ';' + guessRepo(dep, p.repository));
       });
+    }).fail(function(error) {
+      console.error(error);
     });
   });
 
@@ -577,8 +636,10 @@ if (require.main === module) {
     createReg().then(function (registry) {
       registry.plugins.forEach(function (p) {
         console.log(p.id + ';' + p.name);
-      })
-    })
+      });
+    }).fail(function(error) {
+      console.error(error);
+    });
   });
 
   program.parse(process.argv);
