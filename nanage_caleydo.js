@@ -7,7 +7,6 @@ var fs = require('fs'),
     Q = require('q');
 
 var TYPE_OBJECT = '[object Object]';
-var TYPE_ARRAY  = '[object Array]';
 
 //based on https://github.com/vladmiller/dextend/blob/master/lib/dextend.js
 function extend(target) {
@@ -618,7 +617,7 @@ PluginMetaData.prototype.writeDynamicFiles = function (targetDir, targetHTMLDir)
 
 exports.parse = function (config) {
   var p = new PluginMetaData(config);
-  return p.parseDirs(config.directories || ['plugins']);
+  return p.parseDirs(config.directories || ['.', 'plugins']);
 };
 
 if (require.main === module) {
@@ -688,6 +687,21 @@ if (require.main === module) {
         console.log(p.id + ';' + p.name);
       });
     }).fail(function(error) {
+      console.error(error);
+    });
+  });
+
+  program.command('catExternalDeps [type...]').action(function (types) {
+    createReg().then(function (registry) {
+      function dumpDeps(type) {
+        var base = registry.dependencies[type];
+        console.log('# ' + type + ' dependencies:');
+        Object.keys(base).forEach(function(name) {
+          console.log(name+base[name]);
+        });
+      }
+      types = types || Object.keys(registry.dependencies);
+      types.forEach(dumpDeps);
       console.error(error);
     });
   });
