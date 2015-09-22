@@ -391,15 +391,18 @@ module.exports = function (grunt) {
   grunt.registerTask('create_dynamic_files', 'Creates the dynamic files of Caleydo Web', function(product) {
     var done = this.async();
     var config = {
-      targetDir: grunt.config('yeoman.tmp'),
-      startApp: grunt.option('dynconfig.product.app') || '_select'
+      startApp: grunt.option('dynconfig.product.app') || '_select',
+      targetDir : '.',
+      targetHTMLDir : './static'
     };
     if (product) {
       config.dir = grunt.config('yeoman.tmp');
+      config.targetDir = grunt.config('yeoman.tmp');
+      config.targetHTMLDir = grunt.config('yeoman.tmp');
       config.bower_components = grunt.option('dynconfig.product.type') === 'web' ? './bower_components' : './libs/bower_components';
     }
     require('./nanage_caleydo').parse(config).then(function(registry) {
-      return registry.writeDynamicFiles(config.targetDir);
+      return registry.writeDynamicFiles(config.targetDir, config.targetHTMLDir);
     }).then(done);
   });
 

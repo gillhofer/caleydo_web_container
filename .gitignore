@@ -16,6 +16,11 @@
 /debian.txt
 /npm.package.json
 /bower.json
+/tsd.txt
+/registry.json
+/static/caleydo_launcher.js
+/static/caleydo_web.js
+/static/index.html
 /wsgi.py
 
 /data

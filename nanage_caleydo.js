@@ -4,8 +4,41 @@
 
 var fs = require('fs'),
     path = require('path'),
-    Q = require('q'),
-    extend = require('dextend');
+    Q = require('q');
+
+var TYPE_OBJECT = '[object Object]';
+var TYPE_ARRAY  = '[object Array]';
+
+//based on https://github.com/vladmiller/dextend/blob/master/lib/dextend.js
+function extend(target) {
+	var result = null;
+
+	for (var i = 0; i < arguments.length; i++) {
+		var toMerge = arguments[i],
+			keys = Object.keys(toMerge);
+
+		if (result === null) {
+			result = toMerge;
+			continue;
+		}
+
+		for (var j = 0; j < keys.length; j++) {
+			var keyName = keys[j];
+			var value   = toMerge[keyName];
+
+			if (Object.prototype.toString.call(value) == TYPE_OBJECT) {
+				if (result[keyName] === undefined) {
+					result[keyName] = {};
+				}
+				result[keyName] = extend(result[keyName], value);
+			} else {
+				result[keyName] = value;
+			}
+		}
+	}
+
+	return result;
+}
 
 function guessRepo(name, baseRepo) {
   if (!baseRepo || baseRepo.match(/Caleydo\/.*/) || name.match(/caleydo.*/)) {
@@ -14,9 +47,7 @@ function guessRepo(name, baseRepo) {
   return baseRepo.split('/')[0] + '/' + name
 }
 
-function debug() {
-  console.info.apply(console, arguments)
-}
+var debug = function() { }; //console.info;
 
 function replace_variables_f(config, lookup) {
   return config.replace(/\$\{([^}]+)\}/gi, function (match, variable) {
@@ -59,6 +90,17 @@ function Plugin(plugindir, p, desc) {
   this.deps = [];
   this.extensions = {};
 }
+Plugin.prototype.simplify = function () {
+  return {
+    id: this.id,
+    name: this.name,
+    version: this.version,
+    description: this.description,
+    folder: this.folder,
+    repository: this.repository,
+    dependencies: Object.keys(this.dependencies)
+  };
+};
 Object.defineProperty(Plugin.prototype, 'depRepos', {
   enumerable: true,
   get: function () {
@@ -377,15 +419,10 @@ PluginMetaData.prototype.generateDependencyFiles = function (targetDir) {
   var options = this.config.dependencies,
       that = this;
   //generate the dependency files
-    debug('r');
   Object.keys(this.dependencies).forEach(function (d) {
-    debug('r', d);
     var target = path.join(targetDir, (options.target[d] || d + '.txt'));
-    debug('r');
     var converter = options.converter[d] || options.converter._default;
-    debug('r');
     var r = converter(that.dependencies[d]);
-    debug('r', d);
     fs.writeFileSync(target, r);
   });
 };
@@ -542,12 +579,12 @@ PluginMetaData.prototype.createLauncherScript = function () {
     context = context ? context.dataset.context : ''; \n\
     \n\
     require.config(" + c + "); \n\n\
-    require([context+'/caleydo_core/main'], function(C) { \n\
+    require(['../caleydo_core/main'], function(C) { \n\
       //init the core at the beginning \n\
       C._init({ \n\
         registry: { \n\
           baseUrl: context,\n\
-          plugins: " + web_plugins + "\n\
+          extensions: " + web_plugins + "\n\
         } \n\
       }); \n\
       //request the real main file \n\
@@ -557,20 +594,25 @@ PluginMetaData.prototype.createLauncherScript = function () {
   });
 };
 
-PluginMetaData.prototype.writeDynamicFiles = function (targetDir) {
+PluginMetaData.prototype.writeDynamicFiles = function (targetDir, targetHTMLDir) {
+  targetHTMLDir = targetHTMLDir || targetDir;
   var that = this;
   return this.createLauncherScript().then(function (code) {
     debug('write launcher script');
-    fs.writeFileSync(path.join(targetDir,'caleydo_launcher.js'), code);
+    fs.writeFileSync(path.join(targetHTMLDir,'caleydo_launcher.js'), code);
     debug('write start script');
-    fs.writeFileSync(path.join(targetDir,'caleydo_web.js'), that.createStartScript());
+    fs.writeFileSync(path.join(targetHTMLDir,'caleydo_web.js'), that.createStartScript());
     debug('write start html');
-    fs.writeFileSync(path.join(targetDir,'index.html'), that.createStartHTML());
+    fs.writeFileSync(path.join(targetHTMLDir,'index.html'), that.createStartHTML());
     debug('write dependency files');
     that.generateDependencyFiles(targetDir);
 
     debug('write registry');
-    fs.writeFileSync(path.join(targetDir, 'registry.json'), JSON.stringify(that.extensions, null, ' '));
+    fs.writeFileSync(path.join(targetDir, 'registry.json'), JSON.stringify({
+      plugins: that.plugins.map(function(p) { return p.simplify(); }),
+      extensions: that.extensions
+    }, null, ' '));
+    debug('done');
   });
 };
 
@@ -582,12 +624,17 @@ exports.parse = function (config) {
 if (require.main === module) {
   var program = require('commander')
       .option('--source <source>', 'specify source dir', '.')
+      .option('--debug', 'debug output', false)
       .option('--bower <bower>', 'specify source relative bower directory', 'libs/bower_components')
       .option('--bower_url <bower_url>', 'bower url at runtime', '/bower_components')
-      .option('--target <target>', 'specify target dir', '_tmp')
+      .option('--target <target>', 'specify target dir', '.')
+      .option('--targetHTML <targetHTML>', 'specify target dir', './static')
       .option('--default <default>', 'specify default app', null);
 
   function createReg() {
+    if (program.debug) {
+      debug = console.info;
+    }
     return exports.parse({
       dir: program.source,
       bower_components: program.bower,
@@ -597,6 +644,9 @@ if (require.main === module) {
   }
 
   function parsePlugin(plugin) {
+    if (program.debug) {
+      debug = console.info;
+    }
     var p = new PluginMetaData({
       dir: program.source,
       bower_components: program.bower,
@@ -608,7 +658,7 @@ if (require.main === module) {
 
   program.command('gen').action(function () {
     createReg().then(function (registry) {
-      registry.writeDynamicFiles(program.target)
+      registry.writeDynamicFiles(program.target, program.targetHTML)
     }).fail(function(error) {
       console.error(error);
     });

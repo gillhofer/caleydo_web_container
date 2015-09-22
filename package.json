@@ -2,10 +2,15 @@
   "name": "caledo-web",
   "description": "Caleydo Web Container",
   "version": "0.0.1",
-  "license" : "SEE LICENSE IN LICENSE",
+  "license": "SEE LICENSE IN LICENSE",
   "repository": "Caleydo/caleydo_web_container",
   "private": true,
   "dependencies": {
+    "express": "4.x",
+    "fast-csv": "0.5.x",
+    "commander": "^2.5.0",
+    "dextend": "~0.1.1",
+    "comment-json": "~0.1.11"
   },
   "devDependencies": {
     "grunt": "^0.4.5",
@@ -28,8 +33,7 @@
     "time-grunt": "^1.2.1",
     "tslint": "^2.5.0-beta",
     "commander": "^2.5.0",
-    "q": "~1.0.1",
-    "dextend": "~0.1.1"
+    "q": "~1.0.1"
   },
   "engines": {
     "node": "~0.10.x"
