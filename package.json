@@ -6,21 +6,18 @@
   "repository": "Caleydo/caleydo_web_container",
   "private": true,
   "dependencies": {
-    "express": "4.x",
-    "fast-csv": "0.5.x",
-    "commander": "^2.5.0",
-    "dextend": "~0.1.1",
-    "comment-json": "~0.1.11"
+
   },
   "devDependencies": {
+    "caleydo_tool": "Caleydo/caleydo_tool",
     "grunt": "^0.4.5",
     "grunt-bg-shell": "^2.3.1",
     "grunt-contrib-clean": "^0.6.0",
     "grunt-contrib-coffee": "^0.13.0",
+    "grunt-contrib-compress": "^0.13.0",
     "grunt-contrib-copy": "^0.8.0",
     "grunt-contrib-jshint": "^0.11.2",
     "grunt-contrib-watch": "^0.6.1",
-    "grunt-contrib-compress": "^0.13.0",
     "grunt-debian-package": "^0.1.11",
     "grunt-express": "^1.4.1",
     "grunt-jsdoc": "^0.6.7",
@@ -31,9 +28,7 @@
     "jshint-stylish": "^2.0.1",
     "load-grunt-tasks": "^3.2.0",
     "time-grunt": "^1.2.1",
-    "tslint": "^2.5.0-beta",
-    "commander": "^2.5.0",
-    "q": "~1.0.1"
+    "tslint": "^2.5.0-beta"
   },
   "engines": {
     "node": "~0.10.x"

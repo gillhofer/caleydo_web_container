@@ -382,7 +382,7 @@ module.exports = function (grunt) {
 
   grunt.registerTask('create_registry', 'Creates the Caleydo Registry', function() {
     var done = this.async();
-    require('./nanage_caleydo').parse({}).then(function(registry) {
+    require('caleydo_tool/caleydo').parse({}).then(function(registry) {
       grunt.config.set('dynconfig.registry',registry);
       done();
     });
@@ -401,7 +401,7 @@ module.exports = function (grunt) {
       config.targetHTMLDir = grunt.config('yeoman.tmp');
       config.bower_components = grunt.option('dynconfig.product.type') === 'web' ? './bower_components' : './libs/bower_components';
     }
-    require('./nanage_caleydo').parse(config).then(function(registry) {
+    require('caleydo_tool/caleydo').parse(config).then(function(registry) {
       return registry.writeDynamicFiles(config.targetDir, config.targetHTMLDir);
     }).then(done);
   });
