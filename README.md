@@ -34,7 +34,7 @@ Create Dev Environment
 ----------------------
 
 0. *Windows Only*: Install [Git](http://git-scm.com/download/win)
-1. Install [Vagrant](http://www.vagrantup.com/) and [VirtualBox](https://www.virtualbox.org/) (*NOT* Version 5 there is some bug with symbolic links)
+1. Install [Vagrant](http://www.vagrantup.com/) and [VirtualBox](https://www.virtualbox.org/)
   Vagrant is used for creating a controlled environment using a virtual machine provided by VirtualBox
 
 2. Clone this repository
