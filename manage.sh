@@ -55,16 +55,16 @@ function install_pip_dependencies {
   fi
 }
 function install_npm_dependencies {
-  if [ -f _tmp/package.json ] ; then
+  if [ -f npm.package.json ] ; then
     echo "--- installing npm dependencies ---"
     mv "package.json" "ori.package.json"
-    mv "_tmp/package.json" "package.json"
+    mv "npm.package.json" "package.json"
 
     set -vx #to turn echoing on and
     sudo npm install
     set +vx #to turn them both off
 
-    rm "package.json"
+    mv "package.json" "npm.package.json"
     mv "ori.package.json" "package.json"
   fi
 }
@@ -110,7 +110,7 @@ function resolve {
 
   ensure_in_vm
   echo "--- resolving dependencies ---"
-  node_modules/.bin/caleydo --env=vagrant gen
+  node_modules/.bin/caleydo deps
 
   install_apt_dependencies
   install_yum_dependencies
@@ -126,7 +126,7 @@ function resolve_dev {
   ###################################
 
   echo "--- resolving dev dependencies ---"
-  node_modules/.bin/caleydo --env=vagrant gen
+  node_modules/.bin/caleydo deps
 
   install_tsd_dependencies
 }
@@ -256,18 +256,15 @@ function npmredirect {
   ###################################
 
   if [ "`whoami`" == "vagrant" ] ; then
-    #inside vm
-    mkdir -p ~/caleydo_web/plugins
-    if [ -d "plugins" ] ; then
-      if [ ! -e "/home/vagrant/caleydo_web/plugins/node_modules" ] ; then
-        ln -sf `pwd`/plugins ~/caleydo_web/plugins/node_modules
-      fi
-    else
-      mkdir ~/caleydo_web/plugins/node_modules
-    fi
-    cd ~/caleydo_web/plugins
-  else
-    # outside on windows
+    #inside vm we have the tool
+    set -vx #to turn echoing on and
+    node_modules/.bin/caleydo $@
+    set +vx #to turn them both off
+  elif which caleydo >/dev/null; then #check if we have the caleydo tool
+    set -vx #to turn echoing on and
+    caleydo $@
+    set +vx #to turn them both off
+  else # outside on windows or other os
     #outside of vm use move if we are on a linux system else just link
     mkdir -p _npmenv
     if [ -d "plugins" ] ; then
@@ -280,22 +277,18 @@ function npmredirect {
       mkdir _npmenv/node_modules
     fi
     cd _npmenv
-  fi
 
-  #create the link to our own registry
-  echo "registry=$REGISTRY" > .npmrc
 
-  set -vx #to turn echoing on and
+    #create the link to our own registry
+    echo "registry=$REGISTRY" > .npmrc
 
-  npm $@
+    set -vx #to turn echoing on and
 
-  set +vx #to turn them both off
+    npm $@
 
-  #recreate original structure
-  if [ "`whoami`" == "vagrant" ] ; then
-    #inside vm
-    rm ~/caleydo_web/plugins
-  else
+    set +vx #to turn them both off
+
+    #recreate original structure
     cd ..
     rm -r _npmenv
   fi
