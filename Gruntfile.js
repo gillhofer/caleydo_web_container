@@ -364,7 +364,7 @@ module.exports = function (grunt) {
 
   grunt.registerTask('default', [
     'package_common',
-    'tslint',
+    't',
     'jshint',
     'create_registry',
     'all_product:web',
@@ -382,7 +382,14 @@ module.exports = function (grunt) {
 
   grunt.registerTask('create_registry', 'Creates the Caleydo Registry', function() {
     var done = this.async();
-    require('caleydo_tool/caleydo').parse({}).then(function(registry) {
+
+    console.log('start');
+    var m = require('caleydo_tool');
+    console.log('start');
+    m.parse({
+      debug: true
+    }).then(function(registry) {
+      console.log('generated');
       grunt.config.set('dynconfig.registry',registry);
       done();
     });
@@ -391,18 +398,21 @@ module.exports = function (grunt) {
   grunt.registerTask('create_dynamic_files', 'Creates the dynamic files of Caleydo Web', function(product) {
     var done = this.async();
     var config = {
-      startApp: grunt.option('dynconfig.product.app') || '_select',
-      targetDir : '.',
-      targetHTMLDir : './static'
+      default_app: grunt.option('dynconfig.product.app') || '_select',
+      generate: {
+
+      }
     };
     if (product) {
-      config.dir = grunt.config('yeoman.tmp');
-      config.targetDir = grunt.config('yeoman.tmp');
-      config.targetHTMLDir = grunt.config('yeoman.tmp');
+      config.directory = grunt.config('yeoman.tmp')+'/plugins';
+      config.generate.registry_directory = grunt.config('yeoman.tmp');
+      config.generate.external_dependency_directory = grunt.config('yeoman.tmp');
+      config.generate.html_directory = grunt.config('yeoman.tmp');
       config.bower_components = grunt.option('dynconfig.product.type') === 'web' ? './bower_components' : './libs/bower_components';
     }
-    require('caleydo_tool/caleydo').parse(config).then(function(registry) {
-      return registry.writeDynamicFiles(config.targetDir, config.targetHTMLDir);
+    require('caleydo_tool').parse(config).then(function(registry) {
+      console.log('generated');
+      return registry.writeAllFiles();
     }).then(done);
   });
 

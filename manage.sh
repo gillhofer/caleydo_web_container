@@ -21,8 +21,9 @@ function pull {
   cd ..
 }
 
+
 function install_apt_dependencies {
-  if [ -f debian.txt ] ; then
+  if [ -f debian.txt ] && [ which apt-get >/dev/null ]; then
     echo "--- installing apt dependencies ---"
     wd="`pwd`"
     cd /tmp #switch to tmp directory
@@ -32,21 +33,32 @@ function install_apt_dependencies {
     cd ${wd}
   fi
 }
+function install_yum_dependencies {
+  if [ -f redhat.txt ] && [ which yum >/dev/null ]; then
+    echo "--- installing yum dependencies ---"
+    cd /tmp #switch to tmp directory
+    set -vx #to turn echoing on and
+    sudo yum install -y supervisor python-pip python-devel zlib-devel `cat ${basedir}/redhat.txt`
+    set +vx #to turn them both off
+    cd ${basedir}
+    rm redhat.txt
+  fi
+}
 function install_pip_dependencies {
-  if [ -f requirements.txt ] ; then
+  if [ -f _tmp/requirements.txt ] ; then
     echo "--- installing pip dependencies ---"
     wd="`pwd`"
     cd /tmp #switch to tmp directory
-    sudo pip install -r ${wd}/requirements.txt
+    sudo pip install -r ${wd}/_tmp/requirements.txt
     set -vx #to turn echoing on and
     cd ${wd}
   fi
 }
 function install_npm_dependencies {
-  if [ -f npm.package.json ] ; then
+  if [ -f _tmp/package.json ] ; then
     echo "--- installing npm dependencies ---"
     mv "package.json" "ori.package.json"
-    mv "npm.package.json" "package.json"
+    mv "_tmp/package.json" "package.json"
 
     set -vx #to turn echoing on and
     sudo npm install
@@ -101,6 +113,7 @@ function resolve {
   node_modules/.bin/caleydo --env=vagrant gen
 
   install_apt_dependencies
+  install_yum_dependencies
   install_pip_dependencies
   install_npm_dependencies
   install_bower_dependencies
