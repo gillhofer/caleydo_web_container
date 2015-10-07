@@ -13,7 +13,7 @@ function pull {
   echo "--- pull plugins ---"
   cd plugins
   find . -name .git -type d -prune | while read d; do
-    cd $d/..
+    cd ${d}/..
     echo "--- pull plugin $PWD"
     git pull
     cd $OLDPWD
@@ -21,33 +21,32 @@ function pull {
   cd ..
 }
 
-
 function install_apt_dependencies {
-  if [ -f _tmp/debian.txt ] ; then
+  if [ -f debian.txt ] ; then
     echo "--- installing apt dependencies ---"
     wd="`pwd`"
     cd /tmp #switch to tmp directory
     set -vx #to turn echoing on and
-    sudo apt-get install -y `cat $wd/_tmp/debian.txt`
+    sudo apt-get install -y `cat ${wd}/debian.txt`
     set +vx #to turn them both off
-    cd $wd
+    cd ${wd}
   fi
 }
 function install_pip_dependencies {
-  if [ -f _tmp/requirements.txt ] ; then
+  if [ -f requirements.txt ] ; then
     echo "--- installing pip dependencies ---"
     wd="`pwd`"
     cd /tmp #switch to tmp directory
-    sudo pip install -r $wd/_tmp/requirements.txt
+    sudo pip install -r ${wd}/requirements.txt
     set -vx #to turn echoing on and
-    cd $wd
+    cd ${wd}
   fi
 }
 function install_npm_dependencies {
-  if [ -f _tmp/package.json ] ; then
+  if [ -f npm.package.json ] ; then
     echo "--- installing npm dependencies ---"
     mv "package.json" "ori.package.json"
-    mv "_tmp/package.json" "package.json"
+    mv "npm.package.json" "package.json"
 
     set -vx #to turn echoing on and
     sudo npm install
@@ -58,26 +57,24 @@ function install_npm_dependencies {
   fi
 }
 function install_bower_dependencies {
-  if [ -f _tmp/bower.json ] ; then
+  if [ -f bower.json ] ; then
     echo "--- installing bower dependencies ---"
-    mv "_tmp/bower.json" "bower.json"
     set -vx #to turn echoing on and
     bower --config.interactive=false install
     set +vx #to turn them both off
-    mv "bower.json" "_tmp/bower.json"
   fi
 }
 
 function install_tsd_dependencies {
-  if [ -f _tmp/tsd.txt ] ; then
+  if [ -f tsd.txt ] ; then
     echo "--- installing tsd dependencies ---"
 
     while IFS=';' read name sha1
     do
       set -vx #to turn echoing on and
-      tsd install $name --commit $sha1
+      tsd install ${name} --commit ${sha1}
       set +vx #to turn them both off
-    done < _tmp/tsd.txt
+    done < tsd.txt
     rm -f tsd.json
 
     set -vx #to turn echoing on and
@@ -101,7 +98,7 @@ function resolve {
 
   ensure_in_vm
   echo "--- resolving dependencies ---"
-  grunt resolve_dependencies:dev
+  node_modules/.bin/caleydo --env=vagrant gen
 
   install_apt_dependencies
   install_pip_dependencies
@@ -116,7 +113,7 @@ function resolve_dev {
   ###################################
 
   echo "--- resolving dev dependencies ---"
-  grunt resolve_dependencies:dev
+  node_modules/.bin/caleydo --env=vagrant gen
 
   install_tsd_dependencies
 }
@@ -228,6 +225,17 @@ function publish {
   npm --registry="${REGISTRY}" publish $@
 }
 
+function version {
+  ###################################
+  # publishes a plugin
+  ###################################
+  cd plugins/$1
+  shift
+  set -vx
+
+  npm --registry="${REGISTRY}" version $@
+}
+
 
 function npmredirect {
   ###################################
@@ -251,7 +259,7 @@ function npmredirect {
     mkdir -p _npmenv
     if [ -d "plugins" ] ; then
       if [ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" -o "$(expr substr $(uname -s) 1 6)" == "CYGWIN" ]; then
-        mv plugins _npmenv/node_modules
+        cmd <<< "mklink /J \"_npmenv\node_modules\" \"plugins\"" > /dev/null
       else
         ln -s `pwd`/plugins _npmenv/node_modules
       fi
@@ -275,10 +283,6 @@ function npmredirect {
     #inside vm
     rm ~/caleydo_web/plugins
   else
-    #outside of vm use move if we are on a linux system else just link
-    if [ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" -o "$(expr substr $(uname -s) 1 6)" == "CYGWIN" ]; then
-      mv node_modules ../plugins
-    fi
     cd ..
     rm -r _npmenv
   fi
@@ -323,11 +327,15 @@ publish)
   shift
   publish $@
   ;;
+version)
+  shift
+  version $@
+  ;;
 build | server | server_js | dev)
   gruntredirect $@
   ;;
 autocomplete)
-  echo pull resolve clone clone_ssh clone_deps clone_ssh-deps update_deps update_ssh_deps publish build server server_js dev install search ls
+  echo pull resolve clone clone_ssh clone_deps clone_ssh-deps update_deps update_ssh_deps publish version build server server_js dev install search ls
   ;;
 *)
   npmredirect $@
