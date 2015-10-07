@@ -1,0 +1,21 @@
+{
+  "config": {
+    "directory": "plugins",
+    "registry": "http://registry.caleydo.org",
+    "generate": {
+      "index.html": true,
+      "base_url": "",
+      "main_relative_directory_url": "..",
+      "html_directory": "static",
+      "external_dependency_directory": "."
+    },
+    "dependencies": {
+      "target": {
+        "node": "npm.package.json"
+      }
+    }
+  },
+  "plugins": {
+
+  }
+}
