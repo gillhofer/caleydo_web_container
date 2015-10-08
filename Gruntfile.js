@@ -22,11 +22,23 @@ module.exports = function (grunt) {
             dest: 'plugins/',
             src: ['<%=dynconfig.product.include%>/**/*', '!*/_*/**','!**/*.<%=dynconfig.exclude%>']
           },
+          { //copy static stuff
+            expand: true,
+            dot: false,
+            cwd: 'static/',
+            dest: 'static/',
+            src: ['**/*','!**/*.{scss,less,sass,map}','!{index.html,caleydo_web.js,caleydo_launcher.js}']
+          },
+          { //copy static stuff
+            expand: true,
+            dot: false,
+            src: ['LICENSE']
+          },
           { //copy the plugins
             expand: true,
             dot: false,
             cwd: '<%=yeoman.tmp%>/',
-            dest: 'plugins/',
+            dest: 'static/',
             src: ['index.html', 'caleydo_web.js', 'caleydo_launcher.js']
           },
           { //copy bower_components
@@ -35,11 +47,6 @@ module.exports = function (grunt) {
             dest: 'libs/',
             cwd: '<%=yeoman.tmp%>/',
             src: ['bower_components/**/*']
-          },
-          { //copy static stuff
-            expand: true,
-            dot: false,
-            src: ['static/**/*','!**/*.{scss|map,less,sass,map}', 'LICENSE']
           },
           { //copy scripts
             expand: true,
@@ -242,33 +249,9 @@ module.exports = function (grunt) {
         bg: false
       }
     },
-    resolve_dependencies: {
-      product: {
-        options: {
-          plugins: 'plugins/<%=dynconfig.plugins.resolve%>/**/package.json',
-          node_no_devdependencies: true
-        }
-      },
-      dev: {
-
-      }
-    },
-    copy: {
-      web: {
-        files: [
-          { //copy the plugins
-            expand: true,
-            dot: false,
-            cwd: 'plugins/',
-            dest: '<%=yeoman.tmp%>/plugins/',
-            src: ['<%=dynconfig.product.resolve%>/**/*', '!*/_*/**','!**/*.<%=dynconfig.exclude%>']
-          }
-        ]
-      }
-    },
     compress: {
       options: {
-        archive: '<%=yeoman.dist%>/caleydo_<%=dynconfig.product.id%>.<%=dynconfig.extension%>'
+        archive: '<%=yeoman.dist%>/caleydo_<%=dynconfig.product.id%>.<%=dynconfig.product.package%>'
       },
       package_web: {
         files: [
@@ -284,14 +267,19 @@ module.exports = function (grunt) {
             dot: false,
             cwd: 'static',
             dest: '.',
-            src: ['**/*','!**/*.{scss|map}']
+            src: ['**/*','!**/*.{scss,less,sass,map}','!{index.html,caleydo_web.js,caleydo_launcher.js}']
+          },
+          { //copy static stuff
+            expand: true,
+            dot: false,
+            src: ['LICENSE']
           },
           { //copy static stuff
             expand: true,
             dot: true,
             cwd: '<%=yeoman.tmp%>/bower_components',
             dest: 'bower_components',
-            src: ['**/*','!**/*.{scss|map,less,sass,map}']
+            src: ['**/*','!**/*.{scss,less,sass,map}']
           },
           { //copy the plugins
             expand: true,
@@ -308,7 +296,7 @@ module.exports = function (grunt) {
             expand: true,
             dot: false,
             cwd: '<%=yeoman.tmp%>/',
-            src: ['requirements.txt', 'debian.txt', 'config.json', 'bower.json']
+            src: ['requirements.txt', 'debian.txt', 'config.json', 'bower.json', 'registry.json']
           }
         ])
       },
@@ -318,14 +306,9 @@ module.exports = function (grunt) {
             expand: true,
             dot: false,
             cwd: '<%=yeoman.tmp%>/',
-            src: ['config.json', 'debian.txt', 'package.json', 'bower.json']
+            src: ['config.json', 'debian.txt', 'package.json', 'bower.json', 'registry.json']
           }
         ])
-      }
-    },
-    package_product: {
-      options: {
-        products: ['plugins/*/_deploy/product.json']
       }
     }
   });
@@ -364,7 +347,7 @@ module.exports = function (grunt) {
 
   grunt.registerTask('default', [
     'package_common',
-    't',
+    'tslint',
     'jshint',
     'create_registry',
     'all_product:web',
@@ -380,40 +363,48 @@ module.exports = function (grunt) {
     }
   });
 
-  grunt.registerTask('create_registry', 'Creates the Caleydo Registry', function() {
+  grunt.registerTask('create_registry', 'Creates the Caleydo Registry', function(product) {
     var done = this.async();
 
-    console.log('start');
-    var m = require('caleydo_tool');
-    console.log('start');
-    m.parse({
-      debug: true
-    }).then(function(registry) {
-      console.log('generated');
-      grunt.config.set('dynconfig.registry',registry);
-      done();
-    });
-  });
-
-  grunt.registerTask('create_dynamic_files', 'Creates the dynamic files of Caleydo Web', function(product) {
-    var done = this.async();
     var config = {
-      default_app: grunt.option('dynconfig.product.app') || '_select',
+      debug: true,
       generate: {
 
       }
     };
+
     if (product) {
-      config.directory = grunt.config('yeoman.tmp')+'/plugins';
-      config.generate.registry_directory = grunt.config('yeoman.tmp');
+      config.default_app = grunt.config('dynconfig.product.app') || '_select';
+      config.filter = grunt.config('dynconfig.product.include');
       config.generate.external_dependency_directory = grunt.config('yeoman.tmp');
+      config.generate.registry_directory = grunt.config('yeoman.tmp');
       config.generate.html_directory = grunt.config('yeoman.tmp');
-      config.bower_components = grunt.option('dynconfig.product.type') === 'web' ? './bower_components' : './libs/bower_components';
+      config.dependencies = { target: { node: 'package.json' } };
+      config.bower_components = grunt.config('yeoman.tmp')+'/bower_components';
+      if (grunt.config('dynconfig.product.type') === 'web') {
+        config.generate.main_relative_directory_url = '.';
+      }
     }
-    require('caleydo_tool').parse(config).then(function(registry) {
-      console.log('generated');
-      return registry.writeAllFiles();
-    }).then(done);
+
+    var caleydo_tool = require('caleydo_tool');
+    caleydo_tool.parse(config).then(function(registry) {
+      grunt.config.set(product ? 'dynconfig.product.registry' : 'dynconfig.registry',registry);
+      done();
+    }).error(function(error) {
+      console.error(error);
+    });
+  });
+
+  grunt.registerTask('create_dynamic_files', 'Creates the dynamic launcher files of Caleydo Web', function(product) {
+    var done = this.async();
+    var registry = grunt.config(product ? 'dynconfig.product.registry' : 'dynconfig.registry');
+    registry.writeDynamicFiles().then(done);
+  });
+
+  grunt.registerTask('create_dynamic_dependencies', 'Creates the dynamic dependency files of Caleydo Web', function(product) {
+    var done = this.async();
+    var registry = grunt.config(product ? 'dynconfig.product.registry' : 'dynconfig.registry');
+    registry.writeDependencyFiles().then(done);
   });
 
   grunt.registerTask('package_product', 'Packages all products', function(justProduct) {
@@ -424,9 +415,8 @@ module.exports = function (grunt) {
       if (justProduct && justProduct !== product.id) {
         return;
       }
-      var deps = product.base.flatDeps.map(function(d) { return d.id; });
+      var deps = product.plugins.map(function(d) { return d.id; });
       product.include = '{'+deps.join(',')+'}';
-      product.resolve = '{'+deps.join(',')+'}';
       products[product.id] = product;
     });
     //products contains a list of all elements to build
@@ -439,34 +429,43 @@ module.exports = function (grunt) {
     var options = this.options({
       type: type || 'python'
     });
-    var done = this.async();
-    //FIXME
     var deps = {};
 
-    var matching_plugins = registry.plugins.filter(function(plugin) {
+    registry.plugins.forEach(function(plugin) {
       var extensions = plugin.extensions;
-      if (extensions[options.type] || extensions['web']) {
-        plugin.flatDeps.forEach(function(dep) {
-          deps[dep.id] = true;
-        });
-        return true;
+      if ((extensions[options.type] || extensions['web'])) {
+        deps[plugin.id] = plugin;
       }
-      return false;
     });
 
-    //create a pseudo product
+    //console.log(Object.keys(deps));
+    //check if we have all the dependencies assuming if there are some missing dependencies, we can't use it
+    var removed = false;
+    do {
+      removed = false;
+      Object.keys(deps).forEach(function(id) {
+        var anymissing = deps[id].flatDeps.some(function(dep) { return !(deps[dep.id]); });
+        if (anymissing) {
+          removed = true;
+          delete deps[id];
+        }
+      });
+    } while (removed);
 
-    deps = Object.keys(deps);
+    //create a pseudo product
+    var matching_ids = Object.keys(deps);
+    //console.log(matching_ids);
+    var matching_plugins = matching_ids.map(function (p) { return deps[p]; });
 
     var product = {
       id: 'all_'+options.type,
       name: 'all_'+options.type,
       description: '',
       type: options.type,
+      package: options.type === 'web' ? 'zip': 'tar.gz',
       app: '_select',
-      plugins: matching_plugins.map(function(d) { return d.i}),
-      include : '{'+deps.join(',')+'}',
-      resolve : '{'+deps.join(',')+'}'
+      plugins: matching_plugins,
+      include : '{'+matching_ids.join(',')+'}'
     };
 
     //products contains a list of all elements to build
@@ -487,15 +486,17 @@ module.exports = function (grunt) {
       r.push('clean:product:'+name);
       //1. set task for product
       r.push('prepare_product:'+name);
-      //2. resolve its dependencies
-      r.push('resolve_dependencies:product:'+name);
+      //3. create product registry
+      r.push('create_registry:'+name);
+      //4. create dependency files
+      r.push('create_dynamic_dependencies:'+name);
       //3. generate bower dependencies
       r.push('bgShell:bower:'+name);
-      //4. generate the dump files
+      //4. create dynamic files
       r.push('create_dynamic_files:'+name);
-      //5. generate the package
+      //4. generate the package
       r.push('compress:package_'+product.type+':'+name);
-      //6. clean up
+      //5. clean up
       r.push('clean:product:'+name);
       return r;
     }));

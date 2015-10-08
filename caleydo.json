@@ -7,7 +7,8 @@
       "base_url": "",
       "main_relative_directory_url": "..",
       "html_directory": "static",
-      "external_dependency_directory": "."
+      "external_dependency_directory": ".",
+      "absolute_launcher_url": "/"
     },
     "dependencies": {
       "target": {
