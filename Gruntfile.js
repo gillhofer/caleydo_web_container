@@ -320,6 +320,7 @@ module.exports = function (grunt) {
   grunt.registerTask('server_common', [
     'clean:server',
     'compile',
+    'create_registry',
     'create_dynamic_files'
   ]);
 
@@ -335,6 +336,7 @@ module.exports = function (grunt) {
   ]);
   grunt.registerTask('dev', [
     'compile',
+    'create_registry',
     'create_dynamic_files',
     'watch'
   ]);
