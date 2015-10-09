@@ -3,7 +3,6 @@
 /.idea
 /.pycharm_helpers
 /tscommand*.txt
-/wsgi.py
 
 #build entries
 /_*
