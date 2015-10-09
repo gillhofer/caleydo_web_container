@@ -23,7 +23,7 @@ function pull {
 
 
 function install_apt_dependencies {
-  if [ -f debian.txt ] && [ which apt-get >/dev/null ]; then
+  if [ -f debian.txt ] && [ -x "$(command -v apt-get)" ]; then
     echo "--- installing apt dependencies ---"
     wd="`pwd`"
     cd /tmp #switch to tmp directory
@@ -34,7 +34,7 @@ function install_apt_dependencies {
   fi
 }
 function install_yum_dependencies {
-  if [ -f redhat.txt ] && [ which yum >/dev/null ]; then
+  if [ -f redhat.txt ] && [ -x "$(command -v yum)" ]; then
     echo "--- installing yum dependencies ---"
     cd /tmp #switch to tmp directory
     set -vx #to turn echoing on and
